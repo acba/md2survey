@@ -1,0 +1,15 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.bak
+
+# Local office/editor locks
+.~lock.*#
+
+# Generated converter outputs
+saida/
+*.docx
+!exemplo/TSID03-ANEXO_QUESTIONARIO.docx
+*.lss
+!exemplo/limesurvey_survey_431594.lss
