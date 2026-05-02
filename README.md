@@ -1,8 +1,11 @@
-# md2survey - Conversores SurveyMD, DOCX, LSS e SurveyXLSX
+# md2survey - Conversores SurveyMD para DOCX e LSS
 
-Fluxo recomendado: escreva o questionario em SurveyMD (`.md`) e gere os
-artefatos `.docx` e `.lss` a partir dele. A planilha SurveyXLSX continua
-disponivel como formato auxiliar de importacao, mas o `.md` e a fonte principal.
+A versao atual do app entende SurveyMD (`.md`) como arquivo de entrada. A partir
+desse `.md`, o processamento gera os artefatos `.docx` e `.lss`.
+
+O fluxo por planilha (`.xlsx` -> `.md`) esta deprecated. Ele permanece apenas
+como apoio legado para migrar conteudo antigo, mas nao deve ser usado como fluxo
+principal de autoria ou processamento.
 
 ## Uso
 
@@ -11,11 +14,60 @@ python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 python md2docx.py modelo_teste.md modelo_teste.docx --template-docx exemplo\TSID03-ANEXO_QUESTIONARIO.docx
-python md2lss.py modelo_teste.md modelo_teste.lss --sid 431594
+python md2lss.py modelo_teste.md modelo_teste.lss
 ```
 
 O `.docx` serve para revisao/impressao. O `.lss` e o artefato correto para
 importacao no LimeSurvey.
+
+Voce nao precisa se preocupar com `sid` no uso normal: se ele nao existir no
+ambiente de destino, o LimeSurvey pode gerar/atribuir um ID automaticamente na
+importacao. Use `sid:` no cabecalho ou `--sid` apenas quando quiser controlar a
+base numerica usada no `.lss` gerado.
+
+No cabecalho usado para `.lss`, `admin` deve ser curto: o LimeSurvey limita esse
+campo a 50 caracteres. Use `adminemail` para o e-mail do responsavel.
+
+## Variantes por target
+
+Use `target` no cabecalho do `.md` para gerar variantes do mesmo questionario:
+
+```md
+---
+title: "Questionario"
+target: municipal, estadual
+---
+```
+
+Por padrao, toda questao entra em todos os targets. Para restringir uma questao,
+adicione `target` nela:
+
+```md
+### q2001 [short]
+target: municipal
+
+Pergunta exibida apenas no questionario municipal.
+```
+
+Com multiplos targets, os conversores geram saidas com sufixo:
+
+```bash
+python md2docx.py questionario.md questionario.docx
+# questionario_municipal.docx
+# questionario_estadual.docx
+
+python md2lss.py questionario.md questionario.lss
+# questionario_municipal.lss
+# questionario_estadual.lss
+```
+
+No `.lss`, quando houver `--sid` ou `sid:` no cabecalho, o primeiro target usa
+esse SID base e os targets seguintes usam SID incremental na ordem do cabecalho.
+Se nenhum SID for informado, o conversor usa uma base interna apenas para montar
+as referencias do arquivo, e o LimeSurvey pode atribuir o ID final durante a
+importacao. Grupos que ficarem sem questoes apos o filtro sao omitidos. Se uma
+questao de um target depender via `visible_if` de uma questao que nao existe
+nesse mesmo target, a geracao falha com erro.
 
 ## Macro adoption
 
@@ -43,16 +95,20 @@ Anexe evidência documental que comprove a aprovação formal do PEDTIC.
 - `--template-docx`: DOCX de referencia usado como base de estilos, margens, cabecalho e rodape.
 - `--sid`, `--first-gid`, `--first-qid`: parametros do arquivo LimeSurvey `.lss`.
 
-## Planilha como importacao opcional
+## Planilha deprecated
 
-Se precisar partir de SurveyXLSX, ainda e possivel gerar o `.md` inicial:
+A conversao de SurveyXLSX para SurveyMD esta deprecated. Use `.md` como entrada
+do app e gere `.docx` e `.lss` diretamente a partir dele.
+
+Se precisar migrar conteudo antigo de SurveyXLSX, ainda e possivel gerar um
+`.md` inicial:
 
 ```bash
 python xlsx2md.py modelo_teste.xlsx modelo_teste.md
 ```
 
 Tambem existe um comando legado que gera `.md`, `.docx` e `.lss` a partir da
-planilha:
+planilha. Evite esse fluxo para novos questionarios:
 
 ```bash
 python survey_from_xlsx.py modelo_teste.xlsx --template-docx exemplo\TSID03-ANEXO_QUESTIONARIO.docx --force

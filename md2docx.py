@@ -40,6 +40,13 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Inches, Pt, RGBColor
+from utils import (
+    filter_survey_by_target as filter_target_survey,
+    split_frontmatter,
+    survey_targets,
+    target_output_path,
+    validate_target_config,
+)
 
 
 # -----------------------------------------------------------------------------
@@ -99,29 +106,6 @@ class Survey:
 
 def strip_comments(text: str) -> str:
     return re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
-
-
-def split_frontmatter(text: str) -> Tuple[Dict[str, str], List[str]]:
-    lines = text.splitlines()
-    meta: Dict[str, str] = {}
-    if lines and lines[0].strip() == "---":
-        end = None
-        for i in range(1, len(lines)):
-            if lines[i].strip() == "---":
-                end = i
-                break
-        if end is None:
-            raise ValueError("Front matter iniciado com --- mas não encerrado.")
-        for raw in lines[1:end]:
-            line = raw.strip()
-            if not line or line.startswith("#"):
-                continue
-            if ":" not in line:
-                continue
-            key, value = line.split(":", 1)
-            meta[key.strip().lower()] = value.strip().strip('"').strip("'")
-        return meta, lines[end + 1 :]
-    return meta, lines
 
 
 def parse_option_line(line: str) -> Option:
@@ -257,7 +241,7 @@ def parse_markdown(path: Path) -> Survey:
                     "mandatory", "scale", "visible_if", "help", "evidence", "evidence_mandatory",
                     "evidence_allowed_filetypes", "evidence_min_files", "evidence_max_files", "detail",
                     "detail_mandatory", "min_answers", "max_answers", "hide_tip", "allowed_filetypes",
-                    "min_files", "max_files", "text", "question", "answer_width", "subgroup"
+                    "min_files", "max_files", "text", "question", "answer_width", "subgroup", "target"
                 }
                 if key in known:
                     if key == "help":
@@ -281,6 +265,7 @@ def parse_markdown(path: Path) -> Survey:
 
     finish_question()
     finish_scale()
+    validate_target_config(survey)
     return survey
 
 
@@ -638,7 +623,7 @@ def render_adoption(doc: Document, survey: Survey, q: Question, detail_dependenc
         add_option_row(table, opt.text)
         if opt.code == "naoap":
             for nsa in NSA_OPTIONS:
-                add_option_row(table, nsa.text)
+                add_option_row(table, '🔿 ' + nsa.text, symbol='')
                 if nsa.code == "A":
                     add_explanation_row(table, "Indique que leis e/ou normas são essas:")
                 elif nsa.code == "B":
@@ -782,6 +767,10 @@ def build_dependency_maps(group: Group) -> Tuple[Dict[Tuple[str, str], List[Ques
     return by_answer, by_detail, skipped
 
 
+def filter_survey_by_target(survey: Survey, target: str) -> Survey:
+    return filter_target_survey(survey, target)
+
+
 def render_nested_question(doc: Document, q: Question, indent: float = 0.85):
     text = clean_text("\n".join([ln for ln in q.text_lines if ln.strip()])) or q.code
     add_prompt(doc, text, indent=indent)
@@ -840,15 +829,24 @@ def build_docx(survey: Survey, output_path: Path, template_docx: Optional[Path] 
     doc.save(output_path)
 
 
-def main():
+def main(argv: Optional[List[str]] = None):
     parser = argparse.ArgumentParser(description="Converte SurveyMD para DOCX de revisão/impressão.")
     parser.add_argument("input_md", type=Path, help="Arquivo .md SurveyMD de entrada")
     parser.add_argument("output_docx", type=Path, help="Arquivo .docx de saída")
     parser.add_argument("--template-docx", type=Path, default=None, help="DOCX de referência para extrair logotipo do cabeçalho")
     parser.add_argument("--logo", type=Path, default=None, help="Imagem de logotipo a ser usada no cabeçalho")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     survey = parse_markdown(args.input_md)
+    targets = survey_targets(survey)
+    if targets:
+        multi = len(targets) > 1
+        for target in targets:
+            target_survey = filter_survey_by_target(survey, target)
+            output_path = target_output_path(args.output_docx, target) if multi else args.output_docx
+            build_docx(target_survey, output_path, template_docx=args.template_docx, logo_path_arg=args.logo)
+            print(f"DOCX gerado: {output_path}")
+        return
     build_docx(survey, args.output_docx, template_docx=args.template_docx, logo_path_arg=args.logo)
     print(f"DOCX gerado: {args.output_docx}")
 

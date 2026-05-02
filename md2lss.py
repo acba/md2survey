@@ -26,12 +26,21 @@ Dependências: apenas biblioteca padrão do Python.
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import html
 import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+
+from utils import (
+    filter_survey_by_target as filter_target_survey,
+    split_frontmatter,
+    survey_targets,
+    target_output_path,
+    validate_target_config,
+)
 
 
 TYPE_MAP = {
@@ -107,6 +116,12 @@ LANG_FIELDS = [
     "surveyls_numberformat", "attachments",
 ]
 
+SURVEY_FIELD_MAX_LENGTHS = {
+    "admin": 50,
+    "adminemail": 254,
+    "bounce_email": 254,
+}
+
 DEFAULT_ADOPTION_OPTIONS = [
     ("naoad", "Não adota."),
     ("adfor", "Há decisão formal ou plano aprovado para adotá-lo."),
@@ -176,29 +191,6 @@ class Survey:
 # ----------------------------
 # Parser do Markdown SurveyMD
 # ----------------------------
-
-
-def split_frontmatter(text: str) -> Tuple[Dict[str, str], List[str]]:
-    lines = text.splitlines()
-    meta: Dict[str, str] = {}
-    if lines and lines[0].strip() == "---":
-        end = None
-        for i in range(1, len(lines)):
-            if lines[i].strip() == "---":
-                end = i
-                break
-        if end is None:
-            raise ValueError("Front matter iniciado com --- mas não encerrado.")
-        for raw in lines[1:end]:
-            line = raw.strip()
-            if not line or line.startswith("#"):
-                continue
-            if ":" not in line:
-                raise ValueError(f"Linha inválida no front matter: {raw}")
-            k, v = line.split(":", 1)
-            meta[k.strip().lower()] = v.strip().strip('"').strip("'")
-        return meta, lines[end + 1 :]
-    return meta, lines
 
 
 def parse_option(line: str) -> Option:
@@ -378,6 +370,7 @@ def parse_markdown(path: Path) -> Survey:
             continue
 
     expand_adoption_macros(survey)
+    validate_target_config(survey)
     validate_survey(survey)
     return survey
 
@@ -406,7 +399,7 @@ def apply_question_directive(q: Question, key: str, value: str) -> None:
         "nsa", "nsa_text", "lei", "lei_text", "est", "est_text", "raz", "raz_text",
         "detail", "detail_text", "detail_mandatory", "detail_min_answers", "detail_max_answers",
         "detail_hide_tip", "prefix_code", "evidence_suffix", "nsa_suffix", "lei_suffix", "est_suffix",
-        "raz_suffix", "detail_suffix",
+        "raz_suffix", "detail_suffix", "target",
     }:
         q.attrs[key] = value
     else:
@@ -459,6 +452,7 @@ def make_adoption_questions(q: Question) -> List[Question]:
     base = q.code
     adoption_scale = get_attr(q, "adoption_scale", q.scale or "adocao")
     nsa_scale = get_attr(q, "nsa_scale", "nao_aplicabilidade")
+    inherited_attrs = {k: v for k, v in q.attrs.items() if k == "target"}
 
     nsa_enabled = parse_bool(get_attr(q, "nsa", "true"), default=True)
     nsa_suffix = get_attr(q, "nsa_suffix", "nsa")
@@ -481,7 +475,7 @@ def make_adoption_questions(q: Question) -> List[Question]:
         scale=adoption_scale,
         subgroup=q.subgroup,
         visible_if=q.visible_if,
-        attrs={k: v for k, v in q.attrs.items() if k in {"hide_tip"}},
+        attrs={k: v for k, v in q.attrs.items() if k in {"hide_tip", "target"}},
     )
 
     out: List[Question] = [main]
@@ -494,6 +488,7 @@ def make_adoption_questions(q: Question) -> List[Question]:
             mandatory=True,
             scale=nsa_scale,
             visible_if=f"{base} == naoap",
+            attrs=dict(inherited_attrs),
         )
         out.append(nsa)
 
@@ -504,6 +499,7 @@ def make_adoption_questions(q: Question) -> List[Question]:
                 text_lines=[get_attr(q, "lei_text", "**Indique que leis e/ou normas são essas:**")],
                 mandatory=True,
                 visible_if=f"{base}{nsa_suffix} == A",
+                attrs=dict(inherited_attrs),
             ))
         if est_enabled:
             out.append(Question(
@@ -512,6 +508,7 @@ def make_adoption_questions(q: Question) -> List[Question]:
                 text_lines=[get_attr(q, "est_text", "**Identifique esses estudos:**")],
                 mandatory=True,
                 visible_if=f"{base}{nsa_suffix} == B",
+                attrs=dict(inherited_attrs),
             ))
         if raz_enabled:
             out.append(Question(
@@ -520,6 +517,7 @@ def make_adoption_questions(q: Question) -> List[Question]:
                 text_lines=[get_attr(q, "raz_text", "**Explique que razões são essas:**")],
                 mandatory=True,
                 visible_if=f"{base}{nsa_suffix} == C",
+                attrs=dict(inherited_attrs),
             ))
 
     if detail_enabled:
@@ -530,6 +528,7 @@ def make_adoption_questions(q: Question) -> List[Question]:
             mandatory=parse_bool(get_attr(q, "detail_mandatory", "false"), default=False),
             subquestions=list(q.subquestions),
             visible_if=f"{base} in [adpar, admai]",
+            attrs=dict(inherited_attrs),
         )
         detail.attrs["hide_tip"] = get_attr(q, "detail_hide_tip", "1")
         if get_attr(q, "detail_min_answers", ""):
@@ -577,6 +576,10 @@ def validate_survey(survey: Survey) -> None:
                     raise ValueError(f"Questão array {q.code} precisa de rows/subquestions.")
                 if not q.scale and not q.alternatives:
                     raise ValueError(f"Questão array {q.code} precisa de scale ou alternatives/columns.")
+
+
+def filter_survey_by_target(survey: Survey, target: str) -> Survey:
+    return filter_target_survey(survey, target)
 
 
 # ----------------------------
@@ -639,6 +642,24 @@ def split_csv_values(value_text: str) -> List[str]:
 
 def literal(value: str) -> str:
     return value.strip().strip("'").strip('"')
+
+
+def normalize_ls_datetime(value: str) -> str:
+    """Garante que a string de data/hora use o formato do LimeSurvey: YYYY-MM-DD HH:MM:SS.fff."""
+    value = (value or "").strip()
+    if not value:
+        return value
+    for fmt in [
+        "%Y-%m-%d %H:%M:%S.%f",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d",
+    ]:
+        try:
+            return dt.datetime.strptime(value, fmt).strftime("%Y-%m-%d %H:%M:%S.000")
+        except ValueError:
+            continue
+    return value
 
 
 # ----------------------------
@@ -880,7 +901,9 @@ def build_lss(survey: Survey, sid: int, first_gid: int = 1000, first_qid: int = 
                     })
 
             if ltype in {"M", "Q", "F"}:
-                sub_type = "M" if ltype == "M" else "T"
+                sub_type = "T"
+                if ltype == "M" and not ("min_answers" in q.attrs or "max_answers" in q.attrs):
+                    sub_type = "M"
                 for idx, opt in enumerate(q.subquestions, 1):
                     subquestion_rows.append({
                         "qid": next_subqid,
@@ -905,7 +928,7 @@ def build_lss(survey: Survey, sid: int, first_gid: int = 1000, first_qid: int = 
 
             add_attributes(q, ltype, attribute_rows)
 
-    survey_row = build_survey_row(sid, lang, title, admin, adminemail, template, survey_format)
+    survey_row = build_survey_row(sid, lang, title, admin, adminemail, template, survey_format, survey.meta)
     lang_row = build_lang_row(sid, lang, title, survey)
 
     parts = [
@@ -961,12 +984,14 @@ def add_attributes(q: Question, ltype: str, attribute_rows: List[Dict[str, objec
         attr("max_answers", q.attrs["max_answers"])
 
 
-def build_survey_row(sid: int, lang: str, title: str, admin: str, adminemail: str, template: str, survey_format: str) -> Dict[str, object]:
+def build_survey_row(sid: int, lang: str, title: str, admin: str, adminemail: str, template: str, survey_format: str, meta: Dict[str, str]) -> Dict[str, object]:
     row = {f: "" for f in SURVEY_FIELDS}
     row.update({
         "sid": sid,
         "gsid": 1,
         "admin": admin,
+        "expires": normalize_ls_datetime(meta.get("expires", "")),
+        "startdate": normalize_ls_datetime(meta.get("startdate", meta.get("start_date", ""))),
         "adminemail": adminemail,
         "anonymized": "N",
         "format": survey_format,
@@ -1007,7 +1032,18 @@ def build_survey_row(sid: int, lang: str, title: str, admin: str, adminemail: st
         "nokeyboard": "N",
         "alloweditaftercompletion": "N",
     })
+    validate_survey_row_lengths(row)
     return row
+
+
+def validate_survey_row_lengths(row: Dict[str, object]) -> None:
+    for field, max_len in SURVEY_FIELD_MAX_LENGTHS.items():
+        value = "" if row.get(field) is None else str(row.get(field))
+        if len(value) > max_len:
+            raise ValueError(
+                f"Campo LimeSurvey '{field}' tem {len(value)} caracteres, "
+                f"mas o limite e {max_len}. Use um valor mais curto no cabecalho do .md."
+            )
 
 
 def build_lang_row(sid: int, lang: str, title: str, survey: Survey) -> Dict[str, object]:
@@ -1053,8 +1089,18 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     try:
         survey = parse_markdown(args.input_md)
-        sid = args.sid or int(survey.meta.get("sid", "900001"))
-        xml = build_lss(survey, sid=sid, first_gid=args.first_gid, first_qid=args.first_qid)
+        targets = survey_targets(survey)
+        sid_base = args.sid or int(survey.meta.get("sid", "900001"))
+        if targets:
+            multi = len(targets) > 1
+            for index, target in enumerate(targets):
+                target_survey = filter_survey_by_target(survey, target)
+                output_path = target_output_path(args.output_lss, target) if multi else args.output_lss
+                xml = build_lss(target_survey, sid=sid_base + index, first_gid=args.first_gid, first_qid=args.first_qid)
+                output_path.write_text(xml, encoding="utf-8")
+                print(f"OK: arquivo gerado em {output_path}")
+            return 0
+        xml = build_lss(survey, sid=sid_base, first_gid=args.first_gid, first_qid=args.first_qid)
         args.output_lss.write_text(xml, encoding="utf-8")
     except Exception as exc:
         print(f"ERRO: {exc}", file=sys.stderr)

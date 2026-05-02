@@ -2,7 +2,8 @@
 title: "Questionário de Governança e Gestão de TI - 2026"
 language: "pt-BR"
 sid: 489123
-admin: Coordenadoria de Auditoria em Políticas de Tecnologia da Informação
+target: municipal, estadual
+admin: Coordenadoria de Auditoria em TI
 adminemail: "auditoriati@tcerj.tc.br"
 format: G
 template: vanilla
@@ -67,7 +68,7 @@ mandatory: true
 
 ## Grupo: g1000 | Sistema Estadual de Tecnologia da Informação e Comunicação - SETIC
 > De acordo com o Decreto Estadual nº 47.278 de 17 de setembro de 2020, o Sistema Estadual de Tecnologia da Informação e Comunicação - SETIC, configura-se como o conjunto de recursos humanos, tecnológicos e de equipamentos voltados para o estabelecimento e a implementação de políticas para a informação e a comunicação pública, sendo estruturado em dois níveis de atuação: I - Direção Geral, representado pelo PRODERJ; e II – Setorial, representado pelas Assessorias de Informática, ou setores equivalentes, de todos os órgãos da administração direta e indireta do estado do Rio de Janeiro, assim chamadas de NSTIC/RJ.
-Alinhando-se a essa estrutura apresentada, nessa seção será avaliada a percepção do gestor de TI da organização, pessoa responsável pela assessoria de informática (Setor de TI) da organização, podendo, também, ser denominado como o principal responsável pelo NSTIC/RJ, nos termos do Art. 4º do Anexo C da Portaria PRODERJ/PRE nº 825/2021.
+> Alinhando-se a essa estrutura apresentada, nessa seção será avaliada a percepção do gestor de TI da organização, pessoa responsável pela assessoria de informática (Setor de TI) da organização, podendo, também, ser denominado como o principal responsável pelo NSTIC/RJ, nos termos do Art. 4º do Anexo C da Portaria PRODERJ/PRE nº 825/2021.
 
 ### q1011 [single]
 mandatory: true
@@ -130,8 +131,6 @@ Expresse o motivo.
 mandatory: true
 visible_if: q1011 == sim
 help: A Portaria PRODERJ/PRE nº 825/2021 institui a Política de Governança de Tecnologia da Informação e Comunicação do Estado do Rio de Janeiro – PGTIC/RJ, a EGTIC/RJ e normas para elaboração do PEDTIC.
-min_answers: 1
-hide_tip: true
 
 <strong>1022. A organização atende à Portaria PRODERJ/PRE nº 825/2021 expedida pelo Diretor Geral do SETIC (PRODERJ).</strong>
 
@@ -149,7 +148,7 @@ allowed_filetypes: pdf, docx, zip
 min_files: 1
 max_files: 1
 
-Anexe evidência documental que comprove a aprovação formal do PEDTIC.
+Anexe evidência documental que comprove a constituição do Comitê Permanente do PEDTIC.
 
 ### q1022extDevi [upload]
 mandatory: true
@@ -159,3 +158,15 @@ min_files: 1
 max_files: 3
 
 Anexe evidência documental que comprove a aprovação formal do PEDTIC.
+
+### q1023 [adoption]
+mandatory: true
+target: estadual
+visible_if: q1011 == sim
+help: A Portaria PRODERJ/PRE nº 825/2021 institui a Política de Governança de Tecnologia da Informação e Comunicação do Estado do Rio de Janeiro – PGTIC/RJ, a EGTIC/RJ e normas para elaboração do PEDTIC.
+
+<strong>1023. XPTO.</strong>
+
+detail_options:
+- A | a) a organização constituiu seu Comitê Permanente do PEDTIC.
+- B | b) o Comitê Permanente do PEDTIC é composto pelo principal responsável do NSTIC/RJ.
