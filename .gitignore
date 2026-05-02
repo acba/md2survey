@@ -11,5 +11,5 @@ __pycache__/
 saida/
 *.docx
 !exemplo/TSID03-ANEXO_QUESTIONARIO.docx
-*.lss
+# *.lss
 !exemplo/limesurvey_survey_431594.lss
