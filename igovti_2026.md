@@ -87,7 +87,7 @@ detail_options:
 ## Grupo: g2100 | Gestão de Tecnologia da Informação
 
 ### q2111 [adoption]
-question: **2111. A organizacao executa processo de planejamento de tecnologia da informação.**
+question: **2111. A organização executa processo de planejamento de tecnologia da informação.**
 subgroup: Planejamento de TI
 mandatory: true
 explain: O processo de planejamento de TI é o conjunto de atividades formais para definir, priorizar e revisar iniciativas de TI, alinhadas às necessidades institucionais e com participação das áreas envolvidas.
@@ -224,13 +224,9 @@ detail_options:
 - C | c) o plano de continuidade de serviços de TI é testado e revisado periodicamente
 - D | d) o processo de gestão de continuidade de serviços de TI está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
 
-
-## Grupo: g2150 | Seguranca da informacao
-> Questoes extraidas das folhas iGestSegInfo, EstruturaSegInfo e ProcessoSegInfo do arquivo docs/esquema-1.pdf.
-
 ### q2151 [adoption]
 question: **2151. A organização dispõe de uma política de segurança da informação.**
-subgroup: Estrutura de Segurança
+subgroup: Estrutura de Segurança da Informação
 mandatory: true
 explain: A política de segurança da informação define diretrizes e responsabilidades para proteger dados e sistemas, assegurando confidencialidade, integridade e disponibilidade das informações.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Alta Administração; Colaboradores; Diretriz; Gestão de riscos; Informação; Política; Política de segurança da informação; Risco de Segurança da Informação; Segurança da Informação.
@@ -260,7 +256,7 @@ detail_options:
 question: **2153. A organização possui um gestor institucional de segurança da informação.**
 mandatory: true
 explain: O gestor de segurança da informação é o responsável por coordenar políticas, riscos e ações de proteção de dados e sistemas, com autoridade definida pela alta administração.
-help: Considere se ha gestor institucional de seguranca da informacao formalmente designado, com atribuicoes, autoridade e responsabilidades definidas.
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Alta Administração; Competências; Gestão de riscos; Gestor institucional de segurança da informação; Informação; Partes interessadas; Risco de Segurança da Informação; Segurança da Informação.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do gestor de segurança da informação, como: ato formal de designação; descrição de atribuições e vínculo com a alta administração; registros de atuação na coordenação de riscos e ações de segurança; evidências de campanhas de conscientização e treinamentos; estrutura ou recursos disponíveis; ou outras evidências cabíveis, indicando a abrangência na organização..
 
 detail_options:
@@ -288,71 +284,57 @@ detail_options:
 - G | g) o responsável ou equipe (ex.: ETIR) realiza análise pós-incidente para identificar causas e propor melhorias
 
 ### q2161 [adoption]
+question: **2161. A organização executa processo de gestão de ativos associados à informação.**
 mandatory: true
-subgroup: Processo de Segurança
-help: Considere se os riscos de seguranca da informacao sao identificados, avaliados, tratados, aceitos e monitorados.
-
-**2161. A organizacao executa processo de gestao de riscos de seguranca da informacao.**
+subgroup: Processos de Segurança da Informação
+explain: A gestão de ativos associados à informação consiste em identificar, inventariar, classificar e acompanhar ativos que armazenam, processam ou transmitem informações, assegurando sua proteção durante todo o ciclo de vida. Exemplos: sistema de prontuário eletrônico da saúde, sistema de arrecadação tributária, folha de pagamento, portal do aluno, backups, banco de dados de cidadãos, servidores, notebooks e documentos digitais que contenham informações críticas ou dados pessoais.
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Ativos associados à informação; Gestão do desempenho; Informação; Processo de gestão de ativos.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão de ativos associados à informação, como: inventário de ativos e informações críticas; definição formal de responsáveis pelos ativos; classificação ou identificação de informações sensíveis ou críticas; registros de controles de proteção aplicados; planos ou ações mitigatórias para indisponibilidade de ativos críticos; norma ou procedimento formal; relatórios de acompanhamento ou revisão do processo; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | a organização identifica e avalia riscos de segurança da informação
-- B | a organização trata riscos de segurança da informação com base em um plano de tratamento de riscos
-- C | a organização possui um gestor formalmente responsável por coordenar a gestão de riscos de segurança da informação
-- D | o processo de gestão de riscos de segurança da informação está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
-- E | a organização avalia periodicamente o desempenho e a conformidade do processo de gestão de riscos de segurança da informação e promove eventuais ajustes necessários
+- A | a) a organização mantém um inventário dos ativos associados à informação
+- B | b) a organização definiu responsabilidades pelos ativos associados à informação
+- C | c) o inventário identifica as informações críticas que os ativos armazenam, processam ou transmitem
+- D | d) o processo de gestão de ativos associados à informação subsidia a implantação de controles e ações com vistas a assegurar a adequada proteção dos ativos e das informações que armazenam, processam ou transmitem
+- E | e) o processo de gestão de ativos associados à informação subsidia a implantação de ações mitigatórias aplicáveis no caso de ocorrência de evento catastrófico que inviabilize a utilização de ativos
+- F | f) o processo de gestão de ativos associados à informação está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
+- G | g) a organização avalia periodicamente o desempenho e a conformidade do processo de gestão de ativos associados à informação e promove eventuais ajustes necessários
 
 ### q2162 [adoption]
+question: **2162. A organização executa processo de controle de acesso à informação e aos ativos associados à informação.**
 mandatory: true
-help: Considere se ha controles para concessao, revisao, revogacao e monitoramento de acesso a informacao e a ativos associados.
-
-**2162. A organizacao executa processo de controle de acesso a informacao e aos ativos associados a informacao.**
+help:  Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Ativos associados à informação; Certificado digital; Controle; Diretriz; Gestão do desempenho; Informação; Política; Serviço de TI.
+explain: O controle de acesso consiste em definir, conceder, revisar e revogar acessos físicos e lógicos à informação e aos ativos associados, assegurando que apenas usuários autorizados tenham acesso adequado às informações e serviços.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do processo de controle de acesso, como: Política de Controle de Acesso (PCA); normas ou procedimentos de concessão, revisão e revogação de acessos; perfis e matrizes de acesso; registros de revisões periódicas de privilégios; evidências de autenticação forte ou uso de certificado digital; logs de acesso; relatórios de monitoramento; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | a organização implementa controles de acesso físicos e lógicos à informação e aos ativos associados à informação que são por ela gerenciados ou custodiados, com vistas a proteger adequadamente a confidencialidade das informações não públicas e a integridade e a disponibilidade das informações consideradas críticas para o negócio
-- B | os controles de acesso implementados na organização aplicam o princípio “necessidade de conhecer”, o qual prescreve que deve haver necessidade legítima que justifique o acesso à informação por pessoa, sistema ou entidade, bem como o princípio “privilégio mínimo”, o qual estabelece que o perfil de acesso concedido deve incluir tão somente os poderes necessários para o atendimento das legítimas necessidades
-- C | há controles de acesso lógicos na organização que utilizam autenticação com certificado digital ICP-Brasil, a fim de prover identificação inequívoca de pessoas físicas e jurídicas e comprovação de autoria em transações digitais
-- D | a organização analisa criticamente, a intervalos regulares, os direitos de acesso lógicos e físicos existentes, com vistas à remoção de direitos que deixaram de ser necessários e para assegurar que privilégios indevidos não foram obtidos
-- E | a organização instituiu uma Política de Controle de Acesso (PCA), a qual estabelece princípios, objetivos, diretrizes, principais atividades e responsabilidades relativos ao processo de controle de acesso
-- F | a organização avalia periodicamente o desempenho e a conformidade do processo de controle de acesso e promove eventuais ajustes necessários
+- A | a) a organização implementa controles de acesso físicos e lógicos à informação e aos ativos associados à informação que são por ela gerenciados ou custodiados, com vistas a proteger adequadamente a confidencialidade das informações não públicas e a integridade e a disponibilidade das informações consideradas críticas para o negócio
+- B | b) os controles de acesso implementados na organização aplicam o princípio “necessidade de conhecer”, o qual prescreve que deve haver necessidade legítima que justifique o acesso à informação por pessoa, sistema ou entidade, bem como o princípio “privilégio mínimo”, o qual estabelece que o perfil de acesso concedido deve incluir tão somente os poderes necessários para o atendimento das legítimas necessidades
+- C | c) TODO:REMOVE há controles de acesso lógicos na organização que utilizam autenticação com certificado digital ICP-Brasil, a fim de prover identificação inequívoca de pessoas físicas e jurídicas e comprovação de autoria em transações digitais
+- D | d)  a organização aplica o modelo de segurança de 'confiança zero'(zero trust), o qual preconiza que uma identidade não é confiável até que seja adequadamente verificada para cada acesso pretendido, independentemente de perímetros
+- E | e) a organização analisa criticamente, a intervalos regulares, os direitos de acesso lógicos e físicos existentes, com vistas à remoção de direitos que deixaram de ser necessários e para assegurar que privilégios indevidos não foram obtidos
+- F | f) a organização instituiu uma Política de Controle de Acesso (PCA), a qual estabelece princípios, objetivos, diretrizes, principais atividades e responsabilidades relativos ao processo de controle de acesso
+ - G | g) TODO:REMOVE a organização avalia periodicamente o desempenho e a conformidade do processo de controle de acesso e promove eventuais ajustes necessários
 
 ### q2163 [adoption]
+question: **2163. A organização executa processo para classificação e tratamento de informações.**
 mandatory: true
-help: Considere se ativos associados a informacao sao inventariados, classificados, mantidos e acompanhados durante seu ciclo de vida.
-
-**2163. A organizacao executa processo de gestao de ativos associados a informacao.**
+explain: A classificação e tratamento de informações consiste em identificar informações conforme sua criticidade, sensibilidade ou sigilo e aplicar medidas adequadas de proteção, armazenamento, acesso e compartilhamento, de acordo com requisitos legais e de negócio.
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Competências; Processo para classificação e tratamento de informações; Tratamento de dados pessoais.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do processo de classificação e tratamento de informações, como: política ou norma de classificação da informação; critérios de classificação e rotulagem; inventários ou registros de informações críticas, pessoais ou sigilosas; procedimentos de tratamento e proteção; controles de acesso e armazenamento; evidências de adequação à LGPD e à LAI; registros de revisão periódica; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | a organização mantém um inventário dos ativos associados à informação
-- B | a organização definiu responsabilidades pelos ativos associados à informação
-- C | o inventário identifica as informações críticas que os ativos armazenam, processam ou transmitem
-- D | o processo de gestão de ativos associados à informação subsidia a implantação de controles e ações com vistas a assegurar a adequada proteção dos ativos e das informações que armazenam, processam ou transmitem
-- E | o processo de gestão de ativos associados à informação subsidia a implantação de ações mitigatórias aplicáveis no caso de ocorrência de evento catastrófico que inviabilize a utilização de ativos
-- F | o processo de gestão de ativos associados à informação está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
-- G | a organização avalia periodicamente o desempenho e a conformidade do processo de gestão de ativos associados à informação e promove eventuais ajustes necessários
-
-### q2164 [adoption]
-mandatory: true
-help: Considere se ha processo para classificar informacoes e definir tratamentos proporcionais a criticidade, sigilo, integridade e disponibilidade.
-
-**2164. A organizacao executa processo para classificacao e tratamento de informacoes.**
-
-detail_options:
-- A | informações pessoais são identificadas e rotuladas, com vistas a viabilizar adequado tratamento e proteção
-- B | a organização adota procedimentos para tratamento e proteção das informações identificadas na forma do item “a” em conformidade com os requisitos legais e de negócio
-- C | informações sigilosas em razão de sua imprescindibilidade à segurança da sociedade ou do Estado são identificadas e rotuladas, com vistas a viabilizar adequado tratamento e proteção
-- D | a organização adota procedimentos para tratamento e proteção das informações identificadas na forma do item “c” em conformidade com os requisitos legais e de negócio
-- E | informações sigilosas em função de outras hipóteses legais de sigilo ou segredo são identificadas e rotuladas, com vistas a viabilizar adequado tratamento e proteção
-- F | a organização adota procedimentos para tratamento e proteção das informações identificadas na forma do item “e” em conformidade com os requisitos legais e de negócio
-- G | informações críticas para a organização em razão de necessidades do negócio (p. ex. requisitos associados à integridade, disponibilidade, autenticidade ou a outros atributos da informação) são identificadas e rotuladas, com vistas a viabilizar adequado tratamento e proteção
-- H | a organização adota procedimentos para tratamento e proteção das informações identificadas na forma do item “g” em conformidade com os requisitos legais e de negócio
-- I | o processo de classificação e tratamento de informações está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
-- J | a organização avalia periodicamente o desempenho e a conformidade do processo de classificação e tratamento de informações e promove eventuais ajustes necessários
+- A | a) informações pessoais são identificadas e rotuladas, com vistas a viabilizar adequado tratamento e proteção
+- B | b) a organização informa em seu sítio eletrônico as hipóteses em que, no exercício de suas competências, realiza o tratamento de dados pessoais, bem como fornece informações claras e atualizadas sobre a previsão legal, a finalidade, os procedimentos e as práticas de tratamento que utiliza
+- C | c) informações sigilosas em razão de sua imprescindibilidade à segurança da sociedade ou do Estado são identificadas e rotuladas, com vistas a viabilizar adequado tratamento e proteção
+- D | d) informações sigilosas em função de outras hipóteses legais de sigilo ou segredo são identificadas e rotuladas, com vistas a viabilizar adequado tratamento e proteção
+- E | e) informações críticas para a organização em razão de necessidades do negócio (p. ex. requisitos associados à integridade, disponibilidade, autenticidade ou a outros atributos da informação) são identificadas e rotuladas, com vistas a viabilizar adequado tratamento e proteção
+- F | f) o processo de classificação e tratamento de informações está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
 
 ### q2165 [adoption]
+question: **2165. TODO: REMOVE? A organizacao executa processo de gestao de incidentes de seguranca da informacao.**
 mandatory: true
 help: Considere se ha processo para deteccao, registro, classificacao, resposta, comunicacao e aprendizado a partir de incidentes de seguranca da informacao.
-
-**2165. A organizacao executa processo de gestao de incidentes de seguranca da informacao.**
 
 detail_options:
 - A | a organização definiu e comunica amplamente o ponto de contato a ser notificado no caso de ocorrência de incidente de segurança da informação, bem como os canais de comunicação apropriados
@@ -363,52 +345,60 @@ detail_options:
 - F | a organização avalia periodicamente o desempenho e a conformidade do processo de gestão de incidentes de segurança da informação e promove eventuais ajustes necessários
 
 ### q2166 [adoption]
+question: **2166. A organização executa atividades de gestão da segurança dos recursos de processamento da informação, inclusive dos recursos de computação em nuvem.**
 mandatory: true
-help: Considere se ha controles e rotinas para proteger recursos de processamento da informacao, inclusive ambientes locais, terceirizados e de computacao em nuvem.
-
-**2166. A organizacao executa atividades de gestao da seguranca dos recursos de processamento da informacao, inclusive dos recursos de computacao em nuvem.**
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Gestão do desempenho; Informação; Processo para classificação e tratamento de informações.
+explain: A gestão da segurança dos recursos de processamento da informação consiste em proteger dispositivos, sistemas, redes, aplicações e ambientes de TI contra acessos indevidos, falhas, vulnerabilidades e ameaças cibernéticas, incluindo ambientes locais, terceirizados e em nuvem.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão da segurança dos recursos de processamento da informação, como: inventário de dispositivos e softwares; registros de gestão de vulnerabilidades e aplicação de correções; padrões de configuração segura; logs e relatórios de monitoramento; controles de privilégios administrativos; evidências de antivírus, firewall e proteção contra malware; políticas e registros de backup e testes de recuperação; relatórios de testes de segurança; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | a organização gerencia (inventaria e controla) os dispositivos conectados em sua rede
-- B | a organização gerencia (inventaria e controla) os softwares instalados nos dispositivos conectados em sua rede
-- C | a organização gerencia vulnerabilidades técnicas em seus ativos de software, de hardware e de rede críticos para o negócio
-- D | a organização implementa configurações seguras em seus ativos de software, de hardware e de rede críticos para o negócio
-- E | a organização mantém, monitora e analisa logs de auditoria dos ativos de software, de hardware e de rede críticos para o negócio
-- F | a organização aplica controles compensatórios para o uso de privilégios administrativos em seus ativos de software, de hardware e de rede críticos para o negócio
-- G | a organização implementa defesas contra malware (ex: vírus) e outras ameaças cibernéticas (ex: phishing)
-- H | a organização limita e controla o uso de portas, protocolos e serviços de rede nas conexões de sua rede interna com a internet e outras redes externas
-- I | a organização implementa defesa de perímetro das conexões de sua rede interna com a internet e outras redes externas
-- J | a organização implementa cópias regulares de segurança (backup) das informações em meio digital, conforme as melhores práticas e as necessidades de negócio, incluindo a realização periódica de testes de recuperação das informações
-- K | a organização executa regularmente testes de segurança em seu ambiente de TI (detecção de vulnerabilidades e testes de penetração)
+- A | a) a organização gerencia (inventaria e controla) os dispositivos conectados em sua rede
+- B | b) a organização gerencia (inventaria e controla) os softwares instalados nos dispositivos conectados em sua rede
+- C | c) a organização gerencia vulnerabilidades técnicas em seus ativos de software, de hardware e de rede críticos para o negócio
+- D | d) a organização implementa configurações seguras em seus ativos de software, de hardware e de rede críticos para o negócio
+- E | e) a organização mantém, monitora e analisa logs de auditoria dos ativos de software, de hardware e de rede críticos para o negócio
+- F | f) a organização aplica controles compensatórios para o uso de privilégios administrativos em seus ativos de software, de hardware e de rede críticos para o negócio
+- G | g) a organização implementa defesas contra malware (ex: vírus) e outras ameaças cibernéticas (ex: phishing)
+- H | h) a organização limita e controla o uso de portas, protocolos e serviços de rede nas conexões de sua rede interna com a internet e outras redes externas
+- I | i) a organização implementa defesa de perímetro das conexões de sua rede interna com a internet e outras redes externas
+- J | j) a organização implementa cópias regulares de segurança (backup) das informações em meio digital, conforme as melhores práticas e as necessidades de negócio, incluindo a realização periódica de testes de recuperação das informações
+- K | k) a organização executa regularmente testes de segurança em seu ambiente de TI (detecção de vulnerabilidades e testes de penetração)
 
+### q2167 [adoption]
+question: **2167. A organização realiza periodicamente ações de treinamento e/ou capacitação em segurança da informação.**
+mandatory: true
+explain: As ações de treinamento, capacitação e conscientização em segurança da informação buscam orientar servidores, colaboradores e usuários sobre riscos, boas práticas e responsabilidades relacionadas à proteção das informações e dos recursos de TI.
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Informação; Plano de capacitação (Plano de Treinamento); Segurança da Informação.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência das ações de treinamento e conscientização em segurança da informação, como: plano ou programa de capacitação; registros de treinamentos realizados; campanhas de conscientização; materiais educativos; listas de presença; certificados; comunicações internas; cronogramas periódicos; ou outras evidências cabíveis, indicando a abrangência na organização.
+detail_options:
+- A | a) a organização realiza ações de capacitação voltadas para segurança da informação
+- B | b) a organização participa de ações de capacitação voltadas para segurança da informação
+- C | c) a organização realiza ações de conscientização em segurança de TIC
+- D | d) a organização possui programa permanente de conscientização em segurança da informação
 
-## Grupo: g2160 | Gestão de Soluções e Inovacação
+## Grupo: g2170 | Gestão de Soluções
 
 ### q2171 [adoption]
+question: **2171. A organização executa um processo de software.**
 mandatory: true
-help: Considere se ha processo de software definido, executado e acompanhado para desenvolvimento, manutencao, sustentacao ou aquisicao de solucoes.
-
-**2171. A organizacao executa um processo de software.**
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área de negócio; Processo de software; Segurança da Informação.
+explain: O processo de software consiste em definir e executar atividades para desenvolvimento, manutenção, sustentação ou aquisição de sistemas, incluindo requisitos de negócio, segurança, acessibilidade, qualidade e responsabilidades ao longo do ciclo de vida do software.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do processo de software, como: norma ou metodologia de desenvolvimento/aquisição; documentos de requisitos; participação das áreas de negócio; registros de testes e validações; critérios de segurança, acessibilidade e usabilidade; indicadores de qualidade; contratos com cláusulas de propriedade intelectual; fluxos ou ferramentas de desenvolvimento; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | a organização possui pessoal próprio capacitado para gerir o processo de software
-- B | a organização avalia as soluções existentes no mercado antes de decidir pelo desenvolvimento de software (análise do tipo “construir ou adquirir”)
-- C | na etapa de planejamento das contratações de soluções de software, a organização realiza estudos para identificar e mitigar o risco de dependência tecnológica, com vistas a viabilizar a substituição de fabricante/fornecedor quando tecnicamente viável e economicamente vantajoso
-- D | a organização utiliza prioritariamente arquiteturas de software que promovem o desacoplamento de soluções, sistemas e componentes, inclusive nos casos de software adquirido e desenvolvimento realizado mediante contratação, com vistas a facilitar a realização de manutenções e otimizar custos
-- E | o processo de software utilizado pela organização promove a participação de representante da área de negócio como integrante da equipe de desenvolvimento ou aquisição de software, desde sua concepção até a aceitação final
-- F | o processo de software da organização promove a identificação precoce de requisitos de segurança da informação e a gestão permanente desses requisitos durante todo o ciclo de vida do software
-- G | o processo de software da organização promove a identificação precoce de requisitos de interoperabilidade e a gestão permanente desses requisitos durante todo o ciclo de vida do software
-- H | o processo de software da organização promove a identificação precoce de requisitos de acessibilidade e de usabilidade, bem como a gestão permanente desses requisitos durante todo o ciclo de vida do software
-- I | a organização assegura os seus direitos autorais, de propriedade e de uso relativamente ao software que desenvolve por meio de contratação
-- J | organização avalia, por meio de mensurações, indicadores e metas, a qualidade do software desenvolvido ou adquirido
-- K | o processo de software está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
-- L | a organização avalia periodicamente o desempenho e a conformidade do processo de software e promove eventuais ajustes necessários
+- A | a) o processo de software utilizado pela organização promove a participação de representante da área de negócio como integrante da equipe de desenvolvimento ou aquisição de software, desde sua concepção até a aceitação final
+- B | b) o processo de software da organização promove a identificação precoce de requisitos de segurança da informação e a gestão permanente desses requisitos durante todo o ciclo de vida do software
+- C | c) o processo de software da organização promove a identificação precoce de requisitos de acessibilidade e de usabilidade, bem como a gestão permanente desses requisitos durante todo o ciclo de vida do software
+- D | d) a organização assegura os seus direitos autorais, de propriedade e de uso relativamente ao software que desenvolve por meio de contratação
+- E | e) organização avalia, por meio de mensurações, indicadores e metas, a qualidade do software desenvolvido ou adquirido
+- F | f) o processo de software está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
 
-### q2181 [adoption]
+### q2172 [adoption]
+question: **2172. A organização executa processo de gestão de projetos de tecnologia da informação.**
 mandatory: true
-help: Considere se ha processo formal para selecionar, priorizar, planejar, executar e monitorar projetos de tecnologia da informacao.
-
-**2181. A organizacao executa processo de gestao de projetos de tecnologia da informacao.**
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Gestão de riscos; Política; Projeto; TI (Tecnologia da Informação).
+explain: A gestão de projetos de TI consiste em planejar, executar, acompanhar e controlar projetos de tecnologia da informação, assegurando o gerenciamento de escopo, prazo, custos, recursos, riscos e resultados.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão de projetos de TI, como: portfólio de projetos; planos de projeto; cronogramas; registros de acompanhamento de escopo, custos e prazos; análises e planos de tratamento de riscos; relatórios de status; metodologia ou norma formal de gestão de projetos; indicadores de desempenho; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
 - A | a organização possui base de dados consolidada (portfólio) de projetos de tecnologia da informação
@@ -606,23 +596,36 @@ detail_options:
 ## Grupo: g2400 | Inovação em Tecnologia da Informação
 
 ### q2401 [adoption]
+question: **2401. A organização faz uso de inteligência artificial em suas operações.**
 mandatory: true
-help: Considere se a organizacao utiliza inteligencia artificial em processos, servicos, atividades internas, atendimento ao cidadao ou suporte a decisao.
+explain: O uso de inteligência artificial ocorre quando a organização utiliza sistemas ou ferramentas capazes de apoiar atividades, automatizar tarefas, analisar informações, gerar conteúdo ou auxiliar decisões em processos internos ou serviços prestados ao cidadão.
 
-**2401. A organizacao faz uso de inteligencia artificial em suas operacoes.**
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do uso de inteligência artificial, como: relação de sistemas ou soluções com IA; projetos ou provas de conceito (POC); contratos ou aquisições; fluxos automatizados; documentos técnicos; relatórios de uso; exemplos de aplicações em processos internos ou serviços ao cidadão; ou outras evidências cabíveis, indicando a abrangência na organização.
+
 
 detail_options:
-- A | Mockup: ha ato, norma ou documento formal que estabelece a pratica.
-- B | Mockup: ha responsaveis definidos, periodicidade e registros de execucao ou monitoramento.
-- C | Mockup: ha evidencias atualizadas que demonstram aplicacao efetiva da pratica.
+- A | a) há colaboradores que utilizam ferramentas de inteligência artificial em atividades de trabalho
+- B | b) a organização executa projetos ou provas de conceito (POC) envolvendo inteligência artificial
+- C | c) a organização utiliza soluções de inteligência artificial em produção
+- D | d) soluções de inteligência artificial apoiam processos internos da organização
+- E | e) soluções de inteligência artificial apoiam atividades finalísticas ou serviços prestados ao cidadão
+- F | f) a organização possui equipe, unidade ou responsáveis por iniciativas relacionadas à inteligência artificial
+- G | g) a organização utiliza inteligência artificial de forma integrada aos seus processos e sistemas institucionais
 
 ### q2402 [adoption]
+question: **2402. A organização estabeleceu diretrizes para o uso da inteligência artificial.**
 mandatory: true
-help: Considere se a organizacao estabeleceu diretrizes, regras, controles ou orientacoes para uso responsavel, seguro, etico e transparente de inteligencia artificial.
-
-**2402. A organizacao estabeleceu diretrizes para o uso da inteligencia artificial.**
+explain: As diretrizes para uso de inteligência artificial definem regras, responsabilidades e controles para utilização segura, ética e alinhada aos objetivos da organização, incluindo aspectos como riscos, proteção de dados e supervisão humana.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência das diretrizes para uso de inteligência artificial, como: política, norma ou guia institucional; definição de responsabilidades; regras para uso de dados pessoais e informações sensíveis; avaliações de riscos; registros de supervisão ou revisão humana; ações de conscientização ou capacitação; atas de comitês ou grupos de trabalho; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | Mockup: ha ato, norma ou documento formal que estabelece a pratica.
-- B | Mockup: ha responsaveis definidos, periodicidade e registros de execucao ou monitoramento.
-- C | Mockup: ha evidencias atualizadas que demonstram aplicacao efetiva da pratica.
+- A | a) a organização definiu diretrizes ou política para utilização de inteligência artificial
+- B | b) a organização definiu responsabilidades pela supervisão do uso de inteligência artificial
+- C | c) a organização estabelece regras para proteção de dados pessoais e informações sensíveis no uso de inteligência artificial
+- D | d) a organização estabelece diretrizes para avaliação de riscos associados ao uso de inteligência artificial
+- E | e) a organização estabelece diretrizes para revisão humana de resultados produzidos por inteligência artificial, quando aplicável
+- F | f) a organização promove ações de conscientização ou capacitação sobre uso responsável de inteligência artificial
+- G | g) a organização monitora ou revisa periodicamente o uso de inteligência artificial em seus processos
+
+### q2403 [long]
+**2403. Descreva resumidamente os principais usos de inteligência artificial existentes na organização.**
