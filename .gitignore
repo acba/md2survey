@@ -10,6 +10,7 @@ __pycache__/
 # Generated converter outputs
 saida/
 *.docx
+*.lss
 !exemplo/TSID03-ANEXO_QUESTIONARIO.docx
 # *.lss
 !exemplo/limesurvey_survey_431594.lss

@@ -388,17 +388,23 @@ def apply_question_directive(q: Question, key: str, value: str) -> None:
         q.visible_if = value or "1"
     elif key == "other":
         q.other = parse_bool(value)
-    elif key == "title":
+    elif key in {"title", "question"}:
         # Útil para [adoption]; para questões comuns também vira o texto da pergunta.
         q.text_lines.append(value)
+    elif key in {"explain", "evidence_text"}:
+        q.attrs[key] = value
+    elif key in {
+        "evidence", "evidence_type", "evidence_mandatory", "evidence_allowed_filetypes",
+        "evidence_min_files", "evidence_max_files", "evidence_suffix",
+    }:
+        q.attrs[key] = value
     elif key in {
         "allowed_filetypes", "min_files", "max_files", "min_answers", "max_answers", "hide_tip",
         # Diretivas específicas do macro adoption.
-        "adoption_scale", "nsa_scale", "evidence", "evidence_type", "evidence_text",
-        "evidence_mandatory", "evidence_allowed_filetypes", "evidence_min_files", "evidence_max_files",
+        "adoption_scale", "nsa_scale",
         "nsa", "nsa_text", "lei", "lei_text", "est", "est_text", "raz", "raz_text",
         "detail", "detail_text", "detail_mandatory", "detail_min_answers", "detail_max_answers",
-        "detail_hide_tip", "prefix_code", "evidence_suffix", "nsa_suffix", "lei_suffix", "est_suffix",
+        "detail_hide_tip", "prefix_code", "nsa_suffix", "lei_suffix", "est_suffix",
         "raz_suffix", "detail_suffix", "target",
     }:
         q.attrs[key] = value
@@ -450,6 +456,16 @@ def expand_adoption_macros(survey: Survey) -> None:
 
 def make_adoption_questions(q: Question) -> List[Question]:
     base = q.code
+    obsolete_evidence_keys = {
+        "evidence", "evidence_type", "evidence_mandatory", "evidence_allowed_filetypes",
+        "evidence_min_files", "evidence_max_files", "evidence_suffix",
+    }
+    used_obsolete = obsolete_evidence_keys.intersection(q.attrs)
+    if used_obsolete:
+        raise ValueError(
+            f"Campo evidence obsoleto em {base}: use evidence_text para descrever a evidência."
+        )
+
     adoption_scale = get_attr(q, "adoption_scale", q.scale or "adocao")
     nsa_scale = get_attr(q, "nsa_scale", "nao_aplicabilidade")
     inherited_attrs = {k: v for k, v in q.attrs.items() if k == "target"}
@@ -475,7 +491,7 @@ def make_adoption_questions(q: Question) -> List[Question]:
         scale=adoption_scale,
         subgroup=q.subgroup,
         visible_if=q.visible_if,
-        attrs={k: v for k, v in q.attrs.items() if k in {"hide_tip", "target"}},
+        attrs={k: v for k, v in q.attrs.items() if k in {"hide_tip", "target", "explain"}},
     )
 
     out: List[Question] = [main]
@@ -536,6 +552,22 @@ def make_adoption_questions(q: Question) -> List[Question]:
         if get_attr(q, "detail_max_answers", ""):
             detail.attrs["max_answers"] = get_attr(q, "detail_max_answers")
         out.append(detail)
+
+    evidence_text = get_attr(q, "evidence_text", "").strip()
+    if evidence_text:
+        out.append(Question(
+            code=f"{base}evi",
+            type="upload",
+            text_lines=[evidence_text],
+            mandatory=True,
+            visible_if=f"{base} in [adpar, admai]",
+            attrs={
+                **dict(inherited_attrs),
+                "allowed_filetypes": "pdf, docx, zip",
+                "min_files": "1",
+                "max_files": "1",
+            },
+        ))
 
     return out
 
@@ -603,6 +635,17 @@ def md_to_html(text: str) -> str:
 
 def question_to_html(q: Question) -> str:
     body = md_to_html(q.text())
+    explain = q.attrs.get("explain", "").strip()
+    if explain:
+        explain_html = html.escape(explain)
+        body = (
+            f"{body}"
+            '<div class="question-help-container text-info col-12" style="margin:15px;">'
+            '<div class="ls-questionhelp"><p><span style="font-size:9pt;">'
+            '<span style="font-family:Arial, sans-serif;"><span style="color:#35363f;">'
+            f"{explain_html}"
+            "</span></span></span></p></div></div>"
+        )
     if not q.subgroup:
         return body
     if body and body.lstrip().startswith("<") and not body.lstrip().lower().startswith("<p"):

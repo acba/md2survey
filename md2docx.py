@@ -238,10 +238,10 @@ def parse_markdown(path: Path) -> Survey:
                 key = key.strip().lower()
                 value = value.strip()
                 known = {
-                    "mandatory", "scale", "visible_if", "help", "evidence", "evidence_mandatory",
-                    "evidence_allowed_filetypes", "evidence_min_files", "evidence_max_files", "detail",
+                    "mandatory", "scale", "visible_if", "help", "evidence", "evidence_text", "evidence_suffix",
+                    "evidence_mandatory", "evidence_allowed_filetypes", "evidence_min_files", "evidence_max_files", "detail",
                     "detail_mandatory", "min_answers", "max_answers", "hide_tip", "allowed_filetypes",
-                    "min_files", "max_files", "text", "question", "answer_width", "subgroup", "target"
+                    "min_files", "max_files", "text", "question", "explain", "answer_width", "subgroup", "target"
                 }
                 if key in known:
                     if key == "help":
@@ -265,8 +265,24 @@ def parse_markdown(path: Path) -> Survey:
 
     finish_question()
     finish_scale()
+    validate_adoption_evidence_attrs(survey)
     validate_target_config(survey)
     return survey
+
+
+def validate_adoption_evidence_attrs(survey: Survey) -> None:
+    obsolete_evidence_keys = {
+        "evidence", "evidence_mandatory", "evidence_allowed_filetypes",
+        "evidence_min_files", "evidence_max_files", "evidence_suffix",
+    }
+    for group in survey.groups:
+        for q in group.questions:
+            if q.type != "adoption":
+                continue
+            if obsolete_evidence_keys.intersection(q.attrs):
+                raise ValueError(
+                    f"Campo evidence obsoleto em {q.code}: use evidence_text para descrever a evidência."
+                )
 
 
 # -----------------------------------------------------------------------------
@@ -354,7 +370,7 @@ def resolve_style(doc: Document, *names: str) -> Optional[str]:
     return None
 
 
-def add_text_paragraph(doc: Document, text: str = "", *, bold=False, italic=False, size=11, color="000000", align=None, space_after=3, left_indent=0, first_line_indent=None, style=None):
+def add_text_paragraph(doc: Document, text: str = "", *, bold=False, italic=False, size=11, color="000000", align=None, space_after=3, space_before=0, left_indent=0, first_line_indent=None, style=None, name="Arial"):
     explicit_style = style is not None
     if style is None:
         style = resolve_style(doc, "List Paragraph")
@@ -366,10 +382,9 @@ def add_text_paragraph(doc: Document, text: str = "", *, bold=False, italic=Fals
             p.alignment = align
         pf = p.paragraph_format
         pf.space_after = Pt(space_after)
-        pf.space_before = Pt(0)
+        pf.space_before = Pt(space_before)
         pf.line_spacing = 1.08
-        if left_indent:
-            pf.left_indent = Cm(left_indent)
+        pf.left_indent = Cm(left_indent)
         if first_line_indent is not None:
             pf.first_line_indent = Cm(first_line_indent)
     for i, part in enumerate(str(text).split("\n")):
@@ -377,7 +392,7 @@ def add_text_paragraph(doc: Document, text: str = "", *, bold=False, italic=Fals
             p.add_run().add_break()
         run = p.add_run(part)
         if not explicit_style:
-            set_font(run, bold=bold, italic=italic, size=size, color=color)
+            set_font(run, bold=bold, italic=italic, size=size, color=color, name=name)
     return p
 
 
@@ -508,6 +523,76 @@ def add_help(doc: Document, text: str):
     add_text_paragraph(doc, f"? {text}", size=10.5, color="C00000", space_after=8, align=WD_ALIGN_PARAGRAPH.JUSTIFY, style="Ajuda")
 
 
+def add_adoption_explain(doc: Document, text: str):
+    text = clean_text(text)
+    if text:
+        add_text_paragraph(
+            doc,
+            text,
+            size=9,
+            color="5B9BD5",
+            align=WD_ALIGN_PARAGRAPH.JUSTIFY,
+            left_indent=10.16,
+            name="Calibri",
+            space_after=6,
+        )
+
+
+def add_adoption_evidence_text(doc: Document, text: str):
+    text = clean_text(text)
+    if text:
+        add_adoption_evidence_callout(doc, text)
+
+
+def add_adoption_evidence_callout(doc: Document, text: str):
+    add_blank(doc, 2)
+    table = doc.add_table(rows=1, cols=2)
+    table.alignment = WD_TABLE_ALIGNMENT.LEFT
+    table.autofit = False
+    table.columns[0].width = Cm(0.8)
+    table.columns[1].width = Cm(17.4)
+
+    icon_cell = table.cell(0, 0)
+    text_cell = table.cell(0, 1)
+    icon_cell.width = Cm(0.8)
+    text_cell.width = Cm(17.4)
+    icon_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+    text_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+
+    for cell in (icon_cell, text_cell):
+        set_cell_shading(cell, "EAF4FF")
+        set_cell_border(
+            cell,
+            top={"val": "single", "sz": "4", "color": "D6EAFB"},
+            bottom={"val": "single", "sz": "4", "color": "D6EAFB"},
+            left={"val": "single", "sz": "10", "color": "5B9BD5"},
+            right={"val": "single", "sz": "4", "color": "D6EAFB"},
+        )
+        clear_cell(cell)
+
+    p_icon = icon_cell.add_paragraph()
+    p_icon.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_icon.paragraph_format.space_before = Pt(3)
+    p_icon.paragraph_format.space_after = Pt(0)
+    r_icon = p_icon.add_run("⇪")
+    set_font(r_icon, size=13, color="5B9BD5", name="Calibri")
+
+    p_label = text_cell.add_paragraph()
+    p_label.paragraph_format.space_before = Pt(3)
+    p_label.paragraph_format.space_after = Pt(1)
+    r_label = p_label.add_run("Evidência documental")
+    set_font(r_label, bold=True, size=9, color="1F4E79", name="Calibri")
+
+    p_body = text_cell.add_paragraph()
+    p_body.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_body.paragraph_format.space_before = Pt(0)
+    p_body.paragraph_format.space_after = Pt(6)
+    r_body = p_body.add_run(text)
+    set_font(r_body, size=9, color="35363F", name="Calibri")
+
+    add_blank(doc, 4)
+
+
 def add_prompt(doc: Document, text: str, indent=0.85):
     add_text_paragraph(doc, f"○ {clean_text(text)}", size=10, color="666666", left_indent=indent, space_after=2, style="ExplicaAlternativa")
 
@@ -618,6 +703,7 @@ def options_for_question(survey: Survey, q: Question) -> List[Option]:
 def render_adoption(doc: Document, survey: Survey, q: Question, detail_dependencies: Optional[Dict[Tuple[str, str], List[Question]]] = None):
     add_subgroup_title(doc, q.subgroup)
     add_question_title(doc, q)
+    add_adoption_explain(doc, q.attrs.get("explain", ""))
     table = add_option_table(doc)
     for opt in ADOPTION_OPTIONS:
         add_option_row(table, opt.text)
@@ -648,6 +734,7 @@ def render_adoption(doc: Document, survey: Survey, q: Question, detail_dependenc
                 add_explanation_row(table, opt.evidence_text or f"Anexe evidência documental referente ao item {opt.code}.")
 
     add_help(doc, q.help)
+    add_adoption_evidence_text(doc, q.attrs.get("evidence_text", ""))
     add_blank(doc, 8)
 
 
