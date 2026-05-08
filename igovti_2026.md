@@ -14,6 +14,11 @@ endtext: |
 
 # Questionario iGovTI 2026
 
+## Escala: sim_nao
+type: single
+- sim | Sim
+- nao | Não
+
 ## Grupo: g1100 | Governança de Tecnologia da Informação
 > O setor público está passando por uma fase de Transformação Digital, uma necessidade premente para melhorar a qualidade e eficiência dos serviços oferecidos à sociedade. Esta transformação envolve a adoção de tecnologias modernas e a reformulação de processos internos, visando tornar as operações governamentais mais ágeis, transparentes e centradas no cidadão. Neste contexto de mudança, a governança de TI surge como um importante elemento, atuando como uma bússola que orienta as decisões e ações relacionadas à tecnologia da informação dentro das organizações públicas.
 > A governança de TI desempenha um papel fundamental no alinhamento estratégico entre os objetivos da área de TI e os objetivos gerais da organização pública. Assim, é esperado que os investimentos em tecnologia estejam diretamente ligados às metas institucionais, maximizando o valor gerado para a sociedade. Através de estruturas, processos e mecanismos de controle definidos, bem como uma boa gestão de riscos, a governança de TI permite que as organizações públicas tomem decisões mais informadas sobre seus recursos tecnológicos, priorizando iniciativas que realmente contribuam para o cumprimento de sua missão.
@@ -230,7 +235,7 @@ subgroup: Estrutura de Segurança da Informação
 mandatory: true
 explain: A política de segurança da informação define diretrizes e responsabilidades para proteger dados e sistemas, assegurando confidencialidade, integridade e disponibilidade das informações.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Alta Administração; Colaboradores; Diretriz; Gestão de riscos; Informação; Política; Política de segurança da informação; Risco de Segurança da Informação; Segurança da Informação.
-evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da política de segurança da informação, como: documento formal aprovado pela alta administração; conteúdo com diretrizes, responsabilidades e gestão de riscos; registros de comunicação e divulgação; ações de conscientização e treinamento; histórico de revisões; ou outras evidências cabíveis, indicando a abrangência na organização..
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da política de segurança da informação, como: documento formal aprovado pela alta administração; conteúdo com diretrizes, responsabilidades e gestão de riscos; registros de comunicação e divulgação; ações de conscientização e treinamento; histórico de revisões; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
 - A | a) a política declara o comprometimento da alta administração e estabelece princípios, diretrizes, objetivos, estruturas e responsabilidades relativos à segurança da informação
@@ -257,7 +262,7 @@ question: **2153. A organização possui um gestor institucional de segurança d
 mandatory: true
 explain: O gestor de segurança da informação é o responsável por coordenar políticas, riscos e ações de proteção de dados e sistemas, com autoridade definida pela alta administração.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Alta Administração; Competências; Gestão de riscos; Gestor institucional de segurança da informação; Informação; Partes interessadas; Risco de Segurança da Informação; Segurança da Informação.
-evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do gestor de segurança da informação, como: ato formal de designação; descrição de atribuições e vínculo com a alta administração; registros de atuação na coordenação de riscos e ações de segurança; evidências de campanhas de conscientização e treinamentos; estrutura ou recursos disponíveis; ou outras evidências cabíveis, indicando a abrangência na organização..
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do gestor de segurança da informação, como: ato formal de designação; descrição de atribuições e vínculo com a alta administração; registros de atuação na coordenação de riscos e ações de segurança; evidências de campanhas de conscientização e treinamentos; estrutura ou recursos disponíveis; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
 - A | a) o gestor institucional de segurança da informação foi designado formalmente pela alta administração
@@ -407,81 +412,81 @@ detail_options:
 - D | o processo de gestão de projetos está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
 - E | a organização avalia periodicamente o desempenho e a conformidade do processo de gestão de projetos de tecnologia da informação e promove eventuais ajustes necessários
 
-## Grupo: g2200 | Gestao de pessoas em tecnologia da informacao
-> Questoes extraidas das folhas PessoasTI do arquivo docs/esquema-1.pdf.
+## Grupo: g2200 | Gestao de Pessoas em Tecnologia da Informação
 
 ### q2211 [adoption]
+question: **2211. Os perfis profissionais desejados para cada ocupação ou grupo de ocupações de gestão de tecnologia da informação estão definidos e documentados.**
 mandatory: true
-help: Considere se os perfis profissionais para ocupacoes de gestao de TI e seguranca da informacao estao formalmente definidos, documentados e atualizados.
-
-**2211. Os perfis profissionais desejados para cada ocupacao ou grupo de ocupacoes de gestao de tecnologia da informacao e seguranca da informacao estao definidos e documentados.**
+explain: Os perfis profissionais de gestão definem as responsabilidades, atribuições, competências e habilidades esperadas dos ocupantes de cargos de liderança e gestão, promovendo transparência, clareza de papéis e melhor seleção de gestores.
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Competências; Gestor; Ocupação; Partes interessadas; Perfil profissional; Perfil profissional desejado; Planejamento da força de trabalho; Transparência; Transparência ativa.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência dos perfis profissionais de gestão, como: normativos ou documentos com atribuições e competências; descrições de cargos ou funções; matrizes de competências; registros de revisão periódica; publicações em portal institucional ou transparência ativa; atos de designação; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | as responsabilidades e atribuições dos gestores da área finalística estão definidas, documentadas e publicadas
-- B | as responsabilidades e atribuições dos gestores da área finalística são revisadas periodicamente e publicadas
-- C | as responsabilidades e atribuições dos gestores da área administrativa estão definidas, documentadas e publicadas
-- D | as responsabilidades e atribuições dos gestores da área administrativa são revisadas periodicamente e publicadas
-- E | relacionou-se no perfil profissional, além de requerimentos de ordem legal, um conjunto de competências que os ocupantes dos cargos de gestão devem possuir
-- F | a aderência entre os perfis profissionais definidos e as necessidades organizacionais é revisada periodicamente
-- G | a organização utiliza mecanismos de transparência ativa para disponibilizar às partes interessadas internas e externas os perfis profissionais definidos para as ocupações de gestão
+- A | a) as responsabilidades e atribuições dos gestores da área de tecnologia da informação estão definidas, documentadas e publicadas
+- B | b) as responsabilidades e atribuições dos gestores da área de tecnologia da informação são revisadas periodicamente e publicadas
+- C | c) relacionou-se, no perfil profissional, além de requerimentos de ordem legal, um conjunto de competências e habilidades que os ocupantes dos cargos de gestão devem possuir
+- D | d) a organização utiliza mecanismos de transparência ativa para disponibilizar às partes interessadas internas e externas os perfis profissionais definidos para as ocupações de gestão
 
 ### q2212 [adoption]
+question: **2212. Os perfis profissionais desejados para cada ocupação ou grupo de colaboradores da área de gestão de tecnologia da informação estão definidos e documentados.**
 mandatory: true
-help: Considere se os perfis profissionais para colaboradores de TI e seguranca da informacao estao definidos conforme as necessidades da organizacao.
-
-**2212. Os perfis profissionais desejados para cada ocupacao ou grupo de ocupacoes de colaboradores de tecnologia da informacao e seguranca da informacao da organizacao estao definidos e documentados.**
+explain: Os perfis profissionais da área de TI definem responsabilidades, atribuições, competências e habilidades esperadas dos colaboradores que atuam em tecnologia da informação, apoiando a organização, a capacitação e a gestão da força de trabalho de TI.
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área finalística; Colaboradores; Competências; Ocupação; Partes interessadas; Perfil profissional; Perfil profissional desejado; Transparência; Transparência ativa; Transparência passiva.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência dos perfis profissionais da área de TI, como: descrições de cargos ou funções; matrizes de competências; normativos com atribuições e responsabilidades; registros de revisão periódica; publicações em portal institucional ou mecanismos de transparência; planos de capacitação relacionados; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | as responsabilidades e atribuições das ocupações, ou grupo de ocupações, da área finalística estão definidas, documentadas e publicadas
-- B | as responsabilidades e atribuições das ocupações, ou grupo de ocupações, da área finalística são revisadas periodicamente e publicadas
-- C | as responsabilidades e atribuições das ocupações ou grupo de ocupações da área administrativa estão definidas, documentadas e publicadas
-- D | as responsabilidades e atribuições das ocupações ou grupo de ocupações da área administrativa são revisadas periodicamente e publicadas
-- E | relacionou-se nos perfis profissionais, além de requerimentos de ordem legal, um conjunto de competências que o ocupante do cargo deve possuir
-- F | a organização utiliza mecanismos de transparência ativa para disponibilizar às partes interessadas internas e externas os perfis profissionais definidos
+- A | a) as responsabilidades e atribuições das ocupações ou grupo de ocupações da área de tecnologia da informação estão definidas, documentadas e publicadas
+- B | b) as responsabilidades e atribuições das ocupações ou grupo de ocupações da área de tecnologia da informação são revisadas periodicamente e publicadas
+- C | c) relacionou-se, no perfil profissional, além de requerimentos de ordem legal, um conjunto de competências e habilidades que os ocupantes dos cargos devem possuir
+- D | d) a organização utiliza mecanismos de transparência ativa para disponibilizar às partes interessadas internas e externas os perfis profissionais definidos
 
 ### q2213 [adoption]
+question: **2213. Há definição do quantitativo necessário de pessoal da área de tecnologia da informação.**
 mandatory: true
-help: Considere se ha estimativa formal do quantitativo necessario de pessoal de TI e seguranca da informacao por unidade, processo ou funcao.
-
-**2213. Ha definicao do quantitativo necessario de pessoal da area de tecnologia da informacao e seguranca da informacao por unidade organizacional ou por processo de trabalho.**
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área finalística; Planejamento da força de trabalho; Política; Procedimento técnico; Quantitativo necessário; Unidade organizacional.
+explain: A definição do quantitativo necessário de pessoal de TI consiste em estimar, de forma planejada e documentada, a quantidade de profissionais necessária para executar atividades de tecnologia da informação e segurança da informação na organização.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do dimensionamento da força de trabalho de TI, como: política ou metodologia de dimensionamento; estudos ou relatórios técnicos; definição documentada do quantitativo necessário; critérios utilizados (serviços, sistemas, demanda, riscos ou complexidade); revisões periódicas; planos de provimento; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
 - A | há política de orientação para o dimensionamento da força de trabalho
-- B | definiu-se o quantitativo necessário por unidade organizacional, ou processo de trabalho, com base em critério(s) ou procedimento(s) técnico(s)
-- C | definiu-se, de maneira documentada, um quantitativo necessário de pessoal por unidade organizacional, ou processo de trabalho, da área finalística
-- D | definiu-se, de maneira documentada, um quantitativo necessário de pessoal por unidade organizacional, ou processo de trabalho, da área administrativa
-- E | há revisão periódica do quantitativo de pessoal necessário por unidade organizacional ou processo de trabalho
+- B | definiu-se o quantitativo necessário de pessoal da área de tecnologia da informação com base em critério(s) ou procedimento(s) técnico(s)
+- C | definiu-se, de maneira documentada, um quantitativo necessário de pessoal da área de tecnologia da informação
+- D | há revisão periódica do quantitativo de pessoal da área de tecnologia da informação necessário
 
-### q2221 [adoption]
+### q2214 [adoption]
+**2214. A escolha dos gestores de tecnologia da informação e segurança da informação ocorre segundo perfis profissionais previamente definidos e documentados.**
 mandatory: true
-help: Considere se a escolha de gestores de TI e seguranca da informacao considera perfis profissionais previamente definidos e documentados.
-
-**2221. A escolha dos gestores de tecnologia da informacao e seguranca da informacao ocorre segundo perfis profissionais previamente definidos e documentados.**
+explain: A escolha de gestores de TI e segurança da informação com base em perfis profissionais consiste em utilizar critérios previamente definidos de competências, experiência, integridade e habilidades para ocupação de cargos e funções de gestão.
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Gestor; Indicador; Perfil profissional; Perfil profissional desejado; Planejamento da força de trabalho.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do processo de escolha de gestores de TI e segurança da informação, como: perfis profissionais documentados; critérios de seleção; registros de avaliação prévia de impedimentos legais; utilização de entrevistas, análises curriculares ou outras ferramentas estruturadas; currículos publicados; atos de designação; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | avalia-se, previamente à nomeação/designação, se o gestor possui impedimentos legais decorrentes de sanções administrativas, cíveis, eleitorais ou penais, incluindo envolvimento em atos de corrupção
-- B | os gestores da área de finalística são selecionados com base em perfil profissional, previamente, definido e documentado, e compatível com o cargo ou função para o qual tenha sido indicado
-- C | os gestores da área administrativa são selecionados consoante perfil profissional, previamente, definido e documentado, e compatível com o cargo ou função para o qual tenha sido indicado
-- D | são utilizadas ferramentas estruturadas para auxiliar a seleção dos ocupantes dos cargos/funções comissionados de gestão
-- E | são utilizados mecanismos de transparência ativa para disponibilizar às partes interessadas externas e internas o currículo dos ocupantes dos cargos/funções de gestão
+- A | a) avalia-se, previamente à nomeação/designação, se o gestor possui impedimentos legais decorrentes de sanções administrativas, cíveis, eleitorais ou penais, incluindo envolvimento em atos de corrupção
+- B | b) os gestores são selecionados com base em perfil profissional previamente definido e documentado, e compatível com o cargo ou função para o qual tenha sido indicado
+- C | c) são utilizadas ferramentas estruturadas para auxiliar a seleção dos ocupantes dos cargos/funções comissionados de gestão
+- D | d) são utilizados mecanismos de transparência ativa para disponibilizar às partes interessadas externas e internas o currículo dos ocupantes dos cargos/funções de gestão
 
-### q2231 [adoption]
+### q2215 [adoption]
+question: **2215. As lacunas de competências dos colaboradores e gestores da área de tecnologia da informação e de segurança da informação são identificadas e documentadas.**
 mandatory: true
-help: Considere se a organizacao identifica e documenta lacunas de competencias dos colaboradores e gestores de TI e seguranca da informacao.
-
-**2231. As lacunas de competencias dos colaboradores e gestores da area de tecnologia da informacao e de seguranca da informacao sao identificadas e documentadas.**
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área finalística; Colaboradores; Competências; Gestão; Gestor; Lacuna de competência ou de perfil profissional.
+explain: A identificação de lacunas de competências consiste em avaliar e registrar conhecimentos, habilidades e capacidades que precisam ser desenvolvidos pelos colaboradores e gestores de TI e segurança da informação para atender às necessidades da organização.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da identificação de lacunas de competências, como: matrizes de competências; avaliações de perfil; levantamentos de necessidades de capacitação; diagnósticos de competências técnicas e gerenciais; planos de desenvolvimento; relatórios ou registros documentados; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | as lacunas de competências pessoais (transversais, comuns a todos os colaboradores) da organização são identificadas e documentadas
-- B | as lacunas de competências de liderança e gestão necessárias para a atuação dos gestores da organização são identificadas e documentadas
-- C | as lacunas de competências técnicas da área finalística necessárias para a atuação dos colaboradores da organização são identificadas e documentadas
-- D | as lacunas de competências técnicas da área administrativa necessárias para a atuação dos colaboradores da organização são identificadas e documentadas
+- A | a) as lacunas de competências pessoais (transversais, comuns a todos os colaboradores) da organização são identificadas e
+documentadas
+- B | b) as lacunas de competências de liderança e gestão necessárias para a atuação dos gestores da organização são identificadas e
+documentadas
+- C | c) as lacunas de competências técnicas da área de tecnologia da informação necessárias para a atuação dos colaboradores da organização são identificadas e documentadas
+- D | d) as lacunas de competências técnicas da área de segurança da informação necessárias para a atuação dos colaboradores da organização são identificadas e documentadas
 
-### q2232 [adoption]
+### q2216 [adoption]
+question: **2216. As lacunas de competências dos colaboradores e gestores da área de tecnologia da informação e de segurança da informação da organização são tratadas.**
 mandatory: true
+explain: O tratamento de lacunas de competências consiste em executar ações para desenvolver conhecimentos, habilidades e capacidades necessárias aos colaboradores e gestores de TI e segurança da informação, de acordo com as necessidades da organização.
 help: Considere se a organizacao executa acoes para tratar lacunas de competencias, como capacitacao, realocacao, recrutamento, contratacao ou apoio especializado.
-
-**2232. As lacunas de competencias dos colaboradores e gestores da area de tecnologia da informacao e de seguranca da informacao da organizacao sao tratadas.**
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do tratamento de lacunas de competências, como: plano de capacitação ou treinamento; registros de participação em cursos e treinamentos; ações de incentivo à capacitação; acompanhamento de participação e resultados; revisões periódicas do plano de capacitação; contratações ou apoio especializado; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
 - A | a organização elabora plano de capacitação (plano de treinamento) visando o tratamento das lacunas de competência identificadas
@@ -489,64 +494,68 @@ detail_options:
 - C | a organização monitora a participação dos colaboradores e gestores nas ações de capacitação existentes
 - D | a organização analisa periódica e criticamente o plano de capacitação (plano de treinamento) existente
 
-### q2241 [adoption]
+### q2217 [adoption]
+question: **2217. A organização realiza, formalmente, avaliação de desempenho individual do pessoal de tecnologia da informação e de segurança da informação, com atribuição de nota ou conceito, tendo como critério de avaliação o alcance das metas previstas.**
 mandatory: true
-help: Considere se ha avaliacao formal de desempenho individual do pessoal de TI e seguranca da informacao, com criterios, metas e registros.
-
-**2241. A organizacao realiza, formalmente, avaliacao de desempenho individual do pessoal de tecnologia da informacao e de seguranca da informacao, com atribuicao de nota ou conceito, tendo como criterio de avaliacao o alcance das metas previstas.**
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área finalística; Avaliação de desempenho; Colaboradores; Gestor.
+explain: A avaliação de desempenho do pessoal de TI e segurança da informação consiste em medir formalmente o desempenho de colaboradores e gestores, considerando metas, resultados, competências e responsabilidades relacionadas às atividades exercidas.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da avaliação de desempenho do pessoal de TI e segurança da informação, como: normativos ou procedimentos de avaliação; formulários ou sistemas utilizados; critérios e metas avaliadas; registros de avaliações realizadas; atribuição de notas ou conceitos; planos de melhoria decorrentes das avaliações; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
 - A | há normativo que trata da avaliação de desempenho dos colaboradores e gestores
-- B | a avaliação abrange o desempenho de todos os gestores da área finalística
-- C | a avaliação abrange o desempenho de todos os gestores da área administrativa
-- D | a avaliação abrange o desempenho de todos os colaboradores da área finalística
-- E | a avaliação abrange o desempenho de todos os colaboradores da área administrativa
+- B | a avaliação abrange o desempenho dos gestores da área de tecnologia da informação
+- C | a avaliação abrange o desempenho dos gestores da área de segurança da informação
+- D | a avaliação abrange o desempenho dos colaboradores da área de tecnologia da informação
+- E | a avaliação abrange o desempenho dos colaboradores da área de segurança da informação
 
-### q2251 [adoption]
+### q2218 [adoption]
+question: **2218. A organização gerencia os riscos associados à terceirização de serviços de tecnologia da informação.**
 mandatory: true
-help: Considere se a estrutura de pessoal da organizacao contempla cargos especificos para tecnologia da informacao, formalmente previstos e ocupados ou providos conforme necessidade.
-
-**2251. A organizacao possui em sua estrutura cargos especificos para TI.**
+explain: A gestão dos riscos da terceirização de serviços de TI consiste em adotar controles para assegurar que serviços executados por terceiros sejam supervisionados, documentados e prestados de forma segura, contínua e alinhada às necessidades da organização.
+help: Considere se a organização adota medidas para supervisionar contratos e serviços terceirizados de TI, incluindo gestão de riscos, transferência de conhecimento, definição de responsabilidades, segurança da informação e continuidade dos serviços.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão dos riscos associados à terceirização de serviços de TI, como: contratos com definição de responsabilidades e níveis de serviço; registros de fiscalização e acompanhamento; cláusulas de segurança da informação e confidencialidade; análises de riscos; ações de transferência de conhecimento; avaliações de fornecedores; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | Mockup: ha ato, norma ou documento formal que estabelece a pratica.
-- B | Mockup: ha responsaveis definidos, periodicidade e registros de execucao ou monitoramento.
-- C | Mockup: ha evidencias atualizadas que demonstram aplicacao efetiva da pratica.
+- A | a) a organização define formalmente responsabilidades e critérios de fiscalização dos serviços terceirizados de tecnologia da informação
+- B | b) a organização realiza acompanhamento e avaliação periódica do desempenho dos serviços terceirizados de tecnologia da informação
+- C | c) os contratos de serviços terceirizados de tecnologia da informação contemplam requisitos de segurança da informação e confidencialidade
+- D | d) a organização adota medidas para mitigar riscos de dependência excessiva de fornecedores ou de profissionais terceirizados
 
-## Grupo: g2300 | Gestao de contratacoes de tecnologia da informacao
-> Questoes extraidas das folhas de ProcessoContratTI e contratacoes do arquivo docs/esquema-1.pdf.
+### q2219 [array]
+mandatory: true
+scale: sim_nao
+help: Considere se a estrutura de pessoal da organizacao contempla cargos especificos para tecnologia da informacao, formalmente previstos e ocupados ou providos conforme necessidade.
+explain: Os cargos específicos de TI e segurança da informação são funções ou cargos formalmente previstos na estrutura organizacional para execução de atividades técnicas, gerenciais ou especializadas relacionadas à tecnologia e à proteção das informações.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da existência de cargos específicos de TI e segurança da informação, como: leis, decretos ou normativos de criação de cargos; organogramas; planos de cargos e carreiras; editais de concurso; descrição de atribuições; relação de cargos providos; ou outras evidências cabíveis, indicando a abrangência na organização.
+
+**2219. A organização possui em sua estrutura cargos específicos em tecnologia da informação e segurança da informação.**
+
+subquestions:
+- A | a) a organização possui em sua estrutura cargos efetivos em tecnologia da informação
+- B | b) a organização possui em sua estrutura cargos ou funções formalmente atribuídas à área de tecnologia da informação
+- C | c) a organização possui em sua estrutura cargos efetivos em segurança da informação
+- D | d) a organização possui em sua estrutura cargos ou funções formalmente atribuídas à área de segurança da informação
+
+
+## Grupo: g2300 | Gestao de Contratações de Tecnologia da Informação
 
 ### q2311 [adoption]
+question: **2311. Os processos de trabalho relativos às contratações de tecnologia da informação estão definidos.**
 mandatory: true
-help: Considere se as equipes de planejamento analisam riscos das etapas de planejamento da contratacao, selecao do fornecedor e gestao contratual.
-
-**2311. As equipes de planejamento das contratacoes analisam os riscos que possam comprometer a efetividade das etapas de Planejamento da Contratacao, Selecao do Fornecedor e Gestao Contratual ou que impecam ou dificultem o atendimento da necessidade que originou a contratacao.**
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área de gestão de contratações / área de contratações; Processo de trabalho para a gestão de contratos; Processo de trabalho para a seleção de fornecedores; Processo de trabalho para o planejamento de cada contratação.
+explain: Os processos de trabalho aplicáveis às contratações de TI consistem na definição formal das etapas, responsabilidades, procedimentos e documentos relacionados ao planejamento da contratação, à seleção de fornecedores e à gestão e fiscalização de contratos de tecnologia da informação.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência dos processos de trabalho relativos à gestão de contratações de TI, como: manuais, fluxos, normas ou procedimentos internos; definição de papéis e responsabilidades; modelos de documentos e artefatos; fluxogramas; instruções de trabalho; processos de fiscalização contratual; referências à Lei 14.133/2021 e normativos correlatos; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | a gestão de riscos contempla a identificação, análise e avaliação de riscos
-- B | a gestão de riscos contempla o tratamento dos riscos identificados
-- C | a gestão de riscos contempla a definição de responsáveis pelas ações de tratamento dos riscos
-- D | a gestão de riscos é realizada em cada uma das contratações
-- E | a gestão de riscos é realizada em cada uma das contratações de serviços prestados de forma contínua
-- F | as equipes de planejamento das contratações são selecionadas de modo que pelo menos um dos seus integrantes possua capacitação em gestão de riscos
-- G | as equipes de planejamento das contratações são selecionadas de modo que todos os seus integrantes possuam capacitação em gestão de riscos
+- A | a) o processo de trabalho para o planejamento de cada contratação de TI contempla as etapas, as responsabilidades dos atores envolvidos e os artefatos resultantes de cada etapa
+- B | b) o processo de trabalho para a seleção de fornecedores contempla as etapas, as responsabilidades dos atores envolvidos e os artefatos resultantes de cada etapa
+- C | c) o processo de trabalho para a gestão de contratos contempla as etapas, as responsabilidades dos atores envolvidos e os artefatos resultantes de cada etapa
+- D | d) os processos de trabalho definidos estão aderentes às normas legais e infralegais que regem as contratações públicas
 
 ### q2312 [adoption]
+question: **2312. A organização executa processo de planejamento anual das contratações.**
 mandatory: true
-help: Considere se os processos de trabalho relativos a gestao de contratacoes estao formalmente definidos, documentados e conhecidos pelos envolvidos.
-
-**2312. Os processos de trabalho relativos a gestao de contratacoes estao definidos.**
-
-detail_options:
-- A | Mockup: ha ato, norma ou documento formal que estabelece a pratica.
-- B | Mockup: ha responsaveis definidos, periodicidade e registros de execucao ou monitoramento.
-- C | Mockup: ha evidencias atualizadas que demonstram aplicacao efetiva da pratica.
-
-### q2313 [adoption]
-mandatory: true
-help: Considere se a organizacao executa planejamento anual das contratacoes de TI, alinhado ao plano de TI e ao planejamento institucional.
-
-**2313. A organizacao executa processo de planejamento anual das contratacoes.**
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Alta Administração; Conselho ou Colegiado Superior / instância superior; Plano de Contratações.
 
 detail_options:
 - A | Mockup: ha ato, norma ou documento formal que estabelece a pratica.
