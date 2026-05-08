@@ -403,6 +403,10 @@ def add_blank(doc, height=5):
     return p
 
 
+def start_question_page(doc: Document):
+    doc.add_page_break()
+
+
 def extract_logo_from_template(template_docx: Optional[Path]) -> Optional[Path]:
     if not template_docx or not template_docx.exists():
         return None
@@ -532,7 +536,7 @@ def add_adoption_explain(doc: Document, text: str):
             size=9,
             color="5B9BD5",
             align=WD_ALIGN_PARAGRAPH.JUSTIFY,
-            left_indent=10.16,
+            left_indent=4,
             name="Calibri",
             space_after=6,
         )
@@ -574,8 +578,8 @@ def add_adoption_evidence_callout(doc: Document, text: str):
     p_icon.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_icon.paragraph_format.space_before = Pt(3)
     p_icon.paragraph_format.space_after = Pt(0)
-    r_icon = p_icon.add_run("⇪")
-    set_font(r_icon, size=13, color="5B9BD5", name="Calibri")
+    r_icon = p_icon.add_run("📄")
+    set_font(r_icon, size=13, color="5B9BD5", name="Segoe UI Emoji")
 
     p_label = text_cell.add_paragraph()
     p_label.paragraph_format.space_before = Pt(3)
@@ -701,6 +705,7 @@ def options_for_question(survey: Survey, q: Question) -> List[Option]:
 
 
 def render_adoption(doc: Document, survey: Survey, q: Question, detail_dependencies: Optional[Dict[Tuple[str, str], List[Question]]] = None):
+    start_question_page(doc)
     add_subgroup_title(doc, q.subgroup)
     add_question_title(doc, q)
     add_adoption_explain(doc, q.attrs.get("explain", ""))
@@ -721,14 +726,14 @@ def render_adoption(doc: Document, survey: Survey, q: Question, detail_dependenc
     if detail_value not in {"n", "no", "false", "nao", "não", "0"} and q.detail_options:
         add_blank(doc, 4)
         add_text_paragraph(doc, "Visando explicitar melhor o grau de adoção do controle, marque abaixo uma ou mais opções que majoritariamente caracterizam sua organização:", style="AlternativaTexto")
-        
+
         for opt in q.detail_options:
             add_text_paragraph(doc, f"☐  {opt.text}", style="AlternativaTexto")
             for depq in (detail_dependencies or {}).get((q.code, opt.code), []):
                 texto_limpo = ''.join(depq.text_lines).strip()
                 p = add_text_paragraph(doc, f"⮩ {texto_limpo}", style="ExplicaAlternativa")
                 p.paragraph_format.left_indent = Inches(0.19)
-            
+
             # Evidências de detalhe podem vir do XLSX ou de campos opcionais no futuro.
             if opt.evidence.lower() == "upload":
                 add_explanation_row(table, opt.evidence_text or f"Anexe evidência documental referente ao item {opt.code}.")
@@ -743,8 +748,10 @@ def render_question(doc: Document, survey: Survey, q: Question, answer_dependenc
         render_adoption(doc, survey, q, detail_dependencies=detail_dependencies)
         return
 
+    start_question_page(doc)
     add_subgroup_title(doc, q.subgroup)
     add_question_title(doc, q)
+    add_adoption_explain(doc, q.attrs.get("explain", ""))
 
     if q.type in {"single", "list", "radio"}:
         table = add_option_table(doc)
@@ -799,12 +806,15 @@ def render_array_table(doc: Document, survey: Survey, q: Question):
         table.rows[r_idx].cells[0].text = clean_text(row.text)
         for c_idx in range(1, len(cols) + 1):
             table.rows[r_idx].cells[c_idx].text = "○"
-    for row in table.rows:
-        for cell in row.cells:
+    for row_idx, row in enumerate(table.rows):
+        is_header = row_idx == 0
+        for cell_idx, cell in enumerate(row.cells):
             for p in cell.paragraphs:
+                if cell_idx == 0 and not is_header:
+                    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
                 p.paragraph_format.space_after = Pt(0)
                 for run in p.runs:
-                    set_font(run, size=9)
+                    set_font(run, bold=is_header, size=10 if is_header else 9, name="Calibri")
     add_blank(doc, 8)
 
 
@@ -900,8 +910,7 @@ def build_docx(survey: Survey, output_path: Path, template_docx: Optional[Path] 
 
     for group_idx, group in enumerate(survey.groups):
         if group_idx > 0:
-            # Evita excesso de quebras, mas separa grandes blocos.
-            add_blank(doc, 8)
+            doc.add_page_break()
         add_text_paragraph(doc, clean_text(group.title), bold=True, size=14, space_after=10, style=resolve_style(doc, "Título 1", "Heading 1"))
         for desc in group.description_lines:
             add_text_paragraph(doc, clean_text(desc), size=11, align=WD_ALIGN_PARAGRAPH.JUSTIFY, space_after=8, style="TextoGrupo")

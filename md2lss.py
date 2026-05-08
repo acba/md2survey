@@ -196,6 +196,8 @@ class Survey:
 def parse_option(line: str) -> Option:
     """Aceita '- codigo | texto' ou '- codigo: texto'."""
     item = line.strip()
+    if not item.startswith("-") and ("|" in item or ":" in item):
+        item = "- " + item
     if not item.startswith("-"):
         raise ValueError(f"Item de lista inválido: {line}")
     item = item[1:].strip()
@@ -255,6 +257,10 @@ def parse_question_heading(line: str) -> Question:
 
 def is_directive(line: str) -> bool:
     return bool(re.match(r"^[A-Za-z_][A-Za-z0-9_]*\s*:", line))
+
+
+def is_option_line(line: str) -> bool:
+    return bool(re.match(r"^\s*-?\s*[A-Za-z0-9_]+\s*(?:\||:)\s*.+$", line))
 
 
 def parse_markdown(path: Path) -> Survey:
@@ -350,11 +356,11 @@ def parse_markdown(path: Path) -> Survey:
                 mode = "subquestions"
                 continue
 
-            if mode == "alternatives" and line.lstrip().startswith("-"):
+            if mode == "alternatives" and is_option_line(line):
                 current_question.alternatives.append(parse_option(line))
                 continue
 
-            if mode == "subquestions" and line.lstrip().startswith("-"):
+            if mode == "subquestions" and is_option_line(line):
                 current_question.subquestions.append(parse_option(line))
                 continue
 
@@ -369,8 +375,10 @@ def parse_markdown(path: Path) -> Survey:
             current_question.text_lines.append(line)
             continue
 
+    repeat_group_descriptions(survey)
     expand_adoption_macros(survey)
     validate_target_config(survey)
+    fill_empty_groups_with_acknowledgement(survey)
     validate_survey(survey)
     return survey
 
@@ -391,7 +399,7 @@ def apply_question_directive(q: Question, key: str, value: str) -> None:
     elif key in {"title", "question"}:
         # Útil para [adoption]; para questões comuns também vira o texto da pergunta.
         q.text_lines.append(value)
-    elif key in {"explain", "evidence_text"}:
+    elif key in {"explain", "evidence_text", "repeat_group_description"}:
         q.attrs[key] = value
     elif key in {
         "evidence", "evidence_type", "evidence_mandatory", "evidence_allowed_filetypes",
@@ -440,6 +448,60 @@ def clone_common_visibility(source: Question, target: Question) -> None:
 
 def question_text_or_code(q: Question) -> str:
     return q.text() or q.code
+
+
+def unique_group_code(base_code: str, used_codes: set[str]) -> str:
+    code = base_code
+    suffix = 2
+    while code in used_codes:
+        code = f"{base_code}_{suffix}"
+        suffix += 1
+    used_codes.add(code)
+    return code
+
+
+def clone_group_shell(group: Group, code: str) -> Group:
+    return Group(
+        code=code,
+        title=group.title,
+        description_lines=list(group.description_lines),
+    )
+
+
+def repeat_group_descriptions(survey: Survey) -> None:
+    used_codes: set[str] = set()
+    rewritten_groups: List[Group] = []
+
+    for group in survey.groups:
+        if not group.questions:
+            group.code = unique_group_code(group.code, used_codes)
+            rewritten_groups.append(group)
+            continue
+
+        current_group: Optional[Group] = None
+        segment_count = 0
+
+        def ensure_segment_group() -> Group:
+            nonlocal current_group, segment_count
+            if current_group is None:
+                segment_count += 1
+                base_code = group.code if segment_count == 1 else f"{group.code}_parte{segment_count}"
+                current_group = clone_group_shell(group, unique_group_code(base_code, used_codes))
+                rewritten_groups.append(current_group)
+            return current_group
+
+        for q in group.questions:
+            repeat = parse_bool(q.attrs.get("repeat_group_description", "false"), default=False)
+            if repeat:
+                current_group = None
+                repeated_group = clone_group_shell(group, unique_group_code(f"{group.code}_{q.code}", used_codes))
+                repeated_group.questions.append(q)
+                rewritten_groups.append(repeated_group)
+                continue
+
+            ensure_segment_group().questions.append(q)
+
+    survey.groups = rewritten_groups
 
 
 def expand_adoption_macros(survey: Survey) -> None:
@@ -608,6 +670,29 @@ def validate_survey(survey: Survey) -> None:
                     raise ValueError(f"Questão array {q.code} precisa de rows/subquestions.")
                 if not q.scale and not q.alternatives:
                     raise ValueError(f"Questão array {q.code} precisa de scale ou alternatives/columns.")
+
+
+def fill_empty_groups_with_acknowledgement(survey: Survey) -> None:
+    used_codes = {q.code for group in survey.groups for q in group.questions}
+    for group in survey.groups:
+        if group.questions:
+            continue
+
+        base_code = f"q{group.code}_ciencia"
+        code = base_code
+        suffix = 2
+        while code in used_codes:
+            code = f"{base_code}_{suffix}"
+            suffix += 1
+        used_codes.add(code)
+
+        group.questions.append(Question(
+            code=code,
+            type="multi",
+            text_lines=["Confirme para prosseguir para a próxima seção."],
+            mandatory=True,
+            subquestions=[Option("ciente", "Estou ciente das informações apresentadas.")],
+        ))
 
 
 def filter_survey_by_target(survey: Survey, target: str) -> Survey:

@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LSS Viewer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Arial', 'sans-serif']
+          },
+          colors: {
+            ink: '#172033',
+            muted: '#667085',
+            line: '#E6EAF0',
+            panel: '#F7F9FC'
+          },
+          boxShadow: {
+            soft: '0 12px 30px rgba(16, 24, 40, 0.08)'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    .prose-lite p { margin: 0.25rem 0; }
+    .prose-lite ul, .prose-lite ol { margin: 0.35rem 0 0.35rem 1.1rem; }
+    .prose-lite li { margin: 0.15rem 0; }
+    .tree-line { position: relative; }
+    .tree-line::before {
+      content: "";
+      position: absolute;
+      left: 1.05rem;
+      top: 2.75rem;
+      bottom: 0.75rem;
+      width: 1px;
+      background: #E6EAF0;
+    }
+    details[open] > summary .chevron { transform: rotate(90deg); }
+    summary::-webkit-details-marker { display: none; }
+    .drop-active { outline: 2px solid #2563eb; background: #eff6ff; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-ink">
+  <header class="sticky top-0 z-20 border-b border-line bg-white/90 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white shadow-soft">
+          <i data-lucide="network" class="h-5 w-5"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-semibold tracking-tight">LSS Viewer</h1>
+          <p class="text-xs text-muted">Visualizador local de grupos, questoes e relacionamentos LimeSurvey</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+          <i data-lucide="folder-open" class="h-4 w-4"></i>
+          Selecionar .lss
+          <input id="fileInput" type="file" accept=".lss,.xml,text/xml" class="hidden">
+        </label>
+        <button id="expandAll" class="inline-flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50">
+          <i data-lucide="chevrons-down" class="h-4 w-4"></i>
+          Expandir
+        </button>
+        <button id="collapseAll" class="inline-flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50">
+          <i data-lucide="chevrons-up" class="h-4 w-4"></i>
+          Recolher
+        </button>
+        <button id="clearAll" class="inline-flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50">
+          <i data-lucide="x" class="h-4 w-4"></i>
+          Limpar
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-5 py-5 lg:grid-cols-[320px_1fr]">
+    <aside class="space-y-4">
+      <section id="dropZone" class="rounded-xl border border-dashed border-slate-300 bg-white p-5 shadow-sm transition">
+        <div class="flex items-start gap-3">
+          <div class="rounded-lg bg-blue-50 p-2 text-blue-700">
+            <i data-lucide="upload-cloud" class="h-5 w-5"></i>
+          </div>
+          <div>
+            <h2 class="font-semibold">Carregar arquivo</h2>
+            <p class="mt-1 text-sm leading-5 text-muted">Arraste um `.lss` para ca ou use o botao no topo. O arquivo nao sai do navegador.</p>
+          </div>
+        </div>
+        <div id="fileName" class="mt-4 hidden rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700"></div>
+      </section>
+
+      <section class="rounded-xl border border-line bg-white p-4 shadow-sm">
+        <label for="searchInput" class="text-sm font-semibold">Busca</label>
+        <div class="mt-2 flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2">
+          <i data-lucide="search" class="h-4 w-4 text-muted"></i>
+          <input id="searchInput" class="w-full bg-transparent text-sm outline-none" placeholder="codigo, qid, gid, texto...">
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-line bg-white p-4 shadow-sm">
+        <h2 class="text-sm font-semibold">Filtros</h2>
+        <div class="mt-3 space-y-3 text-sm">
+          <label class="flex items-center justify-between gap-3">
+            <span>Somente obrigatorias</span>
+            <input id="filterMandatory" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600">
+          </label>
+          <label class="flex items-center justify-between gap-3">
+            <span>Com condicoes</span>
+            <input id="filterConditions" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600">
+          </label>
+          <label class="flex items-center justify-between gap-3">
+            <span>Com atributos</span>
+            <input id="filterAttributes" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600">
+          </label>
+          <label class="flex items-center justify-between gap-3">
+            <span>Somente upload</span>
+            <input id="filterUpload" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600">
+          </label>
+          <div>
+            <label for="typeFilter" class="text-sm">Tipo</label>
+            <select id="typeFilter" class="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none">
+              <option value="">Todos os tipos</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-line bg-white p-4 shadow-sm">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold">Resumo</h2>
+          <button id="copySummary" class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50">
+            <i data-lucide="copy" class="h-3.5 w-3.5"></i>
+            Copiar
+          </button>
+        </div>
+        <dl id="stats" class="mt-3 grid grid-cols-2 gap-2 text-sm"></dl>
+      </section>
+    </aside>
+
+    <section class="min-w-0 rounded-xl border border-line bg-white shadow-sm">
+      <div class="flex items-center justify-between border-b border-line px-5 py-4">
+        <div>
+          <h2 class="font-semibold">Arvore do questionario</h2>
+          <p id="resultCount" class="text-sm text-muted">Nenhum arquivo carregado.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="inline-flex rounded-lg border border-line bg-slate-50 p-1 text-sm">
+            <button id="viewDetailed" class="rounded-md bg-white px-3 py-1.5 font-medium text-slate-900 shadow-sm">Detalhada</button>
+            <button id="viewCompact" class="rounded-md px-3 py-1.5 font-medium text-muted hover:text-slate-900">Compacta</button>
+          </div>
+          <div id="statusPill" class="hidden rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"></div>
+        </div>
+      </div>
+      <div id="emptyState" class="flex min-h-[560px] flex-col items-center justify-center px-6 text-center">
+        <div class="rounded-2xl bg-slate-100 p-4 text-slate-500">
+          <i data-lucide="file-search" class="h-10 w-10"></i>
+        </div>
+        <h3 class="mt-4 text-lg font-semibold">Carregue um arquivo `.lss`</h3>
+        <p class="mt-2 max-w-md text-sm leading-6 text-muted">A visualizacao mostrara grupos, questoes, subquestoes, opcoes, atributos e relacoes condicionais em uma arvore navegavel.</p>
+      </div>
+      <div id="tree" class="hidden divide-y divide-line"></div>
+    </section>
+  </main>
+
+  <template id="statTemplate">
+    <div class="rounded-lg bg-slate-50 p-3">
+      <dt class="text-xs text-muted"></dt>
+      <dd class="mt-1 text-xl font-semibold"></dd>
+    </div>
+  </template>
+
+  <script>
+    const state = {
+      fileName: '',
+      groups: [],
+      questions: [],
+      subquestions: [],
+      answers: [],
+      conditions: [],
+      attributes: [],
+      byQid: new Map(),
+      subByParent: new Map(),
+      answersByQid: new Map(),
+      conditionsByQid: new Map(),
+      attrsByQid: new Map(),
+      typeSet: new Set(),
+      viewMode: 'detailed'
+    };
+
+    const el = {
+      fileInput: document.getElementById('fileInput'),
+      dropZone: document.getElementById('dropZone'),
+      fileName: document.getElementById('fileName'),
+      searchInput: document.getElementById('searchInput'),
+      filterMandatory: document.getElementById('filterMandatory'),
+      filterConditions: document.getElementById('filterConditions'),
+      filterAttributes: document.getElementById('filterAttributes'),
+      filterUpload: document.getElementById('filterUpload'),
+      typeFilter: document.getElementById('typeFilter'),
+      viewDetailed: document.getElementById('viewDetailed'),
+      viewCompact: document.getElementById('viewCompact'),
+      stats: document.getElementById('stats'),
+      tree: document.getElementById('tree'),
+      emptyState: document.getElementById('emptyState'),
+      resultCount: document.getElementById('resultCount'),
+      statusPill: document.getElementById('statusPill')
+    };
+
+    const typeLabels = {
+      L: 'Escolha unica',
+      M: 'Multipla escolha',
+      S: 'Texto curto',
+      T: 'Texto longo',
+      '|': 'Upload',
+      Q: 'Multiplos textos',
+      F: 'Matriz',
+      X: 'Texto/display'
+    };
+
+    function textOf(node, tag) {
+      const found = node.getElementsByTagName(tag)[0];
+      return found ? found.textContent.trim() : '';
+    }
+
+    function rowsFor(doc, tableName) {
+      const table = doc.getElementsByTagName(tableName)[0];
+      if (!table) return [];
+      return [...table.getElementsByTagName('row')].map(row => {
+        const obj = {};
+        [...row.children].forEach(child => {
+          obj.childName = child.localName || child.nodeName;
+          obj[obj.childName] = child.textContent.trim();
+        });
+        delete obj.childName;
+        return obj;
+      });
+    }
+
+    function sanitizeHtml(html) {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = html || '';
+      wrapper.querySelectorAll('script, style, iframe, object, embed, link, meta').forEach(n => n.remove());
+      wrapper.querySelectorAll('*').forEach(node => {
+        [...node.attributes].forEach(attr => {
+          const name = attr.name.toLowerCase();
+          const value = attr.value.toLowerCase();
+          if (name.startsWith('on') || value.startsWith('javascript:') || value.includes('javascript:')) {
+            node.removeAttribute(attr.name);
+          }
+        });
+      });
+      return wrapper.innerHTML;
+    }
+
+    function plainText(html) {
+      const div = document.createElement('div');
+      div.innerHTML = sanitizeHtml(html || '');
+      return div.textContent.replace(/\s+/g, ' ').trim();
+    }
+
+    function compactQuestionText(html) {
+      const div = document.createElement('div');
+      div.innerHTML = sanitizeHtml(html || '');
+      div.querySelectorAll('.question-help-container, .ls-questionhelp').forEach(node => node.remove());
+      return div.textContent.replace(/\s+/g, ' ').trim();
+    }
+
+    function groupBy(rows, key) {
+      const map = new Map();
+      rows.forEach(row => {
+        const value = row[key] || '';
+        if (!map.has(value)) map.set(value, []);
+        map.get(value).push(row);
+      });
+      return map;
+    }
+
+    function parseLss(xmlText) {
+      const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+      const parserError = doc.getElementsByTagName('parsererror')[0];
+      if (parserError) throw new Error('XML invalido: nao foi possivel ler o arquivo LSS.');
+
+      state.groups = rowsFor(doc, 'groups').sort((a, b) => Number(a.group_order || 0) - Number(b.group_order || 0));
+      state.questions = rowsFor(doc, 'questions').filter(q => (q.parent_qid || '0') === '0')
+        .sort((a, b) => Number(a.question_order || 0) - Number(b.question_order || 0));
+      state.subquestions = rowsFor(doc, 'subquestions').sort((a, b) => Number(a.question_order || 0) - Number(b.question_order || 0));
+      state.answers = rowsFor(doc, 'answers').sort((a, b) => Number(a.sortorder || 0) - Number(b.sortorder || 0));
+      state.conditions = rowsFor(doc, 'conditions');
+      state.attributes = rowsFor(doc, 'question_attributes');
+
+      state.byQid = new Map(state.questions.map(q => [q.qid, q]));
+      state.subByParent = groupBy(state.subquestions, 'parent_qid');
+      state.answersByQid = groupBy(state.answers, 'qid');
+      state.conditionsByQid = groupBy(state.conditions, 'qid');
+      state.attrsByQid = groupBy(state.attributes, 'qid');
+      state.typeSet = new Set(state.questions.map(q => q.type).filter(Boolean));
+      refreshTypeFilter();
+    }
+
+    function refreshTypeFilter() {
+      const current = el.typeFilter.value;
+      el.typeFilter.innerHTML = '<option value="">Todos os tipos</option>';
+      [...state.typeSet].sort().forEach(type => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = `${type} - ${typeLabels[type] || 'Tipo LimeSurvey'}`;
+        el.typeFilter.appendChild(option);
+      });
+      el.typeFilter.value = state.typeSet.has(current) ? current : '';
+    }
+
+    function badge(text, tone = 'slate') {
+      const tones = {
+        slate: 'bg-slate-100 text-slate-700',
+        blue: 'bg-blue-50 text-blue-700',
+        green: 'bg-emerald-50 text-emerald-700',
+        amber: 'bg-amber-50 text-amber-700',
+        rose: 'bg-rose-50 text-rose-700',
+        violet: 'bg-violet-50 text-violet-700'
+      };
+      return `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${tones[tone]}">${escapeHtml(text)}</span>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[ch]));
+    }
+
+    function htmlBlock(html, empty = 'Sem texto.') {
+      const safe = sanitizeHtml(html);
+      if (!plainText(safe)) return `<p class="text-sm text-muted">${empty}</p>`;
+      return `<div class="prose-lite text-sm leading-6 text-slate-700">${safe}</div>`;
+    }
+
+    function questionMatches(q, group, query) {
+      const haystack = [
+        q.qid, q.gid, q.title, q.type, q.mandatory, q.relevance,
+        plainText(q.question), plainText(q.help),
+        group.gid, group.group_name, plainText(group.description)
+      ].join(' ').toLowerCase();
+      return haystack.includes(query);
+    }
+
+    function passesFilters(q) {
+      if (el.filterMandatory.checked && q.mandatory !== 'Y') return false;
+      if (el.filterConditions.checked && !(state.conditionsByQid.get(q.qid) || []).length) return false;
+      if (el.filterAttributes.checked && !(state.attrsByQid.get(q.qid) || []).length) return false;
+      if (el.filterUpload.checked && q.type !== '|') return false;
+      if (el.typeFilter.value && q.type !== el.typeFilter.value) return false;
+      return true;
+    }
+
+    function adoptionRootCode(code) {
+      const match = String(code || '').match(/^(.*?)(nsa|lei|est|raz|ext|evi)$/);
+      return match ? match[1] : '';
+    }
+
+    function isAdoptionAuxiliary(q) {
+      const root = adoptionRootCode(q.title);
+      return Boolean(root && state.questions.some(candidate => candidate.title === root));
+    }
+
+    function visibleQuestionsForMode(questions) {
+      if (state.viewMode !== 'compact') return questions;
+      return questions.filter(q => !isAdoptionAuxiliary(q));
+    }
+
+    function render() {
+      const query = el.searchInput.value.trim().toLowerCase();
+      const groupsById = new Map(state.groups.map(g => [g.gid, g]));
+      const questionsByGid = groupBy(state.questions, 'gid');
+      let visibleQuestions = 0;
+      const fragments = [];
+
+      state.groups.forEach(group => {
+        const questions = questionsByGid.get(group.gid) || [];
+        const modeQuestions = visibleQuestionsForMode(questions);
+        const filtered = modeQuestions.filter(q => passesFilters(q) && (!query || questionMatches(q, group, query)));
+        const groupTextMatch = query && [group.gid, group.group_name, plainText(group.description)].join(' ').toLowerCase().includes(query);
+        const displayQuestions = groupTextMatch ? modeQuestions.filter(passesFilters) : filtered;
+        if (!displayQuestions.length && query && !groupTextMatch) return;
+        if (!displayQuestions.length && !query && questions.length) return;
+
+        visibleQuestions += displayQuestions.length;
+        fragments.push(renderGroup(group, displayQuestions, modeQuestions.length));
+      });
+
+      el.tree.innerHTML = fragments.join('');
+      el.emptyState.classList.toggle('hidden', Boolean(state.groups.length));
+      el.tree.classList.toggle('hidden', !state.groups.length);
+      el.resultCount.textContent = state.groups.length
+        ? `${fragments.length} grupos exibidos, ${visibleQuestions} questoes exibidas`
+        : 'Nenhum arquivo carregado.';
+      renderStats();
+      afterRenderIcons();
+    }
+
+    function renderGroup(group, questions, totalQuestions) {
+      const compact = state.viewMode === 'compact';
+      return `
+        <details class="${compact ? '' : 'tree-line'} group-block" open>
+          <summary class="flex cursor-pointer items-start gap-3 px-5 ${compact ? 'py-3' : 'py-4'} hover:bg-slate-50">
+            <span class="chevron mt-1 text-muted transition"><i data-lucide="chevron-right" class="h-4 w-4"></i></span>
+            <span class="mt-0.5 rounded-lg bg-blue-50 p-2 text-blue-700"><i data-lucide="folder-tree" class="h-4 w-4"></i></span>
+            <span class="min-w-0 flex-1">
+              <span class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold">${escapeHtml(group.group_name || 'Grupo sem nome')}</span>
+                ${badge(`gid ${group.gid}`, 'blue')}
+                ${badge(`ordem ${group.group_order || 0}`)}
+                ${badge(`${questions.length}/${totalQuestions} questoes`, 'green')}
+              </span>
+              ${compact ? '' : `<span class="mt-2 block">${htmlBlock(group.description, 'Sem descricao de grupo.')}</span>`}
+            </span>
+          </summary>
+          <div class="${compact ? 'space-y-1 pb-4 pl-12 pr-5' : 'space-y-3 pb-5 pl-12 pr-5'}">
+            ${questions.map(compact ? renderCompactQuestion : renderQuestion).join('') || '<div class="rounded-lg border border-line bg-slate-50 p-4 text-sm text-muted">Nenhuma questao exibida pelos filtros atuais.</div>'}
+          </div>
+        </details>
+      `;
+    }
+
+    function renderCompactQuestion(q) {
+      const subs = state.subByParent.get(q.qid) || [];
+      const answers = state.answersByQid.get(q.qid) || [];
+      const conditions = state.conditionsByQid.get(q.qid) || [];
+      const attrs = state.attrsByQid.get(q.qid) || [];
+      const text = compactQuestionText(q.question);
+      return `
+        <div class="flex items-start justify-between gap-3 rounded-lg border border-line bg-white px-3 py-2 text-sm hover:bg-slate-50">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-medium">${escapeHtml(q.title || `qid ${q.qid}`)}</span>
+              ${badge(`qid ${q.qid}`, 'blue')}
+              ${badge(q.type || '?', 'violet')}
+              ${q.mandatory === 'Y' ? badge('obrigatoria', 'rose') : ''}
+            </div>
+            <div class="mt-1 line-clamp-2 text-sm leading-5 text-slate-700">${escapeHtml(text || 'Sem texto de pergunta.')}</div>
+          </div>
+          <div class="flex shrink-0 flex-wrap justify-end gap-1">
+            ${subs.length ? badge(`${subs.length} sub`, 'green') : ''}
+            ${answers.length ? badge(`${answers.length} opt`, 'green') : ''}
+            ${conditions.length ? badge('cond', 'amber') : ''}
+            ${attrs.length ? badge('attr', 'slate') : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderQuestion(q) {
+      const subs = state.subByParent.get(q.qid) || [];
+      const answers = state.answersByQid.get(q.qid) || [];
+      const conditions = state.conditionsByQid.get(q.qid) || [];
+      const attrs = state.attrsByQid.get(q.qid) || [];
+      const mandatoryTone = q.mandatory === 'Y' ? 'rose' : 'slate';
+      return `
+        <details class="rounded-xl border border-line bg-white shadow-sm" open>
+          <summary class="flex cursor-pointer items-start gap-3 p-4 hover:bg-slate-50">
+            <span class="chevron mt-1 text-muted transition"><i data-lucide="chevron-right" class="h-4 w-4"></i></span>
+            <span class="mt-0.5 rounded-lg bg-slate-100 p-2 text-slate-700"><i data-lucide="circle-help" class="h-4 w-4"></i></span>
+            <span class="min-w-0 flex-1">
+              <span class="flex flex-wrap items-center gap-2">
+                <span class="font-semibold">${escapeHtml(q.title || `qid ${q.qid}`)}</span>
+                ${badge(`qid ${q.qid}`, 'blue')}
+                ${badge(`${q.type} - ${typeLabels[q.type] || 'Tipo LimeSurvey'}`, 'violet')}
+                ${badge(q.mandatory === 'Y' ? 'obrigatoria' : 'opcional', mandatoryTone)}
+                ${subs.length ? badge(`${subs.length} sub`, 'green') : ''}
+                ${answers.length ? badge(`${answers.length} opcoes`, 'green') : ''}
+                ${conditions.length ? badge(`${conditions.length} condicoes`, 'amber') : ''}
+                ${attrs.length ? badge(`${attrs.length} atributos`, 'slate') : ''}
+              </span>
+              <div class="mt-2">${htmlBlock(q.question, 'Sem texto de pergunta.')}</div>
+            </span>
+          </summary>
+          <div class="space-y-3 border-t border-line bg-slate-50/60 p-4">
+            ${q.help ? detailSection('Ajuda', htmlBlock(q.help), 'message-circle') : ''}
+            ${q.relevance && q.relevance !== '1' ? detailSection('Relevance', `<code class="break-all text-xs">${escapeHtml(q.relevance)}</code>`, 'git-branch') : ''}
+            ${renderListSection('Subquestoes', subs, 'list-tree')}
+            ${renderAnswerSection(answers)}
+            ${renderConditionSection(conditions)}
+            ${renderAttributeSection(attrs)}
+          </div>
+        </details>
+      `;
+    }
+
+    function detailSection(title, body, icon) {
+      return `
+        <section class="rounded-lg border border-line bg-white p-3">
+          <h4 class="mb-2 flex items-center gap-2 text-sm font-semibold"><i data-lucide="${icon}" class="h-4 w-4 text-muted"></i>${title}</h4>
+          ${body}
+        </section>
+      `;
+    }
+
+    function renderListSection(title, rows, icon) {
+      if (!rows.length) return '';
+      return detailSection(title, `
+        <div class="space-y-2">
+          ${rows.map(row => `
+            <div class="rounded-md bg-slate-50 px-3 py-2 text-sm">
+              <div class="mb-1 flex flex-wrap items-center gap-2">${badge(row.title || row.code || row.qid, 'blue')} ${row.type ? badge(row.type) : ''}</div>
+              ${htmlBlock(row.question || row.answer)}
+            </div>
+          `).join('')}
+        </div>
+      `, icon);
+    }
+
+    function renderAnswerSection(rows) {
+      if (!rows.length) return '';
+      return detailSection('Opcoes / respostas', `
+        <div class="space-y-2">
+          ${rows.map(row => `
+            <div class="rounded-md bg-slate-50 px-3 py-2 text-sm">
+              <div class="mb-1 flex flex-wrap items-center gap-2">${badge(row.code, 'blue')} ${badge(`ordem ${row.sortorder || 0}`)}</div>
+              ${htmlBlock(row.answer)}
+            </div>
+          `).join('')}
+        </div>
+      `, 'list-checks');
+    }
+
+    function renderConditionSection(rows) {
+      if (!rows.length) return '';
+      return detailSection('Condicoes', `
+        <div class="space-y-2">
+          ${rows.map(row => {
+            const ref = state.byQid.get(row.cqid);
+            const refLabel = ref ? `${ref.title} (qid ${row.cqid})` : `qid ${row.cqid}`;
+            return `
+              <div class="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                Depende de <strong>${escapeHtml(refLabel)}</strong>
+                <code class="mx-1">${escapeHtml(row.method || '')}</code>
+                <strong>${escapeHtml(row.value || '')}</strong>
+                ${row.cfieldname ? `<div class="mt-1 text-xs text-amber-800">Campo: ${escapeHtml(row.cfieldname)}</div>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `, 'git-branch');
+    }
+
+    function renderAttributeSection(rows) {
+      if (!rows.length) return '';
+      return detailSection('Atributos', `
+        <div class="grid gap-2 sm:grid-cols-2">
+          ${rows.map(row => `
+            <div class="rounded-md bg-slate-50 px-3 py-2 text-sm">
+              <div class="font-medium">${escapeHtml(row.attribute)}</div>
+              <div class="mt-1 break-all text-muted">${escapeHtml(row.value)}</div>
+            </div>
+          `).join('')}
+        </div>
+      `, 'settings-2');
+    }
+
+    function renderStats() {
+      const stats = [
+        ['Grupos', state.groups.length],
+        ['Questoes', state.questions.length],
+        ['Subquestoes', state.subquestions.length],
+        ['Opcoes', state.answers.length],
+        ['Condicoes', state.conditions.length],
+        ['Atributos', state.attributes.length]
+      ];
+      el.stats.innerHTML = stats.map(([label, value]) => `
+        <div class="rounded-lg bg-slate-50 p-3">
+          <dt class="text-xs text-muted">${label}</dt>
+          <dd class="mt-1 text-xl font-semibold">${value}</dd>
+        </div>
+      `).join('');
+      if (state.groups.length) {
+        el.statusPill.textContent = state.fileName;
+        el.statusPill.classList.remove('hidden');
+      } else {
+        el.statusPill.classList.add('hidden');
+      }
+    }
+
+    function afterRenderIcons() {
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      const detailed = mode === 'detailed';
+      el.viewDetailed.className = detailed
+        ? 'rounded-md bg-white px-3 py-1.5 font-medium text-slate-900 shadow-sm'
+        : 'rounded-md px-3 py-1.5 font-medium text-muted hover:text-slate-900';
+      el.viewCompact.className = !detailed
+        ? 'rounded-md bg-white px-3 py-1.5 font-medium text-slate-900 shadow-sm'
+        : 'rounded-md px-3 py-1.5 font-medium text-muted hover:text-slate-900';
+      render();
+    }
+
+    function setError(message) {
+      el.resultCount.textContent = message;
+      el.statusPill.textContent = 'Erro';
+      el.statusPill.classList.remove('hidden');
+      el.tree.classList.add('hidden');
+      el.emptyState.classList.remove('hidden');
+    }
+
+    function loadFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          parseLss(String(reader.result || ''));
+          state.fileName = file.name;
+          el.fileName.textContent = `${file.name} (${Math.round(file.size / 1024)} KB)`;
+          el.fileName.classList.remove('hidden');
+          render();
+        } catch (err) {
+          setError(err.message || 'Erro ao carregar arquivo.');
+        }
+      };
+      reader.onerror = () => setError('Nao foi possivel ler o arquivo.');
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    function setAllDetails(open) {
+      document.querySelectorAll('#tree details').forEach(detail => { detail.open = open; });
+    }
+
+    function copySummary() {
+      const text = [
+        `Arquivo: ${state.fileName || 'nenhum'}`,
+        `Grupos: ${state.groups.length}`,
+        `Questoes: ${state.questions.length}`,
+        `Subquestoes: ${state.subquestions.length}`,
+        `Opcoes: ${state.answers.length}`,
+        `Condicoes: ${state.conditions.length}`,
+        `Atributos: ${state.attributes.length}`
+      ].join('\n');
+      navigator.clipboard?.writeText(text);
+    }
+
+    function clearAll() {
+      state.fileName = '';
+      state.groups = [];
+      state.questions = [];
+      state.subquestions = [];
+      state.answers = [];
+      state.conditions = [];
+      state.attributes = [];
+      el.fileInput.value = '';
+      el.fileName.classList.add('hidden');
+      el.searchInput.value = '';
+      el.filterMandatory.checked = false;
+      el.filterConditions.checked = false;
+      el.filterAttributes.checked = false;
+      el.filterUpload.checked = false;
+      el.typeFilter.innerHTML = '<option value="">Todos os tipos</option>';
+      render();
+    }
+
+    el.fileInput.addEventListener('change', event => loadFile(event.target.files[0]));
+    ['dragenter', 'dragover'].forEach(type => {
+      el.dropZone.addEventListener(type, event => {
+        event.preventDefault();
+        el.dropZone.classList.add('drop-active');
+      });
+    });
+    ['dragleave', 'drop'].forEach(type => {
+      el.dropZone.addEventListener(type, event => {
+        event.preventDefault();
+        el.dropZone.classList.remove('drop-active');
+      });
+    });
+    el.dropZone.addEventListener('drop', event => loadFile(event.dataTransfer.files[0]));
+    document.getElementById('expandAll').addEventListener('click', () => setAllDetails(true));
+    document.getElementById('collapseAll').addEventListener('click', () => setAllDetails(false));
+    document.getElementById('clearAll').addEventListener('click', clearAll);
+    document.getElementById('copySummary').addEventListener('click', copySummary);
+    el.viewDetailed.addEventListener('click', () => setViewMode('detailed'));
+    el.viewCompact.addEventListener('click', () => setViewMode('compact'));
+    [el.searchInput, el.filterMandatory, el.filterConditions, el.filterAttributes, el.filterUpload, el.typeFilter]
+      .forEach(input => input.addEventListener('input', render));
+
+    renderStats();
+    setViewMode('detailed');
+    afterRenderIcons();
+  </script>
+</body>
+</html>
