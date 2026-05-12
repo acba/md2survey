@@ -778,8 +778,6 @@ def render_question(doc: Document, survey: Survey, q: Question, answer_dependenc
         add_answer_line(doc)
     elif q.type in {"long", "textarea"}:
         add_answer_line(doc)
-        add_text_paragraph(doc, "________________________________________________________________", size=10, color="666666", left_indent=0.35, space_after=3, style="ExplicaAlternativa")
-        add_text_paragraph(doc, "________________________________________________________________", size=10, color="666666", left_indent=0.35, space_after=6, style="ExplicaAlternativa")
     # elif q.type in {"upload", "file"}:
         # add_text_paragraph(doc, "☐  Evidência documental a ser anexada no LimeSurvey.", size=10, color="666666", left_indent=0.35, space_after=6, style="ExplicaAlternativa")
     elif q.type in {"array", "matrix"}:

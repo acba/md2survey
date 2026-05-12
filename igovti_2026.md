@@ -1,5 +1,5 @@
 ---
-title: "Questionario iGovTI 2026"
+title: "Fiscalização TCE-RJ nº 18/2026 - iGovTI 2026"
 language: "pt-BR"
 sid: 431594
 admin: CAD-TI
@@ -7,12 +7,67 @@ adminemail: "auditoriati@tcerj.tc.br"
 format: G
 template: vanilla
 welcome: |
-  <p>Este questionario tem por objetivo coletar informacoes sobre governanca, gestao de tecnologia da informacao, seguranca da informacao, pessoas, contratacoes e inovacao em TI.</p>
+  <div class="container mt-3" style="margin-top:20px;margin-bottom:20px;">
+  	<div class="row align-items-center">
+  		<div class="col-md-4">
+  			<img alt="Logotipo TCERJ" class="img-fluid" src="https://www.tcerj.tc.br/cdn-storage/logos/logo-horizontal-colorida-para_fundo_branco@3x.png" style="max-width:300px;" />
+  		</div>
+  		<div class="col-md-8">
+  			<h1 style="font-size:16px;font-weight:bold;color:#444;margin:0;margin-top:20px;">SECRETARIA GERAL DE CONTROLE EXTERNO</h1>
+  			<p style="font-size:12px;color:#666;margin:2px 0;">SUBSECRETARIA DE CONTROLE DE POLÍTICAS DE CIDADANIA</p>
+  			<p style="font-size:12px;color:#666;margin:2px 0;">COORDENADORIA DE AUDITORIA EM POLÍTICAS DE TECNOLOGIA DA INFORMAÇÃO</p>
+  		</div>
+  	</div>
+  </div>
+  <div style="text-align:justify;color:#000000;">
+  	<p style="color:#000000;">O TCE-RJ, por meio da Coordenadoria de Auditoria em Políticas de Tecnologia da Informação (CAD-TI), está realizando a fiscalização 18/2026 que tem por objetivo avaliar o grau de adoção das organizações públicas às boas práticas de governança e gestão de TI.</p>
+
+    <p style="color:#000000;">O método utilizado é o de autoavaliação de controles internos (do inglês Control Self-Assessment – CSA), no qual disponibiliza-se um questionário eletrônico estruturado em boas práticas de governança e gestão de tecnologia da informação, referenciais nacionais e internacionais e normativos aplicáveis à Administração Pública, incluindo aspectos relacionados à segurança cibernética, gestão de serviços, continuidade, gestão de riscos, inteligência artificial, estrutura organizacional e gestão de soluções e projetos de TI.</p>
+
+    <p style="color:#000000;">O questionário busca levantar informações sobre a situação atual da organização quanto às práticas avaliadas, permitindo identificar capacidades institucionais, riscos, fragilidades, iniciativas existentes e oportunidades de melhoria. Além do preenchimento das respostas, serão solicitadas evidências documentais que poderão ser analisadas pela equipe de auditoria para corroborar as informações prestadas.</p>
+
+  	<p style="color:#000000;">A metodologia empregada permite gerar diagnósticos comparativos e indicadores relacionados à governança e à gestão de tecnologia da informação, apoiando tanto a atuação do controle externo quanto a melhoria contínua das organizações avaliadas. Espera-se que os resultados subsidiem ações de aperfeiçoamento institucional, fortalecimento de controles internos, mitigação de riscos e aprimoramento da prestação de serviços públicos suportados por tecnologia da informação.</p>
+
+  	<p style="color:#000000;">Recomenda-se que o responsável pelo preenchimento reúna previamente as informações necessárias junto às áreas envolvidas da organização, especialmente Tecnologia da Informação, Segurança da Informação, Contratações, Planejamento, Governança, Jurídico e áreas finalísticas que utilizem soluções tecnológicas relevantes.</p>
+
+  	<p style="color:#000000;">As evidências documentais que suportam as respostas deverão ser reunidas e mantidas à disposição do TCE-RJ para futura verificação de consistência e validação das informações apresentadas.</p>
+
+  	<p style="color:#000000;">Seguem documentos para auxílio no preenchimento do questionário:</p>
+  	<ul>
+  		<li>
+  			<a class="btn" href="/limesurvey-novo/upload/surveys/265151/images/Question%C3%A1rio.pdf" rel="noreferrer noopener" target="_blank">
+  				<img alt="pdf--v1" height="50" src="https://img.icons8.com/ios/50/pdf--v1.png" width="50" />Questionário em formato PDF
+  			</a>.
+  		</li>
+  	</ul>
+  	<p style="color:#000000;margin-top:5px;">
+  		<strong>Observações importantes:</strong>
+  	</p>
+  	<ol>
+  		<li style="margin-bottom:10px;">As informações consolidadas poderão ser utilizadas pelo TCE-RJ para elaboração de diagnósticos, indicadores, análises comparativas, painéis e relatórios de fiscalização, observadas as restrições legais e institucionais aplicáveis.</li>
+
+      <li style="margin-bottom:10px;">O questionário não possui caráter exaustivo. Algumas práticas avaliadas podem não ser aplicáveis à realidade, ao porte, à estrutura ou ao contexto específico de determinadas organizações.</li>
+
+  		<li style="margin-bottom:10px;">Para os itens que exigem submissão de evidências documentais, estas poderão ser analisadas pela equipe de auditoria para validação das respostas fornecidas. Para os demais itens, as evidências devem ser mantidas organizadas e disponíveis para futura solicitação do TCE-RJ.</li>
+
+  		<li style="margin-bottom:10px;">Informa-se que, para os itens que exigem anexos, será permitido o upload de apenas um arquivo nos formatos PDF, ZIP ou DOCX, com tamanho máximo de 10 MB. Caso a organização deseje enviar mais de um documento, recomenda-se que todos sejam compactados em um único arquivo ZIP.</li>
+  	</ol>
+  </div>
 endtext: |
-  <p>Agradecemos o preenchimento do questionario. As respostas e evidencias documentais devem ser mantidas a disposicao do TCE-RJ para futura verificacao de consistencia.</p>
+  <p style="color:#000000;">Prezado(a),</p>
+
+  <p style="color:#000000;">Agradecemos pela participação na fiscalização 18/2026 que avaliou o grau de adoção das organizações públicas às boas práticas de governança e gestão de TI.</p>
+
+  <p style="color:#000000;">As informações fornecidas contribuirão para o diagnóstico da situação de governança, gestão, segurança da informação e transformação digital das organizações públicas jurisdicionadas, apoiando ações de aperfeiçoamento institucional e de fortalecimento dos controles relacionados à tecnologia da informação.</p>
+
+  <p style="color:#000000;">As respostas e evidências submetidas poderão ser analisadas pela equipe de auditoria para verificação de consistência, validação das informações prestadas e elaboração dos produtos da fiscalização.</p>
+
+  <p style="color:#000000;">Após a consolidação e análise dos resultados, poderão ser encaminhadas comunicações, solicitações complementares, relatórios preliminares ou outras interações relacionadas à fiscalização.</p>
+
+  <p style="color:#000000;">Em caso de dúvidas, entre em contato com a Coordenadoria de Auditoria em Políticas de Tecnologia da Informação (CAD-TI).</p>
 ---
 
-# Questionario iGovTI 2026
+# Fiscalização TCE-RJ nº 18/2026 - iGovTI 2026
 
 ## Escala: sim_nao
 type: single
@@ -20,7 +75,11 @@ type: single
 - nao | Não
 
 ## Grupo: g0100 | Estrutura Organizacional e Força de Trabalho
-> Este grupo coleta informações sobre como as funções de tecnologia da informação e segurança da informação estão organizadas na entidade. O objetivo é caracterizar a existência de estruturas formais, o modelo predominante de prestação dos serviços de TI e o perfil da força de trabalho que atua nessas áreas, permitindo análises comparativas com as demais práticas avaliadas no questionário.
+> Este grupo avalia como a organização estrutura formalmente as funções de tecnologia da informação e segurança da informação, considerando aspectos relacionados à organização administrativa, posicionamento hierárquico, distribuição das responsabilidades e perfil da força de trabalho que atua nessas áreas. Busca-se identificar como a TI está organizada institucionalmente, se existem estruturas formais definidas e como os serviços tecnológicos são prestados e coordenados no âmbito da organização.
+>
+> Também se avalia se as atribuições e competências da área de TI estão formalmente definidas, se a segurança da informação possui estrutura própria ou integrada à TI e qual o nível de proximidade da área de tecnologia com a alta administração. Adicionalmente, busca-se identificar o quantitativo e o perfil dos profissionais que atuam em TI e segurança da informação, considerando os diferentes tipos de vínculo existentes.
+>
+> Uma estrutura organizacional de TI adequadamente definida, com competências formalizadas e força de trabalho compatível com as necessidades institucionais, contribui para fortalecer a governança e a gestão de tecnologia da informação, reduzir riscos operacionais, melhorar a continuidade dos serviços e ampliar a capacidade da organização de apoiar suas atividades finalísticas e administrativas.
 
 ### q0101 [single]
 question: **0101. Qual alternativa melhor descreve a formalização e o modelo de operação predominante da Tecnologia da Informação (TI) na organização?**
@@ -28,7 +87,7 @@ mandatory: true
 explain: Identifica se a TI existe formalmente no organograma e como os recursos e serviços tecnológicos estão distribuídos física e administrativamente na organização.
 help: Considere o modelo predominante de organização e prestação dos serviços de TI da própria organização, ainda que existam situações pontuais diferentes em determinadas secretarias, unidades ou sistemas. No âmbito do SETIC, a atuação do PRODERJ como órgão diretor do sistema e provedor de diretrizes corporativas não caracteriza, por si só, modelo híbrido, federado ou centralizado externo. A classificação deve considerar principalmente como a própria organização estrutura, executa, gerencia e operacionaliza suas atividades e serviços de TI.
 evidence_if: q0101 in [A, B, C, D, E]
-evidence_text: Forneça como evidência a lei, decreto, portaria ou regimento interno que institui o organograma da organização e as competências da área de TI.
+evidence_text: Forneça como evidência a lei, decreto, portaria, regimento interno, organograma, contrato, convênio, termo de cooperação ou instrumento equivalente que demonstre o modelo de organização e prestação dos serviços de TI.
 
 options:
 - A | a) Centralizada Interna: Há uma área de TI centralizada e formal que atende toda a organização, utilizando equipe técnica majoritariamente própria (servidores).
@@ -58,7 +117,7 @@ question: **0103. A organização definiu formalmente as atribuições e compet�
 mandatory: true
 explain: As atribuições da área de TI correspondem às competências, responsabilidades e atividades formalmente estabelecidas em norma, regimento, organograma, ato administrativo ou instrumento equivalente.
 help: Considere apenas atribuições formalmente definidas em instrumentos institucionais. Não considere atividades exercidas apenas de forma informal ou ad hoc.
-evidence_text: Caso tenha assinalado que adota a prática, forneça evidência das atribuições formalizadas da área de TI, como: regimento interno; organograma; decreto; resolução; portaria; manual de competências; descrição formal de responsabilidades; ou outras evidências cabíveis.
+evidence_text: Forneça evidência das atribuições formalizadas da área de TI, como: regimento interno; decreto; resolução; portaria; manual de competências; descrição formal de responsabilidades; ou outras evidências cabíveis.
 
 options:
 - A | a) a área de TI possui atribuições formalizadas relacionadas à sustentação de infraestrutura e serviços tecnológicos
@@ -67,6 +126,7 @@ options:
 - D | d) a área de TI possui atribuições formalizadas relacionadas à governança, planejamento ou gestão de tecnologia da informação
 - E | e) a área de TI possui atribuições formalizadas relacionadas à gestão de contratos e fornecedores de tecnologia da informação
 - F | f) a área de TI possui atribuições formalizadas relacionadas à gestão de dados, análise de dados, automação ou inteligência artificial
+- G | g) não há atribuições ou competências da área de TI formalmente definidas em norma, regimento, organograma, ato administrativo ou instrumento equivalente
 
 ### q0104 [single]
 question: **0104. Como a função de Segurança da Informação (SI) está formalmente posicionada na estrutura organizacional?**
@@ -172,7 +232,7 @@ detail_options:
 - G | g) a organização utiliza os resultados das pesquisas de satisfação como subsídio para promover melhoria na prestação dos serviços
 
 ## Grupo: g2000 | Gestão de Tecnologia da Informação
-> Este grupo avalia se a organização possui processos estruturados para planejar, executar, acompanhar e melhorar a gestão da tecnologia da informação. Enquanto a governança de TI está relacionada ao direcionamento e à supervisão pela alta administração, a gestão de TI trata da execução das atividades necessárias para entregar serviços, sistemas e soluções de tecnologia de forma segura, eficiente e alinhada às necessidades institucionais.
+> Esta seção avalia se a organização possui processos estruturados para planejar, executar, acompanhar e melhorar a gestão da tecnologia da informação. Enquanto a governança de TI está relacionada ao direcionamento e à supervisão pela alta administração, a gestão de TI trata da execução das atividades necessárias para entregar serviços, sistemas e soluções de tecnologia de forma segura, eficiente e alinhada às necessidades institucionais.
 >
 > Nesse contexto, espera-se que a organização realize o planejamento de TI, mantenha plano vigente, organize seus serviços, monitore níveis de atendimento, controle mudanças, gerencie ativos e configurações, trate incidentes, avalie riscos e assegure a continuidade dos serviços críticos. Essas práticas contribuem para reduzir falhas, evitar interrupções, melhorar a qualidade dos serviços e apoiar o funcionamento das áreas finalísticas e administrativas.
 >
@@ -181,10 +241,15 @@ detail_options:
 > Uma gestão de TI efetiva fortalece a capacidade da organização de atender às demandas internas e externas, apoiar a transformação digital, proteger informações, melhorar a prestação dos serviços públicos e utilizar os recursos tecnológicos de forma planejada, controlada e transparente.
 
 ## Grupo: g2100 | Planejamento de Tecnologia da Informação
+> Este grupo avalia se a organização executa atividades estruturadas de planejamento de tecnologia da informação, voltadas à definição, priorização e acompanhamento de iniciativas, projetos, ações, investimentos e contratações de TI alinhados às necessidades institucionais e aos objetivos estratégicos da organização.
+>
+> Também se avalia se a organização possui plano de tecnologia da informação vigente, aprovado pela alta administração e integrado ao planejamento institucional, servindo como instrumento para orientar a execução das ações de TI, a alocação de recursos, a priorização das demandas e o acompanhamento dos resultados alcançados.
+>
+> Um processo de planejamento de TI efetivo contribui para melhorar a coordenação das iniciativas tecnológicas, apoiar a transformação digital, reduzir desperdícios, ampliar a transparência das prioridades institucionais e fortalecer a capacidade da organização de entregar serviços públicos de forma contínua, eficiente e alinhada às necessidades da sociedade.
 
 ### q2101 [adoption]
 question: **2101. A organização executa processo de planejamento de tecnologia da informação.**
-subgroup: Planejamento de TI
+repeat_group_description: true
 mandatory: true
 explain: O processo de planejamento de TI é o conjunto de atividades formais para definir, priorizar e revisar iniciativas de TI, alinhadas às necessidades institucionais e com participação das áreas envolvidas.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Planejamento de Tecnologia da Informação; Risco; TI (Tecnologia da Informação).
@@ -199,6 +264,7 @@ detail_options:
 ### q2102 [adoption]
 question: **2102. A organização possui plano de tecnologia da informação vigente.**
 mandatory: true
+repeat_group_description: true
 explain: O plano de TI é o documento que consolida objetivos, iniciativas e ações de tecnologia, alinhado à estratégia institucional e utilizado para orientar investimentos, contratações e execução da TI.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Alta Administração; Dirigente máximo; Estratégia; Partes interessadas; Planejamento de Tecnologia da Informação; Plano de Tecnologia da Informação; TI (Tecnologia da Informação).
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do plano de TI, como: documento vigente aprovado pela alta administração; publicação do plano (se aplicável); vinculação com orçamento e plano de contratações; alinhamento com planejamento institucional; relatórios ou atas de acompanhamento da execução; indicadores e revisões do plano; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -211,11 +277,16 @@ detail_options:
 - E | e) é feito acompanhamento concomitante à execução do plano de TI, com vistas a assegurar sua observância e possibilitar a realização de ajustes que se fizerem necessário
 
 ## Grupo: g2200 | Gestão de Serviços de Tecnologia da Informação
+> Este grupo avalia se a organização executa processos estruturados para gerenciar, operar, monitorar e melhorar os serviços de tecnologia da informação oferecidos às áreas internas e aos usuários dos serviços públicos. Busca-se identificar se os serviços de TI são organizados, controlados e acompanhados de forma padronizada, previsível e alinhada às necessidades institucionais.
+>
+> Também se avalia se a organização adota práticas relacionadas à gestão de serviços, como definição de catálogo de serviços e acordos de nível de serviço, gestão de mudanças, controle de ativos e configurações, além do tratamento de incidentes operacionais e de segurança da informação. Essas práticas contribuem para reduzir falhas, minimizar indisponibilidades, melhorar a qualidade dos serviços e aumentar a confiabilidade do ambiente tecnológico.
+>
+> Uma gestão de serviços de TI efetiva contribui para ampliar a continuidade e a estabilidade dos serviços públicos, melhorar o atendimento aos usuários, apoiar a transformação digital e fortalecer a capacidade da organização de responder de forma ágil, segura e controlada às demandas institucionais e aos incidentes que afetem os serviços de tecnologia da informação.
 
 ### q2201 [adoption]
 question: **2201. A organização elabora um catálogo de serviços de tecnologia da informação e monitora níveis de serviço.**
 mandatory: true
-subgroup: Gestão de Serviços
+repeat_group_description: true
 explain: O catálogo de serviços de TI descreve os serviços prestados, seus níveis de atendimento e responsáveis, permitindo acordar, monitorar e melhorar a qualidade dos serviços oferecidos aos usuários.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Acordo de Nível de Serviço (ANS); Área de gestão de tecnologia da informação; Catálogo de serviços de TI; Gestão de serviços de tecnologia da informação; Meta; Serviços de tecnologia da informação; TI (Tecnologia da Informação); Usuário.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do catálogo e da gestão de níveis de serviço, como: catálogo de serviços vigente (ex.: portal, documento ou sistema); ANS firmados com secretarias/áreas usuárias; definição de metas (prazos, disponibilidade, suporte); registros de monitoramento dos níveis de serviço; relatórios de desempenho; canais de atendimento definidos; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -230,6 +301,7 @@ detail_options:
 ### q2202 [adoption]
 question: **2202. A organização executa processo de gestão de mudanças.**
 mandatory: true
+repeat_group_description: true
 explain: A gestão de mudanças é o processo de planejar, avaliar, aprovar, implementar e monitorar alterações em serviços e sistemas de TI, reduzindo riscos e impactos aos usuários.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Efetividade; Prática de habilitação de mudança.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do processo de gestão de mudanças, como: norma ou procedimento formal; registros de solicitações e aprovações de mudanças (incluindo emergenciais); planos e evidências de testes; comunicações às áreas impactadas; registros de impactos e serviços afetados; logs ou sistemas de rastreabilidade; relatórios de avaliação pós-implementação; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -245,8 +317,9 @@ detail_options:
 ### q2203 [adoption]
 question: **2203. A organização executa processo de gestão de configuração e ativos (de serviços de tecnologia da informação).**
 mandatory: true
+repeat_group_description: true
 explain: A gestão de configuração e ativos é o controle dos recursos de TI e suas relações, garantindo informações confiáveis para operação, mudanças e tomada de decisão.
-help:  Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Gestão de serviços de tecnologia da informação; Prática de gerenciamento de configuração e ativos; Serviços de tecnologia da informação; TI (Tecnologia da Informação).
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Gestão de serviços de tecnologia da informação; Prática de gerenciamento de configuração e ativos; Serviços de tecnologia da informação; TI (Tecnologia da Informação).
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão de configuração e ativos, como: inventário atualizado de ativos e serviços de TI; base de dados de configuração (CMDB ou equivalente); registros de relacionamento entre sistemas, infraestrutura e serviços; uso dessas informações em mudanças; norma ou procedimento formal; relatórios ou ferramentas de controle; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
@@ -257,6 +330,7 @@ detail_options:
 ### q2204 [adoption]
 question: **2204. A organização executa processo(s) de gestão de incidentes de serviços de tecnologia da informação e de incidentes de segurança da informação.**
 mandatory: true
+repeat_group_description: true
 explain: A gestão de incidentes trata da identificação, registro, priorização e resolução de falhas em serviços e segurança da informação, visando restabelecer rapidamente o serviço e reduzir impactos.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Acordo de Nível de Serviço (ANS); Gestão de serviços de tecnologia da informação; Prática de gestão de incidentes; Segurança da Informação; Serviços de tecnologia da informação; TI (Tecnologia da Informação).
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão de incidentes, como: norma ou procedimento formal; registros de incidentes (chamados/tickets); critérios de priorização e escalonamento; base de conhecimento com erros conhecidos; relatórios de atendimento e tempos de resolução; evidências de tratamento de incidentes de segurança (notificação, resposta e comunicação); análise de causa raiz e ações corretivas; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -270,11 +344,16 @@ detail_options:
 - F | f) a organização definiu procedimentos e responsabilidades quanto à análise dos incidentes, identificação de causas raízes e planejamento e implementação de ações corretivas
 
 ## Grupo: g2300 | Gestão de Riscos de TI e Segurança da Informação
+> Este grupo avalia se a organização executa processos estruturados para identificar, analisar, tratar e acompanhar riscos relacionados à tecnologia da informação, à segurança da informação e à continuidade dos serviços tecnológicos. Busca-se identificar se a organização adota práticas formais para reduzir impactos decorrentes de falhas, indisponibilidades, incidentes de segurança, vulnerabilidades, desastres ou outros eventos que possam comprometer os processos institucionais e a prestação de serviços públicos.
+>
+> Também se avalia se a organização mantém processos formais de gestão de riscos de TI e de segurança da informação, incluindo identificação e avaliação de riscos, definição de responsáveis, elaboração de planos de tratamento e integração com processos institucionais de gestão de riscos. Adicionalmente, busca-se verificar se existem medidas voltadas à continuidade dos serviços críticos de TI, como planos de continuidade, análises de impacto no negócio e testes periódicos de recuperação.
+>
+> A gestão efetiva de riscos e continuidade em TI contribui para aumentar a resiliência organizacional, reduzir a ocorrência e os impactos de incidentes, fortalecer a proteção das informações institucionais e assegurar maior disponibilidade, confiabilidade e continuidade dos serviços públicos suportados por tecnologia da informação.
 
 ### q2301 [adoption]
 question: **2301. A organização executa processo de gestão dos riscos de tecnologia da informação relativos a processos de negócio.**
-subgroup: Gestão de Riscos de TI e Segurança da Informação
 mandatory: true
+repeat_group_description: true
 explain: A gestão de riscos de TI é o processo de identificar, avaliar e tratar riscos que possam afetar sistemas, serviços e processos de negócio, reduzindo impactos e apoiando decisões.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Avaliação de riscos; Critérios de análise e avaliação de riscos; Fonte de risco; Gestão de riscos; Identificação de riscos; Limites de exposição ao risco; Mitigar risco; Processo de gestão de riscos; Resposta a risco; Risco de Tecnologia da Informação; TI (Tecnologia da Informação); Tratamento de risco.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão de riscos de TI, como: matriz de riscos de TI vinculada a processos de negócio; critérios de avaliação e priorização; planos de tratamento; relatórios de acompanhamento; registros de revisão periódica; norma ou procedimento formal; evidências de integração com riscos institucionais; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -287,6 +366,7 @@ detail_options:
 ### q2302 [adoption]
 question: **2302. A organização executa processo de gestão de riscos de segurança da informação.**
 mandatory: true
+repeat_group_description: true
 explain: A gestão de riscos de segurança da informação identifica, avalia e trata ameaças à confidencialidade, integridade e disponibilidade das informações e dos serviços.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Avaliação de riscos; Critérios de análise e avaliação de riscos; Fonte de risco; Gestão de riscos; Identificação de riscos; Limites de exposição ao risco; Mitigar risco; Processo de gestão de riscos; Resposta a risco; Risco de Segurança da Informação; Segurança da Informação; Tratamento de risco.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão de riscos de segurança da informação, como: matriz ou inventário de riscos; registros de identificação e avaliação (impacto e probabilidade); planos de tratamento com responsáveis e prazos; designação formal de responsável; norma ou procedimento institucional; relatórios de acompanhamento; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -311,11 +391,16 @@ detail_options:
 - D | d) o processo de gestão de continuidade de serviços de TI está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
 
 ## Grupo: g2400 | Estrutura de Segurança da Informação
+> Este grupo avalia se a organização possui estruturas, instâncias e responsáveis formalmente definidos para coordenar, supervisionar e executar ações relacionadas à segurança da informação. Busca-se identificar se existem políticas, papéis, competências e mecanismos institucionais voltados à proteção das informações, dos sistemas e dos serviços tecnológicos utilizados pela organização.
+>
+> Também se avalia se a organização dispõe de estruturas de governança e coordenação da segurança da informação, como comitês, gestores institucionais e equipes responsáveis pelo tratamento e resposta a incidentes, bem como se essas estruturas possuem atribuições formalizadas, participação institucional adequada e capacidade para atuar de forma contínua e coordenada.
+>
+> Uma estrutura de segurança da informação adequadamente definida contribui para fortalecer a proteção de dados e sistemas, melhorar a coordenação das ações de segurança, reduzir vulnerabilidades, aumentar a capacidade de resposta a incidentes e apoiar a continuidade e a confiabilidade dos serviços públicos prestados pela organização.
 
 ### q2401 [adoption]
 question: **2401. A organização dispõe de uma política de segurança da informação.**
-subgroup: Estrutura de Segurança da Informação
 mandatory: true
+repeat_group_description: true
 explain: A política de segurança da informação define diretrizes e responsabilidades para proteger dados e sistemas, assegurando confidencialidade, integridade e disponibilidade das informações.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Alta Administração; Colaboradores; Diretriz; Gestão de riscos; Informação; Política; Política de segurança da informação; Risco de Segurança da Informação; Segurança da Informação.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da política de segurança da informação, como: documento formal aprovado pela alta administração; conteúdo com diretrizes, responsabilidades e gestão de riscos; registros de comunicação e divulgação; ações de conscientização e treinamento; histórico de revisões; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -330,6 +415,7 @@ detail_options:
 ### q2402 [adoption]
 question: **2402. A organização dispõe de comitê de segurança da informação.**
 mandatory: true
+repeat_group_description: true
 explain: O comitê de segurança da informação é a instância que coordena decisões, diretrizes e ações para proteger dados e sistemas, envolvendo áreas relevantes da organização.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Comitê de segurança da informação; Segurança da Informação.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do comitê de segurança da informação, como: ato de criação com competências definidas; composição com representantes de áreas relevantes; atas de reuniões; deliberações sobre diretrizes, normas e ações de segurança; registros de acompanhamento de decisões; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -343,6 +429,7 @@ detail_options:
 ### q2403 [adoption]
 question: **2403. A organização possui um gestor institucional de segurança da informação.**
 mandatory: true
+repeat_group_description: true
 explain: O gestor de segurança da informação é o responsável por coordenar políticas, riscos e ações de proteção de dados e sistemas, com autoridade definida pela alta administração.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Alta Administração; Competências; Gestão de riscos; Gestor institucional de segurança da informação; Informação; Partes interessadas; Risco de Segurança da Informação; Segurança da Informação.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do gestor de segurança da informação, como: ato formal de designação; descrição de atribuições e vínculo com a alta administração; registros de atuação na coordenação de riscos e ações de segurança; evidências de campanhas de conscientização e treinamentos; estrutura ou recursos disponíveis; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -358,6 +445,7 @@ detail_options:
 ### q2404 [adoption]
 question: **2404. A organização possui um responsável pelo tratamento e resposta a incidentes.**
 mandatory: true
+repeat_group_description: true
 explain: O responsável por incidentes coordena a detecção, análise e resposta a eventos de segurança, reduzindo impactos e restabelecendo serviços com rapidez.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Alta Administração; Competências; Gestão de riscos; Responsável pelo tratamento e resposta a incidentes; Informação; Partes interessadas; Risco de Segurança da Informação; Segurança da Informação.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do responsável por incidentes, como: ato formal de designação; descrição de competências; evidências da atuação de equipe de resposta a incidentes (ex.: ETIR); registros de monitoramento e análise de eventos; relatórios de incidentes tratados; registros de vulnerabilidades identificadas; comunicações e respostas a incidentes; evidências de coordenação das ações de resposta; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -372,11 +460,15 @@ detail_options:
 - G | g) o responsável ou equipe (ex.: ETIR) realiza análise pós-incidente para identificar causas e propor melhorias
 
 ## Grupo: g2500 | Processos de Segurança da Informação
+> Este grupo avalia se a organização executa processos estruturados para proteger informações, sistemas, serviços e ativos associados à informação contra acessos indevidos, falhas, vazamentos, indisponibilidades e outras ameaças à segurança da informação. Busca-se identificar se a organização adota práticas formais voltadas à proteção da confidencialidade, integridade, disponibilidade e autenticidade das informações sob sua responsabilidade.
+>
+> Também se avalia se a organização mantém processos relacionados à gestão de ativos associados à informação, controle de acesso, classificação e tratamento de informações, proteção dos recursos de processamento da informação e capacitação em segurança da informação. Essas práticas incluem inventário e proteção de ativos, revisão de privilégios, classificação de informações sensíveis, gestão de vulnerabilidades, controles técnicos de segurança, backups, monitoramento, testes de segurança e ações de conscientização e treinamento.
+>
+> A execução efetiva de processos de segurança da informação contribui para reduzir riscos operacionais e cibernéticos, fortalecer a proteção de dados e serviços institucionais, aumentar a capacidade de prevenção e resposta a incidentes e assegurar maior confiabilidade, continuidade e resiliência dos serviços públicos suportados por tecnologia da informação.
 
 ### q2501 [adoption]
 question: **2501. A organização executa processo de gestão de ativos associados à informação.**
 mandatory: true
-subgroup: Processos de Segurança da Informação
 explain: A gestão de ativos associados à informação consiste em identificar, inventariar, classificar e acompanhar ativos que armazenam, processam ou transmitem informações, assegurando sua proteção durante todo o ciclo de vida. Exemplos: sistema de prontuário eletrônico da saúde, sistema de arrecadação tributária, folha de pagamento, portal do aluno, backups, banco de dados de cidadãos, servidores, notebooks e documentos digitais que contenham informações críticas ou dados pessoais.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Ativos associados à informação; Gestão do desempenho; Informação; Processo de gestão de ativos.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão de ativos associados à informação, como: inventário de ativos e informações críticas; definição formal de responsáveis pelos ativos; classificação ou identificação de informações sensíveis ou críticas; registros de controles de proteção aplicados; planos ou ações mitigatórias para indisponibilidade de ativos críticos; norma ou procedimento formal; relatórios de acompanhamento ou revisão do processo; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -388,12 +480,11 @@ detail_options:
 - D | d) o processo de gestão de ativos associados à informação subsidia a implantação de controles e ações com vistas a assegurar a adequada proteção dos ativos e das informações que armazenam, processam ou transmitem
 - E | e) o processo de gestão de ativos associados à informação subsidia a implantação de ações mitigatórias aplicáveis no caso de ocorrência de evento catastrófico que inviabilize a utilização de ativos
 - F | f) o processo de gestão de ativos associados à informação está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
-- G | g) a organização avalia periodicamente o desempenho e a conformidade do processo de gestão de ativos associados à informação e promove eventuais ajustes necessários
 
 ### q2502 [adoption]
 question: **2502. A organização executa processo de controle de acesso à informação e aos ativos associados à informação.**
 mandatory: true
-help:  Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Ativos associados à informação; Certificado digital; Controle; Diretriz; Gestão do desempenho; Informação; Política; Serviço de TI.
+help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Ativos associados à informação; Certificado digital; Controle; Diretriz; Gestão do desempenho; Informação; Política; Serviço de TI.
 explain: O controle de acesso consiste em definir, conceder, revisar e revogar acessos físicos e lógicos à informação e aos ativos associados, assegurando que apenas usuários autorizados tenham acesso adequado às informações e serviços.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do processo de controle de acesso, como: Política de Controle de Acesso (PCA); normas ou procedimentos de concessão, revisão e revogação de acessos; perfis e matrizes de acesso; registros de revisões periódicas de privilégios; evidências de autenticação forte ou uso de certificado digital; logs de acesso; relatórios de monitoramento; ou outras evidências cabíveis, indicando a abrangência na organização.
 
@@ -401,10 +492,8 @@ detail_options:
 - A | a) a organização implementa controles de acesso físicos e lógicos à informação e aos ativos associados à informação que são por ela gerenciados ou custodiados, com vistas a proteger adequadamente a confidencialidade das informações não públicas e a integridade e a disponibilidade das informações consideradas críticas para o negócio
 - B | b) os controles de acesso implementados na organização aplicam o princípio “necessidade de conhecer”, o qual prescreve que deve haver necessidade legítima que justifique o acesso à informação por pessoa, sistema ou entidade, bem como o princípio “privilégio mínimo”, o qual estabelece que o perfil de acesso concedido deve incluir tão somente os poderes necessários para o atendimento das legítimas necessidades
 - C | c) há controles de acesso lógicos na organização que utilizam autenticação com certificado digital ICP-Brasil, a fim de prover identificação inequívoca de pessoas físicas e jurídicas e comprovação de autoria em transações digitais
-- D | d) a organização aplica o modelo de segurança de 'confiança zero' (zero trust), o qual preconiza que uma identidade não é confiável até que seja adequadamente verificada para cada acesso pretendido, independentemente de perímetros
-- E | e) a organização analisa criticamente, a intervalos regulares, os direitos de acesso lógicos e físicos existentes, com vistas à remoção de direitos que deixaram de ser necessários e para assegurar que privilégios indevidos não foram obtidos
-- F | f) a organização instituiu uma Política de Controle de Acesso (PCA), a qual estabelece princípios, objetivos, diretrizes, principais atividades e responsabilidades relativos ao processo de controle de acesso
-- G | g) a organização avalia periodicamente o desempenho e a conformidade do processo de controle de acesso e promove eventuais ajustes necessários
+- D | d) a organização analisa criticamente, a intervalos regulares, os direitos de acesso lógicos e físicos existentes, com vistas à remoção de direitos que deixaram de ser necessários e para assegurar que privilégios indevidos não foram obtidos
+- E | e) a organização instituiu uma Política de Controle de Acesso (PCA), a qual estabelece princípios, objetivos, diretrizes, principais atividades e responsabilidades relativos ao processo de controle de acesso
 
 ### q2503 [adoption]
 question: **2503. A organização executa processo para classificação e tratamento de informações.**
@@ -454,10 +543,14 @@ detail_options:
 - D | d) a organização possui programa permanente de conscientização em segurança da informação
 
 ## Grupo: g2600 | Gestão de Soluções e Projetos de TI
+> Este grupo avalia se a organização executa processos estruturados para desenvolver, adquirir, manter e gerenciar soluções e projetos de tecnologia da informação. Busca-se identificar se os sistemas e projetos de TI são conduzidos de forma planejada, controlada e alinhada às necessidades institucionais, considerando requisitos de negócio, segurança, acessibilidade, qualidade, riscos, prazos, custos e resultados esperados.
+>
+> Também se avalia se a organização adota processos formais relacionados ao ciclo de vida de software e à gestão de projetos de TI, incluindo participação das áreas de negócio, definição de requisitos, realização de testes, acompanhamento de indicadores, gestão de riscos e controle do portfólio de projetos. Essas práticas contribuem para aumentar a previsibilidade das entregas, melhorar a qualidade das soluções e reduzir falhas, retrabalho e riscos operacionais.
+>
+> A gestão efetiva de soluções e projetos de TI contribui para fortalecer a capacidade da organização de entregar sistemas e serviços tecnológicos aderentes às necessidades institucionais, melhorar o controle sobre investimentos e iniciativas de tecnologia e apoiar a transformação digital e a prestação de serviços públicos com maior qualidade, eficiência e segurança.
 
 ### q2601 [adoption]
 question: **2601. A organização executa um processo de software.**
-subgroup: Gestão de Soluções e Projetos de TI
 mandatory: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área de negócio; Processo de software; Segurança da Informação.
 explain: O processo de software consiste em definir e executar atividades para desenvolvimento, manutenção, sustentação ou aquisição de sistemas, incluindo requisitos de negócio, segurança, acessibilidade, qualidade e responsabilidades ao longo do ciclo de vida do software.
@@ -520,7 +613,7 @@ detail_options:
 - D | d) a organização utiliza mecanismos de transparência ativa para disponibilizar às partes interessadas internas e externas os perfis profissionais definidos
 
 ### q2703 [adoption]
-question: **2703. Há definição do quantitativo necessário de pessoal da área de tecnologia da informação e  segurança da informação.**
+question: **2703. Há definição do quantitativo necessário de pessoal da área de tecnologia da informação e segurança da informação.**
 mandatory: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área finalística; Planejamento da força de trabalho; Política; Procedimento técnico; Quantitativo necessário; Unidade organizacional.
 explain: A definição do quantitativo necessário de pessoal de TI consiste em estimar, de forma planejada e documentada, a quantidade de profissionais necessária para executar atividades de tecnologia da informação e segurança da informação na organização.
@@ -528,9 +621,9 @@ evidence_text: Caso tenha assinalado que adota a prática, forneça evidência d
 
 detail_options:
 - A | a) há política de orientação para o dimensionamento da força de trabalho
-- B | b) definiu-se o quantitativo necessário de pessoal da área de tecnologia da informação com base em critério(s) ou procedimento(s) técnico(s)
-- C | c) definiu-se, de maneira documentada, um quantitativo necessário de pessoal da área de tecnologia da informação
-- D | d) há revisão periódica do quantitativo de pessoal da área de tecnologia da informação necessário
+- B | b) definiu-se o quantitativo necessário de pessoal da área de tecnologia da informação e segurança da informação com base em critério(s) ou procedimento(s) técnico(s)
+- C | c) definiu-se, de maneira documentada, um quantitativo necessário de pessoal da área de tecnologia da informação e segurança da informação
+- D | d) há revisão periódica do quantitativo necessário de pessoal da área de tecnologia da informação e segurança da informação
 
 ### q2704 [adoption]
 question: **2704. A escolha dos gestores de tecnologia da informação e segurança da informação ocorre segundo perfis profissionais previamente definidos e documentados.**
@@ -592,7 +685,6 @@ scale: sim_nao
 explain: Os cargos específicos de TI e segurança da informação são funções ou cargos formalmente previstos na estrutura organizacional para execução de atividades técnicas, gerenciais ou especializadas relacionadas à tecnologia e à proteção das informações.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da existência de cargos específicos de TI e segurança da informação, como: leis, decretos ou normativos de criação de cargos; organogramas; planos de cargos e carreiras; editais de concurso; descrição de atribuições; relação de cargos providos; ou outras evidências cabíveis, indicando a abrangência na organização.
 
-
 subquestions:
 - A | a) a organização possui em sua estrutura cargos efetivos em tecnologia da informação
 - B | b) a organização possui em sua estrutura cargos ou funções formalmente atribuídas à área de tecnologia da informação
@@ -612,15 +704,17 @@ subquestions:
 question: **2801. Os processos de trabalho relativos às contratações de tecnologia da informação estão definidos.**
 mandatory: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área de gestão de contratações / área de contratações; Processo de trabalho para a gestão de contratos; Processo de trabalho para a seleção de fornecedores; Processo de trabalho para o planejamento de cada contratação.
-explain: Os processos de trabalho aplicáveis às contratações de TI consistem na definição formal das etapas, responsabilidades, procedimentos e documentos relacionados ao planejamento da contratação, à seleção de fornecedores e à gestão e fiscalização de contratos de tecnologia da informação.
-evidence_text: Caso tenha assinalado que adota a prática, forneça evidência dos processos de trabalho relativos à gestão de contratações de TI, como: manuais, fluxos, normas ou procedimentos internos; definição de papéis e responsabilidades; modelos de documentos e artefatos; fluxogramas; instruções de trabalho; processos de fiscalização contratual; referências à Lei 14.133/2021 e normativos correlatos; ou outras evidências cabíveis, indicando a abrangência na organização.
+explain: Os processos de trabalho relativos às contratações de TI consistem na definição formal das etapas, responsabilidades, procedimentos, controles e documentos relacionados ao planejamento da contratação, à seleção de fornecedores e à gestão e fiscalização contratual. A padronização de artefatos contribui para uniformizar procedimentos, reduzir falhas e aumentar a conformidade das contratações.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência dos processos de trabalho e dos artefatos padronizados relativos às contratações de TI, como: manuais, fluxos, normas ou procedimentos internos; modelos padronizados de documentos; checklists; definição de papéis e responsabilidades; fluxogramas; instruções de trabalho; artefatos de planejamento da contratação; processos de fiscalização contratual; referências à Lei 14.133/2021 e normativos correlatos; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | a) o processo de trabalho para o planejamento de cada contratação de TI contempla as etapas, as responsabilidades dos atores envolvidos e os artefatos resultantes de cada etapa
-- TODO:A | a) são disponibilizados artefatos padronizados para a fase de planejamento das contratações de TI
-- B | b) o processo de trabalho para a seleção de fornecedores contempla as etapas, as responsabilidades dos atores envolvidos e os artefatos resultantes de cada etapa
-- C | c) o processo de trabalho para a gestão de contratos contempla as etapas, as responsabilidades dos atores envolvidos e os artefatos resultantes de cada etapa
-- D | d) os processos de trabalho definidos estão aderentes às normas legais e infralegais que regem as contratações públicas
+- A | a) o processo de trabalho para o planejamento das contratações de TI contempla as etapas, as responsabilidades dos atores envolvidos e os artefatos resultantes de cada etapa
+- B | b) são disponibilizados artefatos padronizados para a fase de planejamento das contratações de TI, como Documento de Formalização da Demanda (DFD), Estudo Técnico Preliminar (ETP), Termo de Referência (TR), Matriz de Riscos ou documentos equivalentes
+- C | c) o processo de trabalho para a seleção de fornecedores contempla as etapas, as responsabilidades dos atores envolvidos e os artefatos resultantes de cada etapa
+- D | d) são disponibilizados artefatos padronizados para a fase de seleção de fornecedores, como minutas, checklists, modelos de edital, pareceres, critérios de julgamento ou documentos equivalentes
+- E | e) o processo de trabalho para a gestão e fiscalização de contratos contempla as etapas, as responsabilidades dos atores envolvidos e os artefatos resultantes de cada etapa
+- F | f) são disponibilizados artefatos padronizados para a gestão e fiscalização de contratos de TI, como modelos de plano de fiscalização, termos de recebimento, relatórios de acompanhamento, registros de ocorrências, avaliações de desempenho contratual ou documentos equivalentes
+- G | g) os processos de trabalho e os artefatos padronizados estão aderentes às normas legais e infralegais que regem as contratações públicas
 
 ### q2802 [adoption]
 question: **2802. A organização executa processo de planejamento anual das contratações.**
@@ -660,15 +754,14 @@ scale: sim_nao
 
 subquestions:
 - A | a) as contratações de soluções de TI, independentemente de qual seja a área demandante, são obrigatoriamente submetidas à análise prévia e aprovação técnica da área de gestão de TI
-- B | as contratações de TI executadas no exercício encontram-se previamente estabelecidas nos instrumentos de planejamento vigentes (PDTI/PEDTIC e PCA)
+- B | b) as contratações de TI executadas no exercício encontram-se previamente estabelecidas nos instrumentos de planejamento vigentes (PDTI/PEDTIC e PCA)
 - C | c) a fase de planejamento de cada contratação de TI é conduzida por uma Equipe de Planejamento da Contratação formalmente designada (composta, minimamente, por integrante requisitante e integrante técnico da área de TI)
 - D | d) os Termos de Referência (TR) ou Projetos Básicos preveem Níveis Mínimos de Serviço (NMS), vinculando o pagamento à efetiva entrega de resultados ou níveis de qualidade, evitando o mero pagamento por postos de trabalho ou horas trabalhadas
 - E | e) a fase de planejamento das contratações de TI inclui a análise expressa de requisitos de segurança da informação e de proteção de dados pessoais (adequação à LGPD)
 
 ### q2804eviA [upload]
 question: Caso tenha assinalado que as contratações de soluções de TI são obrigatoriamente submetidas à análise prévia e aprovação técnica da área de gestão de TI, forneça evidência de norma regulamentando esse processo e de um caso concreto.
-
-
+visible_if: q2804.A == sim
 
 ### q2805 [array]
 question: **2805. Nas contratações de bens e serviços de Tecnologia da Informação, a organização faz uso das Notas Técnicas elaboradas pelo TCE-RJ.**
@@ -691,6 +784,7 @@ subquestions:
 ### q3001 [adoption]
 question: **3001. A organização utiliza inteligência artificial de forma institucional em suas operações.**
 mandatory: true
+repeat_group_description: true
 explain: O uso institucional de inteligência artificial ocorre quando a organização conhece, autoriza, contrata, desenvolve ou supervisiona soluções de IA utilizadas em processos internos, atividades finalísticas ou serviços prestados ao cidadão.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do uso de inteligência artificial, como: relação de sistemas ou soluções com IA; projetos ou provas de conceito (POC); contratos ou aquisições; fluxos automatizados; documentos técnicos; relatórios de uso; exemplos de aplicações em processos internos ou serviços ao cidadão; ou outras evidências cabíveis, indicando a abrangência na organização.
 
@@ -705,13 +799,14 @@ detail_options:
 ### q3002 [adoption]
 question: **3002. A organização estabeleceu diretrizes para o uso da inteligência artificial.**
 mandatory: true
+repeat_group_description: true
 explain: As diretrizes para uso de inteligência artificial definem regras, responsabilidades e controles para utilização segura, ética e alinhada aos objetivos da organização, incluindo aspectos como riscos, proteção de dados e supervisão humana.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência das diretrizes para uso de inteligência artificial, como: política, norma ou guia institucional; definição de responsabilidades; regras para uso de dados pessoais e informações sensíveis; avaliações de riscos; registros de supervisão ou revisão humana; ações de conscientização ou capacitação; atas de comitês ou grupos de trabalho; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
 - A | a) a organização instituiu política ou norma interna com diretrizes claras para utilização ética e segura de inteligência artificial
 - B | b) há regras e restrições formais sobre a utilização de dados institucionais não públicos, dados pessoais ou sensíveis como "insumos" (prompts) em ferramentas de IA
-- C | c) a organização assegura a publicidade ao usuário de sua interação com as soluções de IA
+- C | c) a organização informa ao usuário, quando aplicável, que ele está interagindo com solução de inteligência artificial ou que determinado serviço, resposta ou decisão contou com apoio de IA
 - D | d) a organização estabelece a obrigatoriedade de avaliação de riscos antes da implantação de soluções de IA
 - E | e) a organização adota mecanismos de revisão humana, garantindo que decisões sugeridas por IA não sejam aplicadas de forma totalmente autônoma
 - F | f) a organização realiza testes, validações ou avaliações antes da utilização institucional de soluções de IA
@@ -720,8 +815,11 @@ detail_options:
 ### q3003 [array]
 question: **3003. A organização já realizou contratação de soluções ou serviços que utilizam inteligência artificial.**
 mandatory: true
+repeat_group_description: true
 scale: sim_nao
 help: Considere contratações de softwares, plataformas, serviços em nuvem, assistentes virtuais, ferramentas de automação, análise de dados, IA generativa ou soluções que utilizem técnicas de inteligência artificial, aprendizado de máquina ou processamento de linguagem natural.
+evidence_if: q3003.A == sim or q3003.B == sim or q3003.C == sim
+evidence_text: Caso tenha assinalado que realizou contratações relacionadas à inteligência artificial, forneça alguma evidência das soluções ou serviços contratados, como: editais e/ou contratos, estudos técnicos preliminares (ETP), documentos de formalização da demanda (DFD) e número de processo SEI.
 
 subquestions:
 - A | a) a organização contratou soluções de software como serviço (SaaS) ou plataformas que possuem funcionalidades de IA para atividades específicas (ex: análise de fraudes, reconhecimento facial, chatbots)
@@ -730,7 +828,7 @@ subquestions:
 
 ### q3004 [multi]
 question: **3004. Quais foram as principais dificuldades enfrentadas pela organização na fase de planejamento e contratação de soluções ou serviços que utilizam inteligência artificial (IA)?**
-mandatory: false  
+mandatory: false
 visible_if: q3003.A == sim or q3003.B == sim or q3003.C == sim
 help: Considere contratações de softwares, plataformas, serviços em nuvem, assistentes virtuais, ferramentas de automação, análise de dados, IA generativa ou soluções que utilizem técnicas de inteligência artificial, aprendizado de máquina ou processamento de linguagem natural.
 
@@ -751,6 +849,7 @@ options:
 ### q3005 [adoption]
 question: **3005. A organização adota medidas para identificar e controlar o uso não autorizado ou não mapeado de inteligência artificial generativa.**
 mandatory: true
+repeat_group_description: true
 explain: O uso não autorizado ou não mapeado de IA generativa ocorre quando agentes públicos utilizam ferramentas como ChatGPT, Gemini, Claude, Copilot ou similares em atividades de trabalho sem conhecimento, autorização, diretrizes ou supervisão institucional.
 help: Considere o uso de ferramentas públicas, gratuitas, pessoais, corporativas ou integradas a suítes de produtividade, navegadores, editores de texto, sistemas de busca, atendimento, desenvolvimento de software ou análise de dados.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência das medidas de identificação e controle do uso de IA generativa, como: levantamento de ferramentas utilizadas; norma ou orientação interna; campanhas de conscientização; registros de autorização; controles técnicos; avaliações de risco; comunicações aos usuários; ou outras evidências cabíveis.
@@ -762,4 +861,6 @@ detail_options:
 - D | d) a organização possui processo para avaliação e homologação de novas ferramentas de IA necessárias às atividades de trabalho
 
 ### q3006 [long]
-question: **3006. Descreva resumidamente os principais usos de inteligência artificial existentes na organização.**
+question: **3006. Descreva os principais usos de inteligência artificial existentes na organização, indicando, quando possível, a finalidade, a área responsável, o estágio de utilização e se a solução é desenvolvida internamente, contratada ou disponibilizada por terceiro**
+repeat_group_description: true
+mandatory: false
