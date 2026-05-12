@@ -238,10 +238,11 @@ def parse_markdown(path: Path) -> Survey:
                 key = key.strip().lower()
                 value = value.strip()
                 known = {
-                    "mandatory", "scale", "visible_if", "help", "evidence", "evidence_text", "evidence_suffix",
+                    "mandatory", "scale", "visible_if", "help", "evidence", "evidence_text", "evidence_if", "evidence_suffix",
                     "evidence_mandatory", "evidence_allowed_filetypes", "evidence_min_files", "evidence_max_files", "detail",
                     "detail_mandatory", "min_answers", "max_answers", "hide_tip", "allowed_filetypes",
-                    "min_files", "max_files", "text", "question", "explain", "answer_width", "subgroup", "target"
+                    "min_files", "max_files", "text", "question", "explain", "answer_width", "subgroup", "target",
+                    "repeat_group_description",
                 }
                 if key in known:
                     if key == "help":
@@ -256,6 +257,8 @@ def parse_markdown(path: Path) -> Survey:
                         current_question.visible_if = value
                     elif key in {"text", "question"}:
                         current_question.text_lines.append(value)
+                    elif key == "repeat_group_description":
+                        pass
                     else:
                         current_question.attrs[key] = value
                     mode = None
@@ -781,14 +784,17 @@ def render_question(doc: Document, survey: Survey, q: Question, answer_dependenc
         # add_text_paragraph(doc, "☐  Evidência documental a ser anexada no LimeSurvey.", size=10, color="666666", left_indent=0.35, space_after=6, style="ExplicaAlternativa")
     elif q.type in {"array", "matrix"}:
         render_array_table(doc, survey, q)
+    elif q.type in {"array_numbers", "array_number", "numeric_array", "array_numeros", "matriz_numerica", ":"}:
+        render_array_table(doc, survey, q, cell_text=" ")
     else:
         add_answer_line(doc)
 
     add_help(doc, q.help)
+    add_adoption_evidence_text(doc, q.attrs.get("evidence_text", ""))
     add_blank(doc, 8)
 
 
-def render_array_table(doc: Document, survey: Survey, q: Question):
+def render_array_table(doc: Document, survey: Survey, q: Question, cell_text: str = "○"):
     rows = q.subquestions or []
     cols = options_for_question(survey, q)
     if not rows or not cols:
@@ -805,7 +811,7 @@ def render_array_table(doc: Document, survey: Survey, q: Question):
     for r_idx, row in enumerate(rows, start=1):
         table.rows[r_idx].cells[0].text = clean_text(row.text)
         for c_idx in range(1, len(cols) + 1):
-            table.rows[r_idx].cells[c_idx].text = "○"
+            table.rows[r_idx].cells[c_idx].text = cell_text
     for row_idx, row in enumerate(table.rows):
         is_header = row_idx == 0
         for cell_idx, cell in enumerate(row.cells):

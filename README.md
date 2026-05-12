@@ -81,6 +81,7 @@ Declare cada questao com `### codigo [tipo]`. Os tipos aceitos pelo `.lss` sao:
 - `upload`, `file`, `arquivo`: envio de arquivo.
 - `multi_text`, `multitext`, `varios_textos`: varios campos de texto. Use `subquestions`.
 - `array`, `matrix`, `matriz`: matriz/tabela. Use `subquestions` para linhas e `scale` ou `options` para colunas.
+- `array_numbers`, `array_number`, `numeric_array`, `array_numeros`, `matriz_numerica`: matriz/tabela de numeros. Use `subquestions` para linhas e `scale` ou `options` para colunas.
 - `adoption`, `adocao`: macro de grau de adocao.
 
 Exemplo de escala reutilizavel:
@@ -129,6 +130,28 @@ subquestions:
 
 No parser do `.lss`, linhas de opcoes e subquestoes podem ser escritas com ou
 sem hifen, desde que usem `codigo | texto` ou `codigo: texto`.
+
+Para matriz numerica, use `array_numbers`:
+
+```md
+### q2004 [array_numbers]
+question: **Informe o quantitativo de profissionais por area e vinculo.**
+mandatory: true
+
+subquestions:
+- TI | Tecnologia da Informacao
+- SI | Seguranca da Informacao
+
+options:
+- efetivos | Servidores efetivos
+- comissionados | Servidores comissionados
+- terceirizados | Terceirizados
+```
+
+Por padrao, `array_numbers` gera campos numericos no LimeSurvey com valor minimo
+`0`, maximo `1000`, passo livre (`multiflexible_step: -1`) e caixas de entrada
+visiveis (`input_boxes: 1`). Esses atributos podem ser sobrescritos na questao,
+se necessario.
 
 ## Atributos de questao
 
@@ -250,7 +273,8 @@ O macro `[adoption]` aceita, alem dos atributos gerais:
 - `detail_min_answers`, `detail_max_answers`: limites do detalhamento.
 - `detail_hide_tip`: controla a dica padrao do LimeSurvey no detalhamento.
 - `nsa_suffix`, `lei_suffix`, `est_suffix`, `raz_suffix`, `detail_suffix`: sufixos dos codigos gerados.
-- `evidence_text`: cria pergunta `upload` obrigatoria condicionada a adocao parcial/maior.
+- `evidence_text`: cria pergunta `upload` obrigatoria para envio de evidencia documental.
+- `evidence_if`: condicao de exibicao da pergunta automatica de evidencia documental.
 
 Campos legados `evidence`, `evidence_type`, `evidence_mandatory`,
 `evidence_allowed_filetypes`, `evidence_min_files`, `evidence_max_files` e
@@ -266,8 +290,30 @@ detalhamento.
 
 Quando `evidence_text` e informado em uma questao `[adoption]`, o conversor
 cria automaticamente uma pergunta `upload` obrigatoria, exibida quando a resposta
-indicar adocao parcial ou maior. Se precisar de outro comportamento, declare uma
-pergunta `upload` normal no `.md`, com o tipo e a condicao desejados:
+indicar adocao parcial ou maior.
+
+Nas demais questoes, `evidence_text` tambem cria uma pergunta `upload`
+obrigatoria com os mesmos defaults (`pdf, docx, zip`, minimo 1 arquivo e maximo
+1 arquivo). Use `evidence_if` quando precisar informar explicitamente a condicao
+de exibicao da evidencia:
+
+```md
+### q2001 [single]
+question: **A organizacao possui plano de TI vigente?**
+mandatory: true
+evidence_text: Caso tenha respondido que possui plano vigente, anexe evidencia documental.
+evidence_if: q2001 == sim
+
+options:
+- sim | Sim
+- nao | Nao
+```
+
+Quando `evidence_if` nao for informado, o conversor usa uma condicao padrao:
+qualquer alternativa marcada/respondida para questoes com alternativas, ou
+evidencia sempre visivel para questoes textuais ou sem alternativas discretas.
+Se precisar de outro comportamento, declare uma pergunta `upload` normal no
+`.md`, com o tipo e a condicao desejados:
 
 ```md
 ### q1022extDevi [upload]

@@ -89,6 +89,14 @@ detail_options:
         self.assertEqual(questions["q1evi"].attrs["allowed_filetypes"], "pdf, docx, zip")
         self.assertEqual(questions["q1evi"].attrs["min_files"], "1")
         self.assertEqual(questions["q1evi"].attrs["max_files"], "1")
+
+        root = ET.fromstring(md2lss.build_lss(survey, sid=123456))
+        question_rows = {
+            row.findtext("title"): row
+            for row in root.find("questions/rows")
+        }
+        self.assertEqual(question_rows["q1evi"].findtext("type"), "|")
+        self.assertEqual(question_rows["q1evi"].findtext("mandatory"), "Y")
         self.assertEqual(questions["q1evi"].text(), "Anexe evidencia documental.")
 
         root = ET.fromstring(md2lss.build_lss(survey, sid=123456))
@@ -130,6 +138,102 @@ Texto da adoption.
         self.assertIn("q1evi", municipal_codes)
         self.assertNotIn("q1evi", estadual_codes)
 
+    def test_lss_single_evidence_text_creates_upload_with_default_condition(self):
+        text = """---
+sid: 123456
+---
+
+# Survey
+
+## Grupo: g1 | Grupo 1
+
+### q1 [single]
+question: **Escolha uma opção.**
+mandatory: true
+evidence_text: Anexe evidencia documental.
+
+options:
+- sim | Sim
+- nao | Não
+"""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "survey.md"
+            path.write_text(text, encoding="utf-8")
+
+            survey = md2lss.parse_markdown(path)
+
+        questions = {q.code: q for group in survey.groups for q in group.questions}
+        self.assertIn("q1evi", questions)
+        self.assertEqual(questions["q1evi"].type, "upload")
+        self.assertTrue(questions["q1evi"].mandatory)
+        self.assertEqual(questions["q1evi"].visible_if, "q1 in [sim, nao]")
+        self.assertEqual(questions["q1evi"].attrs["allowed_filetypes"], "pdf, docx, zip")
+        self.assertEqual(questions["q1evi"].attrs["min_files"], "1")
+        self.assertEqual(questions["q1evi"].attrs["max_files"], "1")
+
+    def test_lss_multi_evidence_text_creates_upload_with_any_checked_condition(self):
+        text = """# Survey
+
+## Grupo: g1 | Grupo 1
+
+### q1 [multi]
+question: **Marque as opções.**
+evidence_text: Anexe evidencia documental.
+
+subquestions:
+- A | Opção A
+- B | Opção B
+"""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "survey.md"
+            path.write_text(text, encoding="utf-8")
+
+            survey = md2lss.parse_markdown(path)
+
+        questions = {q.code: q for group in survey.groups for q in group.questions}
+        self.assertEqual(questions["q1evi"].visible_if, "q1.A == Y or q1.B == Y")
+
+    def test_lss_common_evidence_if_overrides_default_condition(self):
+        text = """# Survey
+
+## Grupo: g1 | Grupo 1
+
+### q1 [single]
+question: **Escolha uma opção.**
+evidence_text: Anexe evidencia documental.
+evidence_if: q1 == sim
+
+options:
+- sim | Sim
+- nao | Não
+"""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "survey.md"
+            path.write_text(text, encoding="utf-8")
+
+            survey = md2lss.parse_markdown(path)
+
+        questions = {q.code: q for group in survey.groups for q in group.questions}
+        self.assertEqual(questions["q1evi"].visible_if, "q1 == sim")
+
+    def test_lss_short_evidence_text_without_evidence_if_is_always_visible(self):
+        text = """# Survey
+
+## Grupo: g1 | Grupo 1
+
+### q1 [short]
+question: **Informe o valor.**
+evidence_text: Anexe evidencia documental.
+"""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "survey.md"
+            path.write_text(text, encoding="utf-8")
+
+            survey = md2lss.parse_markdown(path)
+
+        questions = {q.code: q for group in survey.groups for q in group.questions}
+        self.assertEqual(questions["q1evi"].visible_if, "1")
+
     def test_docx_adoption_renders_explain_and_evidence_text(self):
         q = md2docx.Question(
             code="q1",
@@ -156,6 +260,47 @@ Texto da adoption.
         self.assertIn(("help", "Ajuda da questao.", {}), paragraphs)
         self.assertIn(("text", "Explicacao curta.", {"size": 9, "color": "5B9BD5", "align": md2docx.WD_ALIGN_PARAGRAPH.JUSTIFY, "left_indent": 10.16, "name": "Calibri", "space_after": 6}), paragraphs)
         self.assertEqual(evidence_blocks, ["Anexe evidencia documental."])
+
+    def test_docx_common_question_renders_evidence_text(self):
+        q = md2docx.Question(
+            code="q1",
+            type="short",
+            text_lines=["Texto da pergunta."],
+            attrs={"evidence_text": "Anexe evidencia documental."},
+        )
+        survey = md2docx.Survey()
+        evidence_blocks = []
+
+        with patch.object(md2docx, "start_question_page"), \
+            patch.object(md2docx, "add_subgroup_title"), \
+            patch.object(md2docx, "add_question_title"), \
+            patch.object(md2docx, "add_adoption_explain"), \
+            patch.object(md2docx, "add_answer_line"), \
+            patch.object(md2docx, "add_help"), \
+            patch.object(md2docx, "add_adoption_evidence_text", side_effect=lambda _doc, text: evidence_blocks.append(text)), \
+            patch.object(md2docx, "add_blank"):
+            md2docx.render_question(object(), survey, q)
+
+        self.assertEqual(evidence_blocks, ["Anexe evidencia documental."])
+
+    def test_docx_parser_ignores_repeat_group_description_directive(self):
+        text = """# Survey
+
+## Grupo: g1 | Grupo 1
+
+### q1 [adoption]
+question: **Texto da adoption.**
+repeat_group_description: true
+"""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "survey.md"
+            path.write_text(text, encoding="utf-8")
+
+            survey = md2docx.parse_markdown(path)
+
+        question = survey.groups[0].questions[0]
+        self.assertEqual(question.text_lines, ["**Texto da adoption.**"])
+        self.assertNotIn("repeat_group_description", question.attrs)
 
     def test_docx_evidence_text_uses_discreet_callout(self):
         doc = md2docx.Document()

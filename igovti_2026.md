@@ -19,6 +19,87 @@ type: single
 - sim | Sim
 - nao | Não
 
+## Grupo: g0100 | Estrutura Organizacional e Força de Trabalho
+> Este grupo coleta informações sobre como as funções de tecnologia da informação e segurança da informação estão organizadas na entidade. O objetivo é caracterizar a existência de estruturas formais, o modelo predominante de prestação dos serviços de TI e o perfil da força de trabalho que atua nessas áreas, permitindo análises comparativas com as demais práticas avaliadas no questionário.
+
+### q0101 [single]
+question: **0101. Qual alternativa melhor descreve a formalização e o modelo de operação predominante da Tecnologia da Informação (TI) na organização?**
+mandatory: true
+explain: Identifica se a TI existe formalmente no organograma e como os recursos e serviços tecnológicos estão distribuídos física e administrativamente na organização.
+help: Considere o modelo predominante de organização e prestação dos serviços de TI da própria organização, ainda que existam situações pontuais diferentes em determinadas secretarias, unidades ou sistemas. No âmbito do SETIC, a atuação do PRODERJ como órgão diretor do sistema e provedor de diretrizes corporativas não caracteriza, por si só, modelo híbrido, federado ou centralizado externo. A classificação deve considerar principalmente como a própria organização estrutura, executa, gerencia e operacionaliza suas atividades e serviços de TI.
+evidence_if: q0101 in [A, B, C, D, E]
+evidence_text: Forneça como evidência a lei, decreto, portaria ou regimento interno que institui o organograma da organização e as competências da área de TI.
+
+options:
+- A | a) Centralizada Interna: Há uma área de TI centralizada e formal que atende toda a organização, utilizando equipe técnica majoritariamente própria (servidores).
+- B | b) Centralizada Terceirizada: Há uma área de TI centralizada e formal que faz a gestão, mas a execução operacional/técnica é predominantemente terceirizada (ex: fábricas de software, service desk).
+- C | c) Centralizada Externa: Os serviços de TI são prestados predominantemente por um órgão, entidade ou estrutura central externa à organização (ex: empresa pública de processamento de dados estadual ou municipal).
+- D | d) Descentralizada: Diferentes secretarias, unidades ou setores possuem autonomia e mantêm suas próprias equipes, contratos ou infraestruturas de TI de forma independente.
+- E | e) Híbrida: Existe uma TI central formal para diretrizes e infraestrutura corporativa, mas as áreas de negócio possuem equipes próprias para sustentar sistemas específicos.
+- F | f) Inexistente / Informal: Não há área de TI formalmente instituída no organograma da organização.
+
+### q0102 [single]
+question: **0102. Como a área de tecnologia da informação está posicionada na estrutura hierárquica da organização?**
+mandatory: true
+explain: Identifica o nível hierárquico da área de TI e sua proximidade com a alta administração, o que pode influenciar sua capacidade de coordenação institucional, priorização de demandas e participação nas decisões estratégicas.
+help: Considere a posição formal predominante da unidade central de TI no organograma institucional.
+evidence_if: q0102 in [A, B, C, D]
+evidence_text: Forneça como evidência o organograma institucional, regimento interno, lei, decreto, portaria ou instrumento equivalente que demonstre a posição hierárquica da área de TI.
+
+options:
+- A | a) a área de TI reporta-se diretamente ao dirigente máximo da organização
+- B | b) a área de TI está subordinada a secretaria, subsecretaria, diretoria-geral ou estrutura equivalente de nível estratégico
+- C | c) a área de TI está subordinada a área administrativa, financeira ou área meio equivalente
+- D | d) a área de TI está subordinada a unidade operacional ou setorial sem atuação corporativa relevante
+- E | e) não há área de TI formalmente instituída ou não há posicionamento hierárquico formal definido para a área de TI
+
+### q0103 [multi]
+question: **0103. A organização definiu formalmente as atribuições e competências da área de tecnologia da informação.**
+mandatory: true
+explain: As atribuições da área de TI correspondem às competências, responsabilidades e atividades formalmente estabelecidas em norma, regimento, organograma, ato administrativo ou instrumento equivalente.
+help: Considere apenas atribuições formalmente definidas em instrumentos institucionais. Não considere atividades exercidas apenas de forma informal ou ad hoc.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência das atribuições formalizadas da área de TI, como: regimento interno; organograma; decreto; resolução; portaria; manual de competências; descrição formal de responsabilidades; ou outras evidências cabíveis.
+
+options:
+- A | a) a área de TI possui atribuições formalizadas relacionadas à sustentação de infraestrutura e serviços tecnológicos
+- B | b) a área de TI possui atribuições formalizadas relacionadas ao desenvolvimento, manutenção ou integração de sistemas
+- C | c) a área de TI possui atribuições formalizadas relacionadas à segurança da informação ou segurança cibernética
+- D | d) a área de TI possui atribuições formalizadas relacionadas à governança, planejamento ou gestão de tecnologia da informação
+- E | e) a área de TI possui atribuições formalizadas relacionadas à gestão de contratos e fornecedores de tecnologia da informação
+- F | f) a área de TI possui atribuições formalizadas relacionadas à gestão de dados, análise de dados, automação ou inteligência artificial
+
+### q0104 [single]
+question: **0104. Como a função de Segurança da Informação (SI) está formalmente posicionada na estrutura organizacional?**
+mandatory: true
+explain: Identifica se a segurança da informação possui unidade, gestor, responsável, comitê ou instância formal, e se está integrada à TI, separada da TI ou organizada em estrutura colegiada.
+evidence_if: q0104 in [A, B, C, D]
+evidence_text: Forneça como evidência o organograma normatizado ou a portaria de designação que demonstre a quem o gestor/comitê de Segurança da Informação está subordinado.
+
+options:
+- A | a) Independente da TI: Há unidade, área ou gestor de segurança da informação formalmente separado da área de TI.
+- B | b) Integrada à TI: A área, equipe ou responsável por segurança da informação integra a estrutura da área de tecnologia da informação.
+- C | c) Gerida por Comitê: Não há uma unidade administrativa exclusiva para SI, mas a função é coordenada por comitê, comissão ou instância colegiada formal.
+- D | d) Responsável designado: Há responsável formalmente designado para segurança da informação, mas sem unidade, equipe ou comitê específico.
+- E | e) Inexistente / Informal: Não há área, função, gestor ou comitê de Segurança da Informação formalmente instituído na organização.
+
+### q0105 [array_numbers]
+question: **0105. Informe o quantitativo de profissionais que atuam regularmente em tecnologia da informação e segurança da informação, por área e tipo de vínculo.**
+mandatory: true
+explain: Esta questão permite avaliar a capacidade operacional da entidade, o grau de dependência de força de trabalho externa e a existência de pessoal dedicado às funções de TI e segurança da informação.
+help: Informe valores numéricos inteiros. Considere profissionais que atuam de forma regular em atividades de TI ou segurança da informação, na unidade central ou em estruturas descentralizadas. Caso uma pessoa atue simultaneamente nas duas áreas, registre-a na área em que atua predominantemente. Caso não haja profissionais em determinada combinação, informe 0.
+
+subquestions:
+- TI | Tecnologia da Informação
+- SI | Segurança da Informação
+
+options:
+- efetivos | Servidores efetivos ou empregados públicos
+- comissionados | Ocupantes exclusivamente de cargos em comissão (sem vínculo efetivo)
+- terceirizados | Profissionais terceirizados ou contratados por empresas prestadoras de serviço
+- cedidos | Servidores cedidos ou requisitados de outros órgãos
+- temporarios | Contratados por tempo determinado (ex: Processo Seletivo Simplificado - PSS)
+- estagiarios | Estagiários e bolsistas
+
 ## Grupo: g1000 | Governança de Tecnologia da Informação
 > Este grupo avalia como a alta administração direciona, acompanha e avalia o uso da tecnologia da informação na organização. A governança de TI não se limita a aspectos técnicos: envolve decisões estratégicas sobre como a tecnologia deve apoiar os objetivos institucionais, melhorar os serviços públicos, reduzir riscos e gerar valor para a sociedade.
 >
@@ -29,7 +110,7 @@ type: single
 > Uma governança de TI efetiva contribui para o uso eficiente dos recursos públicos, evita desperdícios, fortalece a continuidade e a qualidade dos serviços digitais e apoia a entrega de serviços públicos mais simples, seguros e centrados no usuário.
 
 ### q1001 [adoption]
-question:**1001. A alta administração estabeleceu modelo de gestão de tecnologia da informação.**
+question: **1001. A alta administração estabeleceu modelo de gestão de tecnologia da informação.**
 mandatory: true
 repeat_group_description: true
 explain: O modelo de gestão de tecnologia da informação é o conjunto de diretrizes, estruturas, papéis e instâncias (como comitês) definidos pela alta administração para orientar, controlar e alinhar a TI às estratégias organizacionais.
@@ -48,7 +129,7 @@ detail_options:
 - I | i) a organização divulga os objetivos, indicadores e metas para a gestão de tecnologia da informação
 
 ### q1002 [adoption]
-question:**1002. A alta administração monitora o desempenho da gestão de tecnologia da informação.**
+question: **1002. A alta administração monitora o desempenho da gestão de tecnologia da informação.**
 mandatory: true
 repeat_group_description: true
 explain: O monitoramento do desempenho de TI é o acompanhamento sistemático, pela alta administração, de indicadores, metas e resultados da gestão de TI, para avaliar desempenho e orientar decisões.
@@ -62,7 +143,7 @@ detail_options:
 - D | d) relatórios de medição de desempenho da gestão de tecnologia da informação estão disponíveis à liderança
 
 ### q1003 [adoption]
-question:**1003. A instância superior de governança recebe serviços de auditoria interna que adicionam valor à organização.**
+question: **1003. A instância superior de governança recebe serviços de auditoria interna que adicionam valor à organização.**
 mandatory: true
 repeat_group_description: true
 explain: Os serviços de auditoria interna agregam valor quando avaliam riscos, controles e governança, apoiando a alta administração com recomendações para melhoria da gestão, inclusive de TI e segurança da informação.
@@ -319,11 +400,11 @@ evidence_text: Caso tenha assinalado que adota a prática, forneça evidência d
 detail_options:
 - A | a) a organização implementa controles de acesso físicos e lógicos à informação e aos ativos associados à informação que são por ela gerenciados ou custodiados, com vistas a proteger adequadamente a confidencialidade das informações não públicas e a integridade e a disponibilidade das informações consideradas críticas para o negócio
 - B | b) os controles de acesso implementados na organização aplicam o princípio “necessidade de conhecer”, o qual prescreve que deve haver necessidade legítima que justifique o acesso à informação por pessoa, sistema ou entidade, bem como o princípio “privilégio mínimo”, o qual estabelece que o perfil de acesso concedido deve incluir tão somente os poderes necessários para o atendimento das legítimas necessidades
-- C | c) TODO:REMOVE há controles de acesso lógicos na organização que utilizam autenticação com certificado digital ICP-Brasil, a fim de prover identificação inequívoca de pessoas físicas e jurídicas e comprovação de autoria em transações digitais
-- D | d)  a organização aplica o modelo de segurança de 'confiança zero'(zero trust), o qual preconiza que uma identidade não é confiável até que seja adequadamente verificada para cada acesso pretendido, independentemente de perímetros
+- C | c) há controles de acesso lógicos na organização que utilizam autenticação com certificado digital ICP-Brasil, a fim de prover identificação inequívoca de pessoas físicas e jurídicas e comprovação de autoria em transações digitais
+- D | d) a organização aplica o modelo de segurança de 'confiança zero' (zero trust), o qual preconiza que uma identidade não é confiável até que seja adequadamente verificada para cada acesso pretendido, independentemente de perímetros
 - E | e) a organização analisa criticamente, a intervalos regulares, os direitos de acesso lógicos e físicos existentes, com vistas à remoção de direitos que deixaram de ser necessários e para assegurar que privilégios indevidos não foram obtidos
 - F | f) a organização instituiu uma Política de Controle de Acesso (PCA), a qual estabelece princípios, objetivos, diretrizes, principais atividades e responsabilidades relativos ao processo de controle de acesso
- - G | g) TODO:REMOVE a organização avalia periodicamente o desempenho e a conformidade do processo de controle de acesso e promove eventuais ajustes necessários
+- G | g) a organização avalia periodicamente o desempenho e a conformidade do processo de controle de acesso e promove eventuais ajustes necessários
 
 ### q2503 [adoption]
 question: **2503. A organização executa processo para classificação e tratamento de informações.**
@@ -398,10 +479,10 @@ explain: A gestão de projetos de TI consiste em planejar, executar, acompanhar 
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão de projetos de TI, como: portfólio de projetos; planos de projeto; cronogramas; registros de acompanhamento de escopo, custos e prazos; análises e planos de tratamento de riscos; relatórios de status; metodologia ou norma formal de gestão de projetos; indicadores de desempenho; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | a organização possui base de dados consolidada (portfólio) de projetos de tecnologia da informação
-- B | escopo, custos, uso de recursos e cumprimento de prazos são gerenciados em cada projeto
-- C | é realizada a gestão de riscos de cada um dos projetos de alta materialidade ou alta relevância
-- D | o processo de gestão de projetos está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
+- A | a) a organização possui base de dados consolidada (portfólio) de projetos de tecnologia da informação
+- B | b) escopo, custos, uso de recursos e cumprimento de prazos são gerenciados em cada projeto
+- C | c) é realizada a gestão de riscos de cada um dos projetos de alta materialidade ou alta relevância
+- D | d) o processo de gestão de projetos está formalizado (a organização instituiu norma interna, guia ou instrumento similar com orientações quanto à execução do processo e definição de responsabilidades)
 
 ## Grupo: g2700 | Gestão de Pessoas em Tecnologia da Informação
 > Este grupo avalia se a organização planeja, estrutura e desenvolve sua força de trabalho de tecnologia da informação e segurança da informação. A gestão de pessoas em TI é essencial para assegurar que a organização disponha de profissionais, gestores e competências compatíveis com suas responsabilidades, seus riscos e suas necessidades institucionais.
@@ -446,13 +527,13 @@ explain: A definição do quantitativo necessário de pessoal de TI consiste em 
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do dimensionamento da força de trabalho de TI, como: política ou metodologia de dimensionamento; estudos ou relatórios técnicos; definição documentada do quantitativo necessário; critérios utilizados (serviços, sistemas, demanda, riscos ou complexidade); revisões periódicas; planos de provimento; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | há política de orientação para o dimensionamento da força de trabalho
-- B | definiu-se o quantitativo necessário de pessoal da área de tecnologia da informação com base em critério(s) ou procedimento(s) técnico(s)
-- C | definiu-se, de maneira documentada, um quantitativo necessário de pessoal da área de tecnologia da informação
-- D | há revisão periódica do quantitativo de pessoal da área de tecnologia da informação necessário
+- A | a) há política de orientação para o dimensionamento da força de trabalho
+- B | b) definiu-se o quantitativo necessário de pessoal da área de tecnologia da informação com base em critério(s) ou procedimento(s) técnico(s)
+- C | c) definiu-se, de maneira documentada, um quantitativo necessário de pessoal da área de tecnologia da informação
+- D | d) há revisão periódica do quantitativo de pessoal da área de tecnologia da informação necessário
 
 ### q2704 [adoption]
-**2704. A escolha dos gestores de tecnologia da informação e segurança da informação ocorre segundo perfis profissionais previamente definidos e documentados.**
+question: **2704. A escolha dos gestores de tecnologia da informação e segurança da informação ocorre segundo perfis profissionais previamente definidos e documentados.**
 mandatory: true
 explain: A escolha de gestores de TI e segurança da informação com base em perfis profissionais consiste em utilizar critérios previamente definidos de competências, experiência, integridade e habilidades para ocupação de cargos e funções de gestão.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Gestor; Indicador; Perfil profissional; Perfil profissional desejado; Planejamento da força de trabalho.
@@ -485,10 +566,10 @@ help: Considere se a organizacao executa acoes para tratar lacunas de competenci
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do tratamento de lacunas de competências, como: plano de capacitação ou treinamento; registros de participação em cursos e treinamentos; ações de incentivo à capacitação; acompanhamento de participação e resultados; revisões periódicas do plano de capacitação; contratações ou apoio especializado; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | a organização elabora plano de capacitação (plano de treinamento) visando o tratamento das lacunas de competência identificadas
-- B | a organização incentiva seus colaboradores e gestores a participar das ações de capacitação existentes
-- C | a organização monitora a participação dos colaboradores e gestores nas ações de capacitação existentes
-- D | a organização analisa periódica e criticamente o plano de capacitação (plano de treinamento) existente
+- A | a) a organização elabora plano de capacitação (plano de treinamento) visando o tratamento das lacunas de competência identificadas
+- B | b) a organização incentiva seus colaboradores e gestores a participar das ações de capacitação existentes
+- C | c) a organização monitora a participação dos colaboradores e gestores nas ações de capacitação existentes
+- D | d) a organização analisa periódica e criticamente o plano de capacitação (plano de treinamento) existente
 
 ### q2707 [adoption]
 question: **2707. A organização realiza, formalmente, avaliação de desempenho individual do pessoal de tecnologia da informação e de segurança da informação, com atribuição de nota ou conceito, tendo como critério de avaliação o alcance das metas previstas.**
@@ -505,12 +586,12 @@ detail_options:
 - E | e) a avaliação abrange o desempenho dos colaboradores da área de segurança da informação
 
 ### q2708 [array]
+question: **2708. A organização possui em sua estrutura cargos específicos em tecnologia da informação e segurança da informação.**
 mandatory: true
 scale: sim_nao
 explain: Os cargos específicos de TI e segurança da informação são funções ou cargos formalmente previstos na estrutura organizacional para execução de atividades técnicas, gerenciais ou especializadas relacionadas à tecnologia e à proteção das informações.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da existência de cargos específicos de TI e segurança da informação, como: leis, decretos ou normativos de criação de cargos; organogramas; planos de cargos e carreiras; editais de concurso; descrição de atribuições; relação de cargos providos; ou outras evidências cabíveis, indicando a abrangência na organização.
 
-**2708. A organização possui em sua estrutura cargos específicos em tecnologia da informação e segurança da informação.**
 
 subquestions:
 - A | a) a organização possui em sua estrutura cargos efetivos em tecnologia da informação
@@ -536,6 +617,7 @@ evidence_text: Caso tenha assinalado que adota a prática, forneça evidência d
 
 detail_options:
 - A | a) o processo de trabalho para o planejamento de cada contratação de TI contempla as etapas, as responsabilidades dos atores envolvidos e os artefatos resultantes de cada etapa
+- TODO:A | a) são disponibilizados artefatos padronizados para a fase de planejamento das contratações de TI
 - B | b) o processo de trabalho para a seleção de fornecedores contempla as etapas, as responsabilidades dos atores envolvidos e os artefatos resultantes de cada etapa
 - C | c) o processo de trabalho para a gestão de contratos contempla as etapas, as responsabilidades dos atores envolvidos e os artefatos resultantes de cada etapa
 - D | d) os processos de trabalho definidos estão aderentes às normas legais e infralegais que regem as contratações públicas
@@ -568,7 +650,7 @@ detail_options:
 - D | d) a ata de registro de preços, a ata de julgamento, contendo propostas e lances oferecidos (quando for o caso) são publicadas no PNCP
 - E | e) o inteiro teor dos contratos, notas de empenho, aditivos e termos de prorrogação de contratos são publicados no PNCP
 - F | f) os termos de recebimentos provisórios e definitivos são publicados no PNCP
-- G | g) a análise realizada e justificativa dada para subsidiar a decisão de prorrogação contratual são publicadas no PNCP\
+- G | g) a análise realizada e justificativa dada para subsidiar a decisão de prorrogação contratual são publicadas no PNCP
 
 ### q2804 [array]
 question: **2804. No fluxo de contratação e gestão de contratos de soluções de tecnologia da informação, a organização adota as seguintes práticas de governança e controle:**
@@ -578,11 +660,15 @@ scale: sim_nao
 
 subquestions:
 - A | a) as contratações de soluções de TI, independentemente de qual seja a área demandante, são obrigatoriamente submetidas à análise prévia e aprovação técnica da área de gestão de TI
-- B | b) as contratações de TI executadas no exercício encontram-se previamente estabelecidas nos instrumentos de planejamento vigentes (PDTI e PCA)
-- C | c) a fase de planejamento de cada contratação de TI é conduzida por uma Equipe de Planejamento da Contratação formalmente designada (composta, regra geral, por integrante requisitante, integrante técnico e integrante administrativo)
-- D | d) os Termos de Referência (TR) ou Projetos Básicos preveem Acordos de Nível de Serviço (ANS), vinculando o pagamento à efetiva entrega de resultados ou níveis de qualidade, evitando o mero pagamento por postos de trabalho ou horas trabalhadas
+- B | as contratações de TI executadas no exercício encontram-se previamente estabelecidas nos instrumentos de planejamento vigentes (PDTI/PEDTIC e PCA)
+- C | c) a fase de planejamento de cada contratação de TI é conduzida por uma Equipe de Planejamento da Contratação formalmente designada (composta, minimamente, por integrante requisitante e integrante técnico da área de TI)
+- D | d) os Termos de Referência (TR) ou Projetos Básicos preveem Níveis Mínimos de Serviço (NMS), vinculando o pagamento à efetiva entrega de resultados ou níveis de qualidade, evitando o mero pagamento por postos de trabalho ou horas trabalhadas
 - E | e) a fase de planejamento das contratações de TI inclui a análise expressa de requisitos de segurança da informação e de proteção de dados pessoais (adequação à LGPD)
-- F | f) a organização aplica o princípio da segregação de funções na fase de execução contratual, designando formalmente gestor do contrato, fiscal técnico, fiscal administrativo e fiscal requisitante
+
+### q2804eviA [upload]
+question: Caso tenha assinalado que as contratações de soluções de TI são obrigatoriamente submetidas à análise prévia e aprovação técnica da área de gestão de TI, forneça evidência de norma regulamentando esse processo e de um caso concreto.
+
+
 
 ### q2805 [array]
 question: **2805. Nas contratações de bens e serviços de Tecnologia da Informação, a organização faz uso das Notas Técnicas elaboradas pelo TCE-RJ.**
@@ -595,30 +681,26 @@ subquestions:
 - A | a) a Nota Técnica TCE-RJ n. 06/2023
 - B | b) a Nota Técnica TCE-RJ n. 08/2024
 
-## Grupo: g3000 | Inovação em Tecnologia da Informação
-> Este grupo avalia se a organização utiliza tecnologias inovadoras, especialmente inteligência artificial, para apoiar suas atividades, melhorar processos internos e aprimorar a prestação de serviços públicos. A inovação em TI deve estar orientada à geração de valor, à eficiência administrativa, à melhoria da experiência dos usuários e ao alcance dos objetivos institucionais.
+## Grupo: g3000 | Inteligência Artificial
+> Este grupo avalia se a organização utiliza inteligência artificial para apoiar suas atividades, melhorar processos internos e aprimorar a prestação de serviços públicos. Busca-se identificar se essas tecnologias são utilizadas de forma experimental, em projetos-piloto ou em produção, tanto em atividades administrativas quanto finalísticas.
 >
-> Nesse contexto, busca-se identificar se a organização já faz uso de soluções de inteligência artificial, automação, análise avançada de dados ou outras tecnologias emergentes, seja em fase experimental, em projetos-piloto ou em uso efetivo nas atividades administrativas e finalísticas.
+> Também se avalia se o uso dessas soluções ocorre com diretrizes, responsabilidades e controles institucionais adequados, especialmente quanto à proteção de dados, gestão de riscos, supervisão humana, segurança da informação e prevenção de usos indevidos.
 >
-> Também se avalia se o uso dessas tecnologias ocorre com diretrizes claras, responsabilidades definidas e controles adequados, especialmente quanto à proteção de dados pessoais, segurança da informação, avaliação de riscos, transparência, supervisão humana e prevenção de usos indevidos ou discriminatórios.
->
-> Uma inovação em TI efetiva e responsável contribui para modernizar a administração pública, reduzir retrabalho, apoiar decisões, ampliar a capacidade de análise da organização e oferecer serviços públicos mais ágeis, seguros, acessíveis e centrados no cidadão.
+> A utilização institucional de inteligência artificial, quando realizada de forma responsável, pode contribuir para modernizar a administração pública, ampliar a eficiência operacional, apoiar a tomada de decisão e oferecer serviços públicos mais ágeis, acessíveis e centrados no cidadão.
 
 ### q3001 [adoption]
-question: **3001. A organização faz uso de inteligência artificial em suas operações.**
+question: **3001. A organização utiliza inteligência artificial de forma institucional em suas operações.**
 mandatory: true
-explain: O uso de inteligência artificial ocorre quando a organização utiliza sistemas ou ferramentas capazes de apoiar atividades, automatizar tarefas, analisar informações, gerar conteúdo ou auxiliar decisões em processos internos ou serviços prestados ao cidadão.
+explain: O uso institucional de inteligência artificial ocorre quando a organização conhece, autoriza, contrata, desenvolve ou supervisiona soluções de IA utilizadas em processos internos, atividades finalísticas ou serviços prestados ao cidadão.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do uso de inteligência artificial, como: relação de sistemas ou soluções com IA; projetos ou provas de conceito (POC); contratos ou aquisições; fluxos automatizados; documentos técnicos; relatórios de uso; exemplos de aplicações em processos internos ou serviços ao cidadão; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | a) há uso conhecido, autorizado ou mapeado de ferramentas de inteligência artificial em atividades de trabalho
-- B | b) a organização executa projetos ou provas de conceito (POC) envolvendo inteligência artificial
-- C | c) a organização utiliza soluções de inteligência artificial em produção
-- D | d) soluções de inteligência artificial apoiam processos internos da organização
-- E | e) soluções de inteligência artificial apoiam atividades finalísticas ou serviços prestados ao cidadão
-- F | f) a organização possui equipe, unidade ou responsáveis por iniciativas relacionadas à inteligência artificial
-- G | g) há unidade especializada em inteligência artificial, com especialistas em IA e capacidade para desenvolver projetos
-- H | h) a organização monitora ou revisa periodicamente o uso de inteligência artificial em seus processos
+- A | a) a organização identifica e avalia continuamente oportunidades de aplicação de inteligência artificial alinhadas às suas necessidades institucionais
+- B | b) a organização executa projetos-piloto ou provas de conceito (POC) envolvendo inteligência artificial
+- C | c) a organização desenvolve internamente soluções de inteligência artificial para suportar suas necessidades institucionais
+- D | d) soluções de inteligência artificial já operam em produção apoiando processos administrativos internos
+- E | e) soluções de inteligência artificial já operam em produção apoiando atividades finalísticas ou serviços prestados diretamente ao cidadão
+- F | f) a organização designou formalmente uma equipe, comitê ou responsáveis técnicos pelas iniciativas e projetos de inteligência artificial
 
 ### q3002 [adoption]
 question: **3002. A organização estabeleceu diretrizes para o uso da inteligência artificial.**
@@ -627,13 +709,13 @@ explain: As diretrizes para uso de inteligência artificial definem regras, resp
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência das diretrizes para uso de inteligência artificial, como: política, norma ou guia institucional; definição de responsabilidades; regras para uso de dados pessoais e informações sensíveis; avaliações de riscos; registros de supervisão ou revisão humana; ações de conscientização ou capacitação; atas de comitês ou grupos de trabalho; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 detail_options:
-- A | a) a organização definiu diretrizes ou política para utilização de inteligência artificial
-- B | b) a organização definiu responsabilidades pela supervisão do uso de inteligência artificial
-- C | c) a organização estabelece regras para proteção de dados pessoais e informações sensíveis no uso de inteligência artificial
-- D | d) a organização estabelece diretrizes para avaliação de riscos associados ao uso de inteligência artificial
-- E | e) a organização estabelece diretrizes para revisão humana de resultados produzidos por inteligência artificial, quando aplicável
-- F | f) a organização promove ações de conscientização ou capacitação sobre uso responsável de inteligência artificial
-- G | g) a organização define critérios para utilização de dados institucionais, pessoais ou sensíveis em soluções de inteligência artificial
+- A | a) a organização instituiu política ou norma interna com diretrizes claras para utilização ética e segura de inteligência artificial
+- B | b) há regras e restrições formais sobre a utilização de dados institucionais não públicos, dados pessoais ou sensíveis como "insumos" (prompts) em ferramentas de IA
+- C | c) a organização assegura a publicidade ao usuário de sua interação com as soluções de IA
+- D | d) a organização estabelece a obrigatoriedade de avaliação de riscos antes da implantação de soluções de IA
+- E | e) a organização adota mecanismos de revisão humana, garantindo que decisões sugeridas por IA não sejam aplicadas de forma totalmente autônoma
+- F | f) a organização realiza testes, validações ou avaliações antes da utilização institucional de soluções de IA
+- G | g) a organização realiza ações regulares de conscientização ou capacitação sobre uso responsável de inteligência artificial
 
 ### q3003 [array]
 question: **3003. A organização já realizou contratação de soluções ou serviços que utilizam inteligência artificial.**
@@ -642,10 +724,42 @@ scale: sim_nao
 help: Considere contratações de softwares, plataformas, serviços em nuvem, assistentes virtuais, ferramentas de automação, análise de dados, IA generativa ou soluções que utilizem técnicas de inteligência artificial, aprendizado de máquina ou processamento de linguagem natural.
 
 subquestions:
-- A | a) a organização já contratou soluções de inteligência artificial para apoio a atividades administrativas internas
-- B | b) a organização já contratou soluções de inteligência artificial para apoio a atividades finalísticas
-- C | c) a organização já contratou soluções de inteligência artificial generativa (ex.: ChatGPT, Gemini, Claude, Copilot ou similares)
-- D | d) a organização já contratou serviços especializados relacionados à inteligência artificial (consultoria, treinamento, desenvolvimento ou sustentação)
+- A | a) a organização contratou soluções de software como serviço (SaaS) ou plataformas que possuem funcionalidades de IA para atividades específicas (ex: análise de fraudes, reconhecimento facial, chatbots)
+- B | b) a organização contratou soluções de inteligência artificial generativa (ex.: ChatGPT, Gemini, Claude, Copilot ou ferramentas equivalentes)
+- C | c) a organização contratou serviços especializados relacionados à inteligência artificial (consultoria, treinamento, desenvolvimento ou sustentação)
 
-### q3004 [short]
-**3004. Descreva resumidamente os principais usos de inteligência artificial existentes na organização.**
+### q3004 [multi]
+question: **3004. Quais foram as principais dificuldades enfrentadas pela organização na fase de planejamento e contratação de soluções ou serviços que utilizam inteligência artificial (IA)?**
+mandatory: false  
+visible_if: q3003.A == sim or q3003.B == sim or q3003.C == sim
+help: Considere contratações de softwares, plataformas, serviços em nuvem, assistentes virtuais, ferramentas de automação, análise de dados, IA generativa ou soluções que utilizem técnicas de inteligência artificial, aprendizado de máquina ou processamento de linguagem natural.
+
+options:
+- A | a) Dificuldade para identificar e comparar soluções disponíveis no mercado (fornecedores, funcionalidades, maturidade das ofertas e experiências de outros órgãos).
+- B | b) Dificuldade para definir claramente o objeto, escopo, entregas e responsabilidades da contratação.
+- C | c) Dificuldade para especificar requisitos técnicos e funcionais da solução (integrações, desempenho, rastreabilidade, registros de auditoria, explicabilidade ou requisitos de infraestrutura).
+- D | d) Dificuldade para estimar preços, quantitativos ou consumo da solução (usuários, processamento, chamadas de API, armazenamento, tokens ou escalabilidade).
+- E | e) Dificuldade para estimar o custo total da solução ao longo do tempo (implantação, operação, suporte, treinamento, segurança, monitoramento e evolução).
+- F | f) Dificuldade para definir o modelo de contratação mais adequado (SaaS, plataforma em nuvem, desenvolvimento sob demanda, serviço gerenciado ou licenciamento).
+- G | g) Dificuldade para definir critérios objetivos de julgamento, avaliação técnica ou comprovação de capacidade dos fornecedores.
+- H | h) Dificuldade para elaborar artefatos de planejamento e termos de referência com requisitos e critérios verificáveis.
+- I | i) Dificuldade para planejar implantação, integração, migração, treinamento de usuários ou gestão da mudança organizacional.
+- J | j) Dificuldade para definir mecanismos de acompanhamento, fiscalização, transparência, auditoria ou penalidades contratuais.
+- K | k) Dificuldade para integrar soluções de IA aos sistemas corporativos existentes.
+- L | l) Dificuldade para definir exigências de Proteção de Dados, LGPD e garantias de que os dados do órgão não serão utilizados para treinamento de modelos públicos.
+
+### q3005 [adoption]
+question: **3005. A organização adota medidas para identificar e controlar o uso não autorizado ou não mapeado de inteligência artificial generativa.**
+mandatory: true
+explain: O uso não autorizado ou não mapeado de IA generativa ocorre quando agentes públicos utilizam ferramentas como ChatGPT, Gemini, Claude, Copilot ou similares em atividades de trabalho sem conhecimento, autorização, diretrizes ou supervisão institucional.
+help: Considere o uso de ferramentas públicas, gratuitas, pessoais, corporativas ou integradas a suítes de produtividade, navegadores, editores de texto, sistemas de busca, atendimento, desenvolvimento de software ou análise de dados.
+evidence_text: Caso tenha assinalado que adota a prática, forneça evidência das medidas de identificação e controle do uso de IA generativa, como: levantamento de ferramentas utilizadas; norma ou orientação interna; campanhas de conscientização; registros de autorização; controles técnicos; avaliações de risco; comunicações aos usuários; ou outras evidências cabíveis.
+
+detail_options:
+- A | a) a organização identifica quais ferramentas públicas de IA generativa (gratuitas ou contas pessoais) estão sendo acessadas na rede corporativa
+- B | b) a organização definiu ferramentas de IA generativa autorizadas, restritas ou vedadas para uso em atividades de trabalho
+- C | c) a organização adota controles técnicos para reduzir o uso de ferramentas de IA generativa não homologadas/autorizadas
+- D | d) a organização possui processo para avaliação e homologação de novas ferramentas de IA necessárias às atividades de trabalho
+
+### q3006 [long]
+question: **3006. Descreva resumidamente os principais usos de inteligência artificial existentes na organização.**

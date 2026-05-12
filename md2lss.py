@@ -68,6 +68,11 @@ TYPE_MAP = {
     "array": "F",
     "matrix": "F",
     "matriz": "F",
+    "array_numbers": ":",
+    "array_number": ":",
+    "numeric_array": ":",
+    "array_numeros": ":",
+    "matriz_numerica": ":",
 }
 
 MACRO_TYPES = {"adoption", "adocao", "adoção"}
@@ -242,7 +247,7 @@ def parse_group_heading(line: str) -> Group:
 
 def parse_question_heading(line: str) -> Question:
     # ### q1111 [single]
-    m = re.match(r"^###\s+([A-Za-z0-9_]+)\s*\[([A-Za-z0-9_|çãõáéíóúâêôàü\-]+)\]\s*$", line, flags=re.I)
+    m = re.match(r"^###\s+([A-Za-z0-9_]+)\s*\[([A-Za-z0-9_|:çãõáéíóúâêôàü\-]+)\]\s*$", line, flags=re.I)
     if not m:
         raise ValueError(
             f"Cabeçalho de questão inválido: {line}\n"
@@ -377,6 +382,7 @@ def parse_markdown(path: Path) -> Survey:
 
     repeat_group_descriptions(survey)
     expand_adoption_macros(survey)
+    expand_common_evidence_questions(survey)
     validate_target_config(survey)
     fill_empty_groups_with_acknowledgement(survey)
     validate_survey(survey)
@@ -399,7 +405,7 @@ def apply_question_directive(q: Question, key: str, value: str) -> None:
     elif key in {"title", "question"}:
         # Útil para [adoption]; para questões comuns também vira o texto da pergunta.
         q.text_lines.append(value)
-    elif key in {"explain", "evidence_text", "repeat_group_description"}:
+    elif key in {"explain", "evidence_text", "evidence_if", "repeat_group_description"}:
         q.attrs[key] = value
     elif key in {
         "evidence", "evidence_type", "evidence_mandatory", "evidence_allowed_filetypes",
@@ -408,6 +414,7 @@ def apply_question_directive(q: Question, key: str, value: str) -> None:
         q.attrs[key] = value
     elif key in {
         "allowed_filetypes", "min_files", "max_files", "min_answers", "max_answers", "hide_tip",
+        "input_boxes", "multiflexible_min", "multiflexible_max", "multiflexible_step",
         # Diretivas específicas do macro adoption.
         "adoption_scale", "nsa_scale",
         "nsa", "nsa_text", "lei", "lei_text", "est", "est_text", "raz", "raz_text",
@@ -634,6 +641,66 @@ def make_adoption_questions(q: Question) -> List[Question]:
     return out
 
 
+def expand_common_evidence_questions(survey: Survey) -> None:
+    """Adiciona perguntas de upload para questões comuns com evidence_text."""
+    for group in survey.groups:
+        expanded: List[Question] = []
+        for q in group.questions:
+            expanded.append(q)
+            if q.type.lower() in MACRO_TYPES or q.type.lower() in {"upload", "file", "arquivo", "|"}:
+                continue
+            evidence_text = get_attr(q, "evidence_text", "").strip()
+            if not evidence_text:
+                continue
+            inherited_attrs = {k: v for k, v in q.attrs.items() if k == "target"}
+            expanded.append(Question(
+                code=f"{q.code}evi",
+                type="upload",
+                text_lines=[evidence_text],
+                mandatory=True,
+                visible_if=evidence_condition_for_question(survey, q),
+                attrs={
+                    **inherited_attrs,
+                    "allowed_filetypes": "pdf, docx, zip",
+                    "min_files": "1",
+                    "max_files": "1",
+                },
+            ))
+        group.questions = expanded
+
+
+def evidence_condition_for_question(survey: Survey, q: Question) -> str:
+    explicit = get_attr(q, "evidence_if", "").strip()
+    if explicit:
+        return explicit
+
+    ltype = TYPE_MAP.get(q.type, q.type)
+    answer_options = options_for_question(survey, q)
+    if ltype == "L" and answer_options:
+        return f"{q.code} in [{', '.join(opt.code for opt in answer_options)}]"
+    if ltype == "M":
+        options = q.subquestions or q.alternatives
+        if options:
+            return " or ".join(f"{q.code}.{opt.code} == Y" for opt in options)
+    if ltype == "F" and q.subquestions and answer_options:
+        parts = [
+            f"{q.code}.{row.code} == {col.code}"
+            for row in q.subquestions
+            for col in answer_options
+        ]
+        if parts:
+            return " or ".join(parts)
+    return "1"
+
+
+def options_for_question(survey: Survey, q: Question) -> List[Option]:
+    if q.alternatives:
+        return q.alternatives
+    if q.scale and q.scale in survey.scales:
+        return survey.scales[q.scale].options
+    return []
+
+
 # ----------------------------
 # Validação
 # ----------------------------
@@ -665,7 +732,7 @@ def validate_survey(survey: Survey) -> None:
                     raise ValueError(f"Questão multi {q.code} precisa de subquestions.")
             if ltype == "Q" and not q.subquestions:
                 raise ValueError(f"Questão multi_text {q.code} precisa de subquestions.")
-            if ltype == "F":
+            if ltype in {"F", ":"}:
                 if not q.subquestions:
                     raise ValueError(f"Questão array {q.code} precisa de rows/subquestions.")
                 if not q.scale and not q.alternatives:
@@ -1028,7 +1095,50 @@ def build_lss(survey: Survey, sid: int, first_gid: int = 1000, first_qid: int = 
                         "scale_id": 0,
                     })
 
-            if ltype in {"M", "Q", "F"}:
+            if ltype == ":":
+                for idx, opt in enumerate(q.subquestions, 1):
+                    subquestion_rows.append({
+                        "qid": next_subqid,
+                        "parent_qid": q.qid,
+                        "sid": sid,
+                        "gid": group.gid,
+                        "type": "T",
+                        "title": opt.code,
+                        "question": md_to_html(opt.text),
+                        "preg": "",
+                        "help": "",
+                        "other": "N",
+                        "mandatory": "N",
+                        "question_order": idx,
+                        "language": lang,
+                        "scale_id": 0,
+                        "same_default": 0,
+                        "relevance": "1",
+                        "modulename": "",
+                    })
+                    next_subqid += 1
+                for idx, opt in enumerate(ans_options, 1):
+                    subquestion_rows.append({
+                        "qid": next_subqid,
+                        "parent_qid": q.qid,
+                        "sid": sid,
+                        "gid": group.gid,
+                        "type": "T",
+                        "title": opt.code,
+                        "question": md_to_html(opt.text),
+                        "preg": "",
+                        "help": "",
+                        "other": "N",
+                        "mandatory": "N",
+                        "question_order": idx,
+                        "language": lang,
+                        "scale_id": 1,
+                        "same_default": 0,
+                        "relevance": "1",
+                        "modulename": "",
+                    })
+                    next_subqid += 1
+            elif ltype in {"M", "Q", "F"}:
                 sub_type = "T"
                 if ltype == "M" and not ("min_answers" in q.attrs or "max_answers" in q.attrs):
                     sub_type = "M"
@@ -1099,6 +1209,11 @@ def add_attributes(q: Question, ltype: str, attribute_rows: List[Dict[str, objec
 
     if ltype == "M" and q.attrs.get("hide_tip", "1").lower() not in {"0", "false", "não", "nao"}:
         attr("hide_tip", "1")
+    if ltype == ":":
+        attr("input_boxes", q.attrs.get("input_boxes", "1"))
+        attr("multiflexible_min", q.attrs.get("multiflexible_min", "0"))
+        attr("multiflexible_max", q.attrs.get("multiflexible_max", "1000"))
+        attr("multiflexible_step", q.attrs.get("multiflexible_step", "-1"))
     if ltype == "|":
         if "allowed_filetypes" in q.attrs:
             attr("allowed_filetypes", q.attrs["allowed_filetypes"])
