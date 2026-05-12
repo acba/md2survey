@@ -83,6 +83,31 @@ options:
 - terceirizados | Terceirizados
 """
 
+REPEAT_GROUP_CHAIN_MD = """---
+title: Repeat Group Chain Test
+sid: 904
+---
+
+# Repeat Group Chain Test
+
+## Grupo: g1 | Grupo 1
+> Descricao do grupo.
+
+### q1 [short]
+repeat_group_description: true
+question: Pergunta 1.
+
+### q2 [short]
+question: Pergunta 2.
+
+### q3 [short]
+repeat_group_description: true
+question: Pergunta 3.
+
+### q4 [short]
+question: Pergunta 4.
+"""
+
 
 class LssStructureTests(unittest.TestCase):
     def write_md(self, text: str) -> Path:
@@ -154,6 +179,24 @@ class LssStructureTests(unittest.TestCase):
         self.assertEqual(attributes["multiflexible_min"], "0")
         self.assertEqual(attributes["multiflexible_max"], "1000")
         self.assertEqual(attributes["multiflexible_step"], "-1")
+
+    def test_repeat_group_description_keeps_following_plain_questions_in_same_group(self):
+        survey = md2lss.parse_markdown(self.write_md(REPEAT_GROUP_CHAIN_MD))
+
+        groups = {group.code: [q.code for q in group.questions] for group in survey.groups}
+
+        self.assertEqual(groups["g1_q1"], ["q1", "q2"])
+        self.assertEqual(groups["g1_q3"], ["q3", "q4"])
+        self.assertNotIn("g1", groups)
+        self.assertNotIn("g1_parte2", groups)
+
+    def test_lss_hides_total_question_count_by_default(self):
+        survey = md2lss.parse_markdown(self.write_md(PLAIN_MULTI_MD))
+
+        root = ET.fromstring(md2lss.build_lss(survey, sid=901))
+        survey_row = next(iter(root.find("surveys/rows")))
+
+        self.assertEqual(survey_row.findtext("showxquestions"), "N")
 
 
 if __name__ == "__main__":

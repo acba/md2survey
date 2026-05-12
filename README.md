@@ -191,7 +191,10 @@ explain: Considere processos documentados, aprovados e usados de forma recorrent
 Use `repeat_group_description: true` quando uma questao deve ser exportada no
 `.lss` em um grupo proprio, repetindo o mesmo titulo e a mesma descricao do
 grupo original. Isso e util quando o texto do grupo apresenta um contexto que
-deve aparecer imediatamente antes daquela questao.
+deve aparecer imediatamente antes daquela questao. As questoes seguintes sem
+`repeat_group_description` permanecem nesse mesmo grupo repetido, ate que outra
+questao com `repeat_group_description: true` inicie um novo grupo ou ate o
+proximo `## Grupo:`.
 
 ```md
 ## Grupo: g2000 | Gestao de Tecnologia da Informacao
@@ -209,8 +212,10 @@ mandatory: true
 ```
 
 No `.lss`, o exemplo acima gera dois grupos, cada um com a mesma descricao de
-`g2000` e com uma questao logica. Em questoes `[adoption]`, a macro inteira fica
-no mesmo grupo repetido: pergunta principal, nao aplicabilidade, justificativas,
+`g2000` e com uma questao logica. Se uma pergunta comum vier apos uma questao
+com `repeat_group_description: true` e nao declarar o atributo, ela sera mantida
+no mesmo grupo repetido. Em questoes `[adoption]`, a macro inteira fica no mesmo
+grupo repetido: pergunta principal, nao aplicabilidade, justificativas,
 detalhamento e evidencia.
 
 Os codigos dos grupos repetidos sao ajustados automaticamente para evitar

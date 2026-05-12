@@ -500,10 +500,10 @@ def repeat_group_descriptions(survey: Survey) -> None:
         for q in group.questions:
             repeat = parse_bool(q.attrs.get("repeat_group_description", "false"), default=False)
             if repeat:
-                current_group = None
                 repeated_group = clone_group_shell(group, unique_group_code(f"{group.code}_{q.code}", used_codes))
                 repeated_group.questions.append(q)
                 rewritten_groups.append(repeated_group)
+                current_group = repeated_group
                 continue
 
             ensure_segment_group().questions.append(q)
@@ -1263,7 +1263,7 @@ def build_survey_row(sid: int, lang: str, title: str, admin: str, adminemail: st
         "usetokens": "N",
         "bounce_email": adminemail,
         "tokenlength": "15",
-        "showxquestions": "Y",
+        "showxquestions": "N",
         "showgroupinfo": "B",
         "shownoanswer": "N",
         "showqnumcode": "X",
