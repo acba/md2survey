@@ -793,7 +793,7 @@ def question_to_html(q: Question) -> str:
         body = (
             f"{body}"
             '<div class="question-help-container text-info col-12" style="margin:15px;">'
-            '<div class="ls-questionhelp"><p><span style="font-size:9pt;">'
+            '<div class="ls-questionhelp"><p><span style="font-size:12pt;">'
             '<span style="font-family:Arial, sans-serif;"><span style="color:#35363f;">'
             f"{explain_html}"
             "</span></span></span></p></div></div>"
@@ -1063,8 +1063,6 @@ def build_lss(survey: Survey, sid: int, first_gid: int = 1000, first_qid: int = 
             for cond in cond_specs:
                 refq = q_index[cond.ref]
                 cfield = sgqa(sid, int(refq.gid), int(refq.qid), cond.subcode)
-                if cond.subcode:
-                    cfield = "+" + cfield
                 for value in cond.values:
                     condition_rows.append({
                         "cid": cid,

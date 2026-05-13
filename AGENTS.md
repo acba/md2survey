@@ -67,3 +67,14 @@ screenshots for DOCX formatting changes.
 Treat survey files as untrusted input. Do not add network calls or execute
 embedded content from Markdown, XLSX, DOCX, or LSS files. Keep dependencies
 minimal and update `requirements.txt` whenever a new import is required.
+
+## Browser Automation
+
+Use `agent-browser` for web automation. Run `agent-browser --help` for all commands.
+
+Core workflow:
+
+1. `agent-browser open <url>` - Navigate to page
+2. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)
+3. `agent-browser click @e1` / `fill @e2 "text"` - Interact using refs
+4. Re-snapshot after page changes

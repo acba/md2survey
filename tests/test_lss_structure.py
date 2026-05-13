@@ -108,6 +108,36 @@ question: Pergunta 3.
 question: Pergunta 4.
 """
 
+ARRAY_CONDITION_MD = """---
+title: Array Condition Test
+sid: 905
+---
+
+# Array Condition Test
+
+## Escala: sim_nao
+type: single
+- sim | Sim
+- nao | Nao
+
+## Grupo: g1 | Grupo 1
+
+### q1 [array]
+mandatory: true
+scale: sim_nao
+
+Praticas adotadas.
+
+subquestions:
+- A | Pratica A
+- B | Pratica B
+
+### q1eviA [upload]
+visible_if: q1.A == sim
+
+Envie evidencia da pratica A.
+"""
+
 
 class LssStructureTests(unittest.TestCase):
     def write_md(self, text: str) -> Path:
@@ -197,6 +227,16 @@ class LssStructureTests(unittest.TestCase):
         survey_row = next(iter(root.find("surveys/rows")))
 
         self.assertEqual(survey_row.findtext("showxquestions"), "N")
+
+    def test_array_subquestion_condition_does_not_prefix_cfieldname_with_plus(self):
+        survey = md2lss.parse_markdown(self.write_md(ARRAY_CONDITION_MD))
+
+        root = ET.fromstring(md2lss.build_lss(survey, sid=905))
+        evidence = next(row for row in root.find("questions/rows") if row.findtext("title") == "q1eviA")
+        condition = next(row for row in root.find("conditions/rows") if row.findtext("qid") == evidence.findtext("qid"))
+
+        self.assertEqual(evidence.findtext("relevance"), '((905X1000X10000A.NAOK == "sim"))')
+        self.assertEqual(condition.findtext("cfieldname"), "905X1000X10000A")
 
 
 if __name__ == "__main__":

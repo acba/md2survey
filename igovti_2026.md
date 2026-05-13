@@ -117,6 +117,7 @@ question: **0103. A organização definiu formalmente as atribuições e compet�
 mandatory: true
 explain: As atribuições da área de TI correspondem às competências, responsabilidades e atividades formalmente estabelecidas em norma, regimento, organograma, ato administrativo ou instrumento equivalente.
 help: Considere apenas atribuições formalmente definidas em instrumentos institucionais. Não considere atividades exercidas apenas de forma informal ou ad hoc.
+evidence_if: q0103 in [A, B, C, D, E, F]
 evidence_text: Forneça evidência das atribuições formalizadas da área de TI, como: regimento interno; decreto; resolução; portaria; manual de competências; descrição formal de responsabilidades; ou outras evidências cabíveis.
 
 options:
@@ -380,6 +381,7 @@ detail_options:
 ### q2303 [adoption]
 question: **2303. A organização executa processo de gestão de continuidade de serviços de tecnologia da informação.**
 mandatory: true
+repeat_group_description: true
 explain: A gestão de continuidade de TI garante que serviços e sistemas críticos possam ser mantidos ou recuperados em caso de falhas, desastres ou interrupções.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Análise de impacto no negócio; Gestão de continuidade do negócio; Plano de continuidade do negócio; Serviços de tecnologia da informação; TI (Tecnologia da Informação).
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da continuidade de serviços de TI, como: plano de continuidade ou de recuperação de desastres (PCN/DRP); análises de impacto no negócio (BIA/AIN); definição de prazos de recuperação (RTO/RPO); registros de testes e revisões do plano; norma ou procedimento formal; relatórios de incidentes relevantes; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -469,6 +471,7 @@ detail_options:
 ### q2501 [adoption]
 question: **2501. A organização executa processo de gestão de ativos associados à informação.**
 mandatory: true
+repeat_group_description: true
 explain: A gestão de ativos associados à informação consiste em identificar, inventariar, classificar e acompanhar ativos que armazenam, processam ou transmitem informações, assegurando sua proteção durante todo o ciclo de vida. Exemplos: sistema de prontuário eletrônico da saúde, sistema de arrecadação tributária, folha de pagamento, portal do aluno, backups, banco de dados de cidadãos, servidores, notebooks e documentos digitais que contenham informações críticas ou dados pessoais.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Ativos associados à informação; Gestão do desempenho; Informação; Processo de gestão de ativos.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão de ativos associados à informação, como: inventário de ativos e informações críticas; definição formal de responsáveis pelos ativos; classificação ou identificação de informações sensíveis ou críticas; registros de controles de proteção aplicados; planos ou ações mitigatórias para indisponibilidade de ativos críticos; norma ou procedimento formal; relatórios de acompanhamento ou revisão do processo; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -484,6 +487,7 @@ detail_options:
 ### q2502 [adoption]
 question: **2502. A organização executa processo de controle de acesso à informação e aos ativos associados à informação.**
 mandatory: true
+repeat_group_description: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Ativos associados à informação; Certificado digital; Controle; Diretriz; Gestão do desempenho; Informação; Política; Serviço de TI.
 explain: O controle de acesso consiste em definir, conceder, revisar e revogar acessos físicos e lógicos à informação e aos ativos associados, assegurando que apenas usuários autorizados tenham acesso adequado às informações e serviços.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do processo de controle de acesso, como: Política de Controle de Acesso (PCA); normas ou procedimentos de concessão, revisão e revogação de acessos; perfis e matrizes de acesso; registros de revisões periódicas de privilégios; evidências de autenticação forte ou uso de certificado digital; logs de acesso; relatórios de monitoramento; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -498,6 +502,7 @@ detail_options:
 ### q2503 [adoption]
 question: **2503. A organização executa processo para classificação e tratamento de informações.**
 mandatory: true
+repeat_group_description: true
 explain: A classificação e tratamento de informações consiste em identificar informações conforme sua criticidade, sensibilidade ou sigilo e aplicar medidas adequadas de proteção, armazenamento, acesso e compartilhamento, de acordo com requisitos legais e de negócio.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Competências; Processo para classificação e tratamento de informações; Tratamento de dados pessoais.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do processo de classificação e tratamento de informações, como: política ou norma de classificação da informação; critérios de classificação e rotulagem; inventários ou registros de informações críticas, pessoais ou sigilosas; procedimentos de tratamento e proteção; controles de acesso e armazenamento; evidências de adequação à LGPD e à LAI; registros de revisão periódica; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -513,6 +518,7 @@ detail_options:
 ### q2504 [adoption]
 question: **2504. A organização executa atividades de gestão da segurança dos recursos de processamento da informação, inclusive dos recursos de computação em nuvem.**
 mandatory: true
+repeat_group_description: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Gestão do desempenho; Informação; Processo para classificação e tratamento de informações.
 explain: A gestão da segurança dos recursos de processamento da informação consiste em proteger dispositivos, sistemas, redes, aplicações e ambientes de TI contra acessos indevidos, falhas, vulnerabilidades e ameaças cibernéticas, incluindo ambientes locais, terceirizados e em nuvem.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão da segurança dos recursos de processamento da informação, como: inventário de dispositivos e softwares; registros de gestão de vulnerabilidades e aplicação de correções; padrões de configuração segura; logs e relatórios de monitoramento; controles de privilégios administrativos; evidências de antivírus, firewall e proteção contra malware; políticas e registros de backup e testes de recuperação; relatórios de testes de segurança; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -533,6 +539,7 @@ detail_options:
 ### q2505 [adoption]
 question: **2505. A organização realiza periodicamente ações de treinamento e/ou capacitação em segurança da informação.**
 mandatory: true
+repeat_group_description: true
 explain: As ações de treinamento, capacitação e conscientização em segurança da informação buscam orientar servidores, colaboradores e usuários sobre riscos, boas práticas e responsabilidades relacionadas à proteção das informações e dos recursos de TI.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Informação; Plano de capacitação (Plano de Treinamento); Segurança da Informação.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência das ações de treinamento e conscientização em segurança da informação, como: plano ou programa de capacitação; registros de treinamentos realizados; campanhas de conscientização; materiais educativos; listas de presença; certificados; comunicações internas; cronogramas periódicos; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -552,6 +559,7 @@ detail_options:
 ### q2601 [adoption]
 question: **2601. A organização executa um processo de software.**
 mandatory: true
+repeat_group_description: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área de negócio; Processo de software; Segurança da Informação.
 explain: O processo de software consiste em definir e executar atividades para desenvolvimento, manutenção, sustentação ou aquisição de sistemas, incluindo requisitos de negócio, segurança, acessibilidade, qualidade e responsabilidades ao longo do ciclo de vida do software.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do processo de software, como: norma ou metodologia de desenvolvimento/aquisição; documentos de requisitos; participação das áreas de negócio; registros de testes e validações; critérios de segurança, acessibilidade e usabilidade; indicadores de qualidade; contratos com cláusulas de propriedade intelectual; fluxos ou ferramentas de desenvolvimento; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -567,6 +575,7 @@ detail_options:
 ### q2602 [adoption]
 question: **2602. A organização executa processo de gestão de projetos de tecnologia da informação.**
 mandatory: true
+repeat_group_description: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Gestão de riscos; Política; Projeto; TI (Tecnologia da Informação).
 explain: A gestão de projetos de TI consiste em planejar, executar, acompanhar e controlar projetos de tecnologia da informação, assegurando o gerenciamento de escopo, prazo, custos, recursos, riscos e resultados.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da gestão de projetos de TI, como: portfólio de projetos; planos de projeto; cronogramas; registros de acompanhamento de escopo, custos e prazos; análises e planos de tratamento de riscos; relatórios de status; metodologia ou norma formal de gestão de projetos; indicadores de desempenho; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -589,6 +598,7 @@ detail_options:
 ### q2701 [adoption]
 question: **2701. Os perfis profissionais desejados para cada ocupação ou grupo de ocupações de gestão de tecnologia da informação estão definidos e documentados.**
 mandatory: true
+repeat_group_description: true
 explain: Os perfis profissionais de gestão definem as responsabilidades, atribuições, competências e habilidades esperadas dos ocupantes de cargos de liderança e gestão, promovendo transparência, clareza de papéis e melhor seleção de gestores.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Competências; Gestor; Ocupação; Partes interessadas; Perfil profissional; Perfil profissional desejado; Planejamento da força de trabalho; Transparência; Transparência ativa.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência dos perfis profissionais de gestão, como: normativos ou documentos com atribuições e competências; descrições de cargos ou funções; matrizes de competências; registros de revisão periódica; publicações em portal institucional ou transparência ativa; atos de designação; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -602,6 +612,7 @@ detail_options:
 ### q2702 [adoption]
 question: **2702. Os perfis profissionais desejados para cada ocupação ou grupo de colaboradores da área de gestão de tecnologia da informação estão definidos e documentados.**
 mandatory: true
+repeat_group_description: true
 explain: Os perfis profissionais da área de TI definem responsabilidades, atribuições, competências e habilidades esperadas dos colaboradores que atuam em tecnologia da informação, apoiando a organização, a capacitação e a gestão da força de trabalho de TI.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área finalística; Colaboradores; Competências; Ocupação; Partes interessadas; Perfil profissional; Perfil profissional desejado; Transparência; Transparência ativa; Transparência passiva.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência dos perfis profissionais da área de TI, como: descrições de cargos ou funções; matrizes de competências; normativos com atribuições e responsabilidades; registros de revisão periódica; publicações em portal institucional ou mecanismos de transparência; planos de capacitação relacionados; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -615,6 +626,7 @@ detail_options:
 ### q2703 [adoption]
 question: **2703. Há definição do quantitativo necessário de pessoal da área de tecnologia da informação e segurança da informação.**
 mandatory: true
+repeat_group_description: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área finalística; Planejamento da força de trabalho; Política; Procedimento técnico; Quantitativo necessário; Unidade organizacional.
 explain: A definição do quantitativo necessário de pessoal de TI consiste em estimar, de forma planejada e documentada, a quantidade de profissionais necessária para executar atividades de tecnologia da informação e segurança da informação na organização.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do dimensionamento da força de trabalho de TI, como: política ou metodologia de dimensionamento; estudos ou relatórios técnicos; definição documentada do quantitativo necessário; critérios utilizados (serviços, sistemas, demanda, riscos ou complexidade); revisões periódicas; planos de provimento; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -628,6 +640,7 @@ detail_options:
 ### q2704 [adoption]
 question: **2704. A escolha dos gestores de tecnologia da informação e segurança da informação ocorre segundo perfis profissionais previamente definidos e documentados.**
 mandatory: true
+repeat_group_description: true
 explain: A escolha de gestores de TI e segurança da informação com base em perfis profissionais consiste em utilizar critérios previamente definidos de competências, experiência, integridade e habilidades para ocupação de cargos e funções de gestão.
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Gestor; Indicador; Perfil profissional; Perfil profissional desejado; Planejamento da força de trabalho.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do processo de escolha de gestores de TI e segurança da informação, como: perfis profissionais documentados; critérios de seleção; registros de avaliação prévia de impedimentos legais; utilização de entrevistas, análises curriculares ou outras ferramentas estruturadas; currículos publicados; atos de designação; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -641,6 +654,7 @@ detail_options:
 ### q2705 [adoption]
 question: **2705. As lacunas de competências dos colaboradores e gestores da área de tecnologia da informação e de segurança da informação são identificadas e documentadas.**
 mandatory: true
+repeat_group_description: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área finalística; Colaboradores; Competências; Gestão; Gestor; Lacuna de competência ou de perfil profissional.
 explain: A identificação de lacunas de competências consiste em avaliar e registrar conhecimentos, habilidades e capacidades que precisam ser desenvolvidos pelos colaboradores e gestores de TI e segurança da informação para atender às necessidades da organização.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da identificação de lacunas de competências, como: matrizes de competências; avaliações de perfil; levantamentos de necessidades de capacitação; diagnósticos de competências técnicas e gerenciais; planos de desenvolvimento; relatórios ou registros documentados; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -654,6 +668,7 @@ detail_options:
 ### q2706 [adoption]
 question: **2706. As lacunas de competências dos colaboradores e gestores da área de tecnologia da informação e de segurança da informação da organização são tratadas.**
 mandatory: true
+repeat_group_description: true
 explain: O tratamento de lacunas de competências consiste em executar ações para desenvolver conhecimentos, habilidades e capacidades necessárias aos colaboradores e gestores de TI e segurança da informação, de acordo com as necessidades da organização.
 help: Considere se a organizacao executa acoes para tratar lacunas de competencias, como capacitacao, realocacao, recrutamento, contratacao ou apoio especializado.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do tratamento de lacunas de competências, como: plano de capacitação ou treinamento; registros de participação em cursos e treinamentos; ações de incentivo à capacitação; acompanhamento de participação e resultados; revisões periódicas do plano de capacitação; contratações ou apoio especializado; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -667,6 +682,7 @@ detail_options:
 ### q2707 [adoption]
 question: **2707. A organização realiza, formalmente, avaliação de desempenho individual do pessoal de tecnologia da informação e de segurança da informação, com atribuição de nota ou conceito, tendo como critério de avaliação o alcance das metas previstas.**
 mandatory: true
+repeat_group_description: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área finalística; Avaliação de desempenho; Colaboradores; Gestor.
 explain: A avaliação de desempenho do pessoal de TI e segurança da informação consiste em medir formalmente o desempenho de colaboradores e gestores, considerando metas, resultados, competências e responsabilidades relacionadas às atividades exercidas.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da avaliação de desempenho do pessoal de TI e segurança da informação, como: normativos ou procedimentos de avaliação; formulários ou sistemas utilizados; critérios e metas avaliadas; registros de avaliações realizadas; atribuição de notas ou conceitos; planos de melhoria decorrentes das avaliações; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -682,7 +698,9 @@ detail_options:
 question: **2708. A organização possui em sua estrutura cargos específicos em tecnologia da informação e segurança da informação.**
 mandatory: true
 scale: sim_nao
+repeat_group_description: true
 explain: Os cargos específicos de TI e segurança da informação são funções ou cargos formalmente previstos na estrutura organizacional para execução de atividades técnicas, gerenciais ou especializadas relacionadas à tecnologia e à proteção das informações.
+evidence_if: q2708.A == sim or q2708.B == sim or q2708.C == sim or q2708.D == sim
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da existência de cargos específicos de TI e segurança da informação, como: leis, decretos ou normativos de criação de cargos; organogramas; planos de cargos e carreiras; editais de concurso; descrição de atribuições; relação de cargos providos; ou outras evidências cabíveis, indicando a abrangência na organização.
 
 subquestions:
@@ -703,6 +721,7 @@ subquestions:
 ### q2801 [adoption]
 question: **2801. Os processos de trabalho relativos às contratações de tecnologia da informação estão definidos.**
 mandatory: true
+repeat_group_description: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Área de gestão de contratações / área de contratações; Processo de trabalho para a gestão de contratos; Processo de trabalho para a seleção de fornecedores; Processo de trabalho para o planejamento de cada contratação.
 explain: Os processos de trabalho relativos às contratações de TI consistem na definição formal das etapas, responsabilidades, procedimentos, controles e documentos relacionados ao planejamento da contratação, à seleção de fornecedores e à gestão e fiscalização contratual. A padronização de artefatos contribui para uniformizar procedimentos, reduzir falhas e aumentar a conformidade das contratações.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência dos processos de trabalho e dos artefatos padronizados relativos às contratações de TI, como: manuais, fluxos, normas ou procedimentos internos; modelos padronizados de documentos; checklists; definição de papéis e responsabilidades; fluxogramas; instruções de trabalho; artefatos de planejamento da contratação; processos de fiscalização contratual; referências à Lei 14.133/2021 e normativos correlatos; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -719,6 +738,7 @@ detail_options:
 ### q2802 [adoption]
 question: **2802. A organização executa processo de planejamento anual das contratações.**
 mandatory: true
+repeat_group_description: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Alta Administração; Conselho ou Colegiado Superior / instância superior; Plano de Contratações.
 explain: O planejamento anual das contratações consiste em consolidar e priorizar, de forma planejada e coordenada, as necessidades de contratação da organização para determinado exercício, considerando objetivos institucionais, orçamento e demandas das áreas envolvidas.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência do processo de planejamento anual das contratações, como: Plano de Contratações Anual (PCA); normativos ou procedimentos relacionados; registros de participação das áreas envolvidas; aprovação pela alta administração; integração com planejamento institucional e orçamento; publicação no PNCP; cronogramas; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -733,6 +753,7 @@ detail_options:
 ### q2803 [adoption]
 question: **2803. A organização torna públicos os documentos relacionados com cada contratação de tecnologia da informação, contemplando as fases de planejamento, seleção do fornecedor e gestão contratual, excepcionados os casos de sigilo amparados pela legislação.**
 mandatory: true
+repeat_group_description: true
 help: Para esclarecimentos nesta questão, consulte, no glossário, os seguintes verbetes: Portal Nacional de Compras Públicas; Transparência; Transparência ativa.
 explain: A transparência das contratações consiste em disponibilizar publicamente documentos e informações relacionados às fases de planejamento, seleção de fornecedores e gestão contratual, permitindo o acompanhamento, controle social e fiscalização das contratações públicas, ressalvadas hipóteses legais de sigilo.
 evidence_text: Caso tenha assinalado que adota a prática, forneça evidência da transparência das contratações, como: links ou registros de publicação no Portal Nacional de Compras Públicas (PNCP); publicações de ETP, TR, editais, atas, contratos, aditivos e documentos de gestão contratual; normativos internos sobre transparência; relatórios de publicação; ou outras evidências cabíveis, indicando a abrangência na organização.
@@ -749,6 +770,7 @@ detail_options:
 ### q2804 [array]
 question: **2804. No fluxo de contratação e gestão de contratos de soluções de tecnologia da informação, a organização adota as seguintes práticas de governança e controle:**
 mandatory: true
+repeat_group_description: true
 explain: A governança nas contratações de TI exige que as aquisições estejam alinhadas ao planejamento, possuam viabilidade técnica atestada pela área especializada, sejam construídas por equipes multidisciplinares e fiscalizadas com segregação de funções, garantindo que o pagamento esteja vinculado a resultados.
 scale: sim_nao
 
@@ -766,6 +788,7 @@ visible_if: q2804.A == sim
 ### q2805 [array]
 question: **2805. Nas contratações de bens e serviços de Tecnologia da Informação, a organização faz uso das Notas Técnicas elaboradas pelo TCE-RJ.**
 mandatory: true
+repeat_group_description: true
 scale: sim_nao
 help: As Notas Técnicas do TCE-RJ estão disponíveis em https://www.tcerj.tc.br/cadastro-publicacoes/public/nota-tecnica.
 explain: O uso das Notas Técnicas do TCE-RJ consiste em considerar orientações, recomendações e boas práticas elaboradas pelo Tribunal para apoiar o planejamento, a instrução, a contratação e a fiscalização de bens e serviços de tecnologia da informação.
