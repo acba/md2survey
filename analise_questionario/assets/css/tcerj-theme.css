@@ -1,0 +1,356 @@
+/* Dashboard iGovTI 2026 — Tema TCE-RJ */
+
+:root {
+  --tcerj-navy: #1a3a5c;
+  --tcerj-cyan: #0088bb;
+  --tcerj-lime: #7cb342;
+  --tcerj-light: #e8f4f8;
+  --tcerj-white: #ffffff;
+  --tcerj-text: #333333;
+  --tcerj-gray: #f5f5f5;
+  --tcerj-border: #d0e0e8;
+  --tcerj-shadow: rgba(26, 58, 92, 0.12);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(135deg, var(--tcerj-light) 0%, var(--tcerj-white) 100%);
+  color: var(--tcerj-text);
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.tcerj-header {
+  background: linear-gradient(90deg, var(--tcerj-navy) 0%, var(--tcerj-cyan) 100%);
+  color: var(--tcerj-white);
+  padding: 1.2rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  box-shadow: 0 2px 10px var(--tcerj-shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.tcerj-header img {
+  height: 48px;
+  filter: brightness(0) invert(1);
+}
+
+.tcerj-header h1 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.tcerj-header .subtitle {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-left: auto;
+}
+
+/* ── Upload Area ── */
+.upload-section {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.upload-card {
+  background: var(--tcerj-white);
+  border: 2px dashed var(--tcerj-cyan);
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.upload-card:hover, .upload-card.dragover {
+  border-color: var(--tcerj-lime);
+  background: var(--tcerj-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--tcerj-shadow);
+}
+
+.upload-card i {
+  font-size: 3rem;
+  color: var(--tcerj-cyan);
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.upload-card h3 {
+  color: var(--tcerj-navy);
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.upload-card p {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.upload-card input[type="file"] {
+  display: none;
+}
+
+/* ── Loading ── */
+.loading-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255,255,255,0.92);
+  z-index: 200;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.loading-overlay.active {
+  display: flex;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--tcerj-border);
+  border-top-color: var(--tcerj-cyan);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Dashboard ── */
+.dashboard {
+  display: none;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard.active {
+  display: block;
+}
+
+.section-title {
+  font-size: 1.3rem;
+  color: var(--tcerj-navy);
+  margin: 2rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid var(--tcerj-cyan);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-title::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 24px;
+  background: var(--tcerj-lime);
+  border-radius: 3px;
+}
+
+/* ── Cards ── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background: var(--tcerj-white);
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px var(--tcerj-shadow);
+  border-left: 4px solid var(--tcerj-cyan);
+  transition: transform 0.2s;
+}
+
+.metric-card:hover {
+  transform: translateY(-3px);
+}
+
+.metric-card .label {
+  font-size: 0.85rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.metric-card .value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--tcerj-navy);
+}
+
+.metric-card .status {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.status-green {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-yellow {
+  background: #fff8e1;
+  color: #f57f17;
+}
+
+.status-red {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* ── Gráficos ── */
+.chart-container {
+  background: var(--tcerj-white);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 12px var(--tcerj-shadow);
+}
+
+.chart-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* ── Tabela ── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--tcerj-white);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px var(--tcerj-shadow);
+}
+
+.data-table th {
+  background: var(--tcerj-navy);
+  color: var(--tcerj-white);
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.data-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--tcerj-border);
+  font-size: 0.9rem;
+}
+
+.data-table tr:nth-child(even) {
+  background: var(--tcerj-gray);
+}
+
+.data-table tr:hover {
+  background: var(--tcerj-light);
+}
+
+.badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-sim {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.badge-nao {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* ── Botões ── */
+.btn-group {
+  display: flex;
+  gap: 1rem;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--tcerj-navy), var(--tcerj-cyan));
+  color: var(--tcerj-white);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 12px rgba(0,136,187,0.4);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--tcerj-white);
+  color: var(--tcerj-navy);
+  border: 2px solid var(--tcerj-cyan);
+}
+
+.btn-secondary:hover {
+  background: var(--tcerj-light);
+}
+
+/* ── Footer ── */
+.tcerj-footer {
+  background: var(--tcerj-navy);
+  color: var(--tcerj-white);
+  text-align: center;
+  padding: 1.5rem;
+  margin-top: 3rem;
+  font-size: 0.85rem;
+}
+
+/* ── Responsivo ── */
+@media (max-width: 768px) {
+  .chart-row {
+    grid-template-columns: 1fr;
+  }
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .tcerj-header h1 {
+    font-size: 1.1rem;
+  }
+}

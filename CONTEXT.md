@@ -48,6 +48,10 @@ _Avoid_: anexo when the analysis must reason about audit support.
 The normalized representation of an **Evidência enviada**, including extracted text, document inventory, metadata, and unsupported-file notes.
 _Avoid_: arquivo processado.
 
+**Evidência interna**:
+A file contained inside a ZIP **Evidência enviada** after safe extraction.
+_Avoid_: anexo separado when it came from the same uploaded ZIP.
+
 **Nome original da evidência**:
 The `name` attribute stored inside a spreadsheet upload object and used to locate the physical **Evidência enviada** in the **Diretório do auditado**.
 _Avoid_: filename when referring to the internal LimeSurvey storage id.
@@ -64,9 +68,13 @@ _Avoid_: qualquer resposta de adoção.
 The evaluation of one **Evidência enviada** against the **Item afirmado** values it is expected to support.
 _Avoid_: análise da pergunta when more than one evidence column can exist for the same question.
 
-**Checklist de análise**:
-A versioned audit checklist that defines how an **Evidência enviada** must be evaluated for a **Questão base** or a specific item.
-_Avoid_: prompt when referring to the audit criteria rather than the model instruction text.
+**Prompt de análise**:
+A versioned, question-specific instruction that defines how an **Evidência enviada** must be evaluated for a **Questão base** or a specific item.
+_Avoid_: prompt genérico when the evaluation criteria are specific to one question.
+
+**Postura de julgamento**:
+The evidentiary strictness encoded in a **Prompt de análise**, such as conservative or permissive evaluation.
+_Avoid_: flag de execução when the strictness changes audit criteria.
 
 **Conclusão de conformidade**:
 The item-level result stating whether an **Item afirmado** is supported by the **Evidência enviada**.
@@ -100,6 +108,10 @@ _Avoid_: decisão final.
 The model-assisted decision step that evaluates a complete **Pacote de evidência** against all **Itens afirmados** in scope for one **Análise de evidência**.
 _Avoid_: uma chamada por item.
 
+**Provedor de IA**:
+The configured AI service that performs a **Julgamento consolidado** using a specific model and API credential.
+_Avoid_: modelo when referring to the service integration rather than the model identifier.
+
 ## Relationships
 
 - One **Resposta submetida** belongs to exactly one **Auditado**.
@@ -110,9 +122,12 @@ _Avoid_: uma chamada por item.
 - One **Raiz de evidências** contains one **Diretório do auditado** per **Auditado**.
 - One **Diretório do auditado** contains the physical files referenced by the **Nome original da evidência** in that auditado's **Colunas de evidência**.
 - One **Evidência enviada** produces one **Pacote de evidência** before model analysis.
+- One ZIP **Evidência enviada** may contain many **Evidências internas**.
 - One **Evidência enviada** can be analyzed against one or more **Itens afirmados**.
-- One **Checklist de análise** applies to one **Questão base** or one specific item of that question.
+- One **Prompt de análise** applies to one **Questão base** or one specific item of that question.
+- One **Prompt de análise** has one **Postura de julgamento**.
 - One **Análise de evidência** normally has one **Julgamento consolidado**.
+- One **Julgamento consolidado** is performed through one **Provedor de IA**.
 - One **Análise de evidência** produces one **Conclusão de conformidade** for each **Item afirmado** in scope.
 - One **Conclusão de conformidade** must include one **Fundamentação da conclusão**.
 - One **Análise de evidência** produces one **Registro de análise**.
@@ -130,3 +145,5 @@ _Avoid_: uma chamada por item.
 - `filename` in the upload object is the internal LimeSurvey storage id; file lookup in the organized evidence directory uses **Nome original da evidência** from `name`.
 - **Item afirmado** excludes weak or negative adoption states; only adoption claims that require evidence and `sim` array items are analyzed.
 - "Mesma evidência" is not identified only by file name; resolved term: **Identidade da análise**.
+- A missing **Prompt de análise** blocks only that **Análise de evidência**; the pipeline must not fall back to generic judgment.
+- A different **Postura de julgamento** requires a different **Prompt de análise** so the **Identidade da análise** changes.

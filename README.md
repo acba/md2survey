@@ -1,40 +1,139 @@
 # md2survey - Conversores SurveyMD para DOCX e LSS
 
-A versao atual do app entende SurveyMD (`.md`) como arquivo de entrada. A partir
-desse `.md`, o processamento gera os artefatos `.docx` e `.lss`.
+Este repositorio contem conversores CLI para transformar questionarios escritos
+em SurveyMD (`.md`) nos artefatos usados no fluxo de trabalho:
 
-O fluxo por planilha (`.xlsx` -> `.md`) esta deprecated. Ele permanece apenas
-como apoio legado para migrar conteudo antigo, mas nao deve ser usado como fluxo
-principal de autoria ou processamento.
+- `.docx`: documento de revisao e impressao.
+- `.lss`: arquivo importavel no LimeSurvey.
 
-## Uso
+O fluxo principal de autoria e processamento deve partir do `.md`. O fluxo por
+planilha (`.xlsx` -> `.md`) esta deprecated e permanece apenas como apoio
+legado para migrar conteudo antigo.
+
+## Sumario
+
+- [Uso basico](#uso-basico)
+- [Estrutura de um SurveyMD](#estrutura-de-um-surveymd)
+- [Cabecalho do questionario](#cabecalho-do-questionario)
+- [Variantes por target](#variantes-por-target)
+- [Grupos](#grupos)
+- [Escalas](#escalas)
+- [Tipos de questao](#tipos-de-questao)
+- [Estruturas auxiliares](#estruturas-auxiliares)
+- [Atributos gerais de questao](#atributos-gerais-de-questao)
+- [Atributos por tipo de questao](#atributos-por-tipo-de-questao)
+- [Condicoes de exibicao](#condicoes-de-exibicao)
+- [Macro adoption](#macro-adoption)
+- [Recomendacoes de autoria](#recomendacoes-de-autoria)
+
+## Uso basico
+
+Crie e ative um ambiente virtual antes de executar os conversores:
 
 ```bash
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
+```
+
+Gere os artefatos a partir do `.md`:
+
+```bash
 python md2docx.py modelo_teste.md modelo_teste.docx --template-docx exemplo\TSID03-ANEXO_QUESTIONARIO.docx
 python md2lss.py modelo_teste.md modelo_teste.lss
 ```
 
-O `.docx` serve para revisao/impressao. O `.lss` e o artefato correto para
-importacao no LimeSurvey.
+Use `python <script>.py --help` para conferir as opcoes atuais de cada CLI.
 
-Voce nao precisa se preocupar com `sid` no uso normal: se ele nao existir no
-ambiente de destino, o LimeSurvey pode gerar/atribuir um ID automaticamente na
-importacao. Use `sid:` no cabecalho ou `--sid` apenas quando quiser controlar a
-base numerica usada no `.lss` gerado.
+O `.docx` serve para revisao humana e impressao. O `.lss` e o artefato correto
+para importacao no LimeSurvey.
 
-No cabecalho usado para `.lss`, `admin` deve ser curto: o LimeSurvey limita esse
-campo a 50 caracteres. Use `adminemail` para o e-mail do responsavel.
+## Estrutura de um SurveyMD
 
-## Variantes por target
+Um arquivo SurveyMD e composto por:
 
-Use `target` no cabecalho do `.md` para gerar variantes do mesmo questionario:
+1. Cabecalho opcional em frontmatter YAML simples.
+2. Titulo principal opcional.
+3. Escalas reutilizaveis opcionais.
+4. Grupos.
+5. Questoes dentro dos grupos.
+
+Exemplo minimo:
 
 ```md
 ---
-title: "Questionario"
+title: Questionario de exemplo
+language: pt-BR
+---
+
+# Questionario de exemplo
+
+## Escala: sim_nao
+type: single
+- sim | Sim
+- nao | Nao
+
+## Grupo: g1 | Planejamento de TI
+> Este grupo trata de planejamento, governanca e acompanhamento de TI.
+
+### q1 [single]
+question: **A organizacao possui plano de TI vigente?**
+mandatory: true
+scale: sim_nao
+```
+
+Cada questao deve usar o formato:
+
+```md
+### codigo_da_questao [tipo]
+question: Texto da pergunta
+```
+
+No `.lss`, uma questao fora de um grupo gera erro. No `.docx`, o conversor pode
+criar um grupo padrao, mas a recomendacao e sempre declarar `## Grupo:`.
+
+## Cabecalho do questionario
+
+O cabecalho fica no inicio do arquivo, entre `---`.
+
+```md
+---
+title: Questionario de Governanca de TI
+target: municipal, estadual
+sid: 431594
+language: pt-BR
+admin: Administracao
+adminemail: admin@example.com
+template: vanilla
+format: G
+---
+```
+
+| Atributo | Descricao | DOCX | LSS |
+|---|---|---:|---:|
+| `title` | Titulo do questionario. | Sim | Sim |
+| `target` | Lista de variantes de saida. | Sim | Sim |
+| `sid` | ID base do survey no `.lss`. | Nao | Sim |
+| `language` / `lang` | Idioma do survey. Padrao: `pt-BR`. | Nao | Sim |
+| `admin` | Nome do administrador. No LimeSurvey, mantenha ate 50 caracteres. | Nao | Sim |
+| `adminemail` / `admin_email` | E-mail do administrador. | Nao | Sim |
+| `template` | Tema/template do LimeSurvey. Padrao: `vanilla`. | Nao | Sim |
+| `format` | Formato de navegacao do LimeSurvey. Padrao: `G`. | Nao | Sim |
+| `expires` | Data de expiracao do survey. | Nao | Sim |
+| `startdate` / `start_date` | Data de inicio do survey. | Nao | Sim |
+
+Voce nao precisa informar `sid` no uso normal. Se o SID nao existir no ambiente
+de destino, o LimeSurvey pode gerar ou atribuir um ID automaticamente durante a
+importacao. Use `sid:` no cabecalho ou `--sid` apenas quando quiser controlar a
+base numerica usada no `.lss` gerado.
+
+## Variantes por target
+
+Use `target` no cabecalho para gerar variantes do mesmo questionario:
+
+```md
+---
+title: Questionario
 target: municipal, estadual
 ---
 ```
@@ -62,171 +161,24 @@ python md2lss.py questionario.md questionario.lss
 ```
 
 No `.lss`, quando houver `--sid` ou `sid:` no cabecalho, o primeiro target usa
-esse SID base e os targets seguintes usam SID incremental na ordem do cabecalho.
-Se nenhum SID for informado, o conversor usa uma base interna apenas para montar
-as referencias do arquivo, e o LimeSurvey pode atribuir o ID final durante a
-importacao. Grupos que ficarem sem questoes apos o filtro recebem uma questao
-automatica de ciencia. Se uma
-questao de um target depender via `visible_if` de uma questao que nao existe
-nesse mesmo target, a geracao falha com erro.
+esse SID base e os targets seguintes usam SIDs incrementais na ordem do
+cabecalho. Se uma questao de um target depender via `visible_if` de uma questao
+que nao existe nesse mesmo target, a geracao falha com erro.
 
-## Tipos de questao e escalas
+## Grupos
 
-Declare cada questao com `### codigo [tipo]`. Os tipos aceitos pelo `.lss` sao:
-
-- `single`, `list`, `radio`, `lista`: escolha unica. Use `scale` ou `options`.
-- `multi`, `multiple`, `checkbox`, `multipla`: multiplos checkboxes. Use `subquestions`.
-- `short`, `text`, `texto_curto`: resposta curta em texto.
-- `long`, `textarea`, `texto_longo`: resposta longa em texto.
-- `upload`, `file`, `arquivo`: envio de arquivo.
-- `multi_text`, `multitext`, `varios_textos`: varios campos de texto. Use `subquestions`.
-- `array`, `matrix`, `matriz`: matriz/tabela. Use `subquestions` para linhas e `scale` ou `options` para colunas.
-- `array_numbers`, `array_number`, `numeric_array`, `array_numeros`, `matriz_numerica`: matriz/tabela de numeros. Use `subquestions` para linhas e `scale` ou `options` para colunas.
-- `adoption`, `adocao`: macro de grau de adocao.
-
-Exemplo de escala reutilizavel:
+Declare grupos com:
 
 ```md
-## Escala: sim_nao
-type: single
-- sim | Sim
-- nao | Nao
+## Grupo: codigo | Titulo do grupo
+> Descricao opcional do grupo.
 ```
 
-Uso da escala em uma questao:
-
-```md
-### q2001 [single]
-question: **A organizacao possui plano de TI vigente?**
-mandatory: true
-scale: sim_nao
-```
-
-Tambem e possivel declarar opcoes diretamente na questao:
-
-```md
-### q2002 [single]
-question: **Qual e a situacao do plano de TI?**
-mandatory: true
-
-options:
-- vigente | Plano vigente
-- vencido | Plano vencido
-- inexistente | Nao ha plano
-```
-
-Para `multi`, `multi_text` e `array`, use `subquestions`:
-
-```md
-### q2003 [multi]
-question: **Quais artefatos existem?**
-mandatory: true
-
-subquestions:
-- plano | Plano de TI
-- relatorio | Relatorio de acompanhamento
-- ata | Ata de aprovacao
-```
-
-No parser do `.lss`, linhas de opcoes e subquestoes podem ser escritas com ou
-sem hifen, desde que usem `codigo | texto` ou `codigo: texto`.
-
-Para matriz numerica, use `array_numbers`:
-
-```md
-### q2004 [array_numbers]
-question: **Informe o quantitativo de profissionais por area e vinculo.**
-mandatory: true
-
-subquestions:
-- TI | Tecnologia da Informacao
-- SI | Seguranca da Informacao
-
-options:
-- efetivos | Servidores efetivos
-- comissionados | Servidores comissionados
-- terceirizados | Terceirizados
-```
-
-Por padrao, `array_numbers` gera campos numericos no LimeSurvey com valor minimo
-`0`, maximo `1000`, passo livre (`multiflexible_step: -1`) e caixas de entrada
-visiveis (`input_boxes: 1`). Esses atributos podem ser sobrescritos na questao,
-se necessario.
-
-## Atributos de questao
-
-Os atributos gerais aceitos nas questoes sao:
-
-- `question` ou `title`: texto/enunciado da questao.
-- `mandatory`: `true`, `false`, `sim`, `nao`, `1`, `0` etc.
-- `scale`: codigo de uma escala criada com `## Escala:`.
-- `help`: texto de ajuda da questao.
-- `subgroup`: titulo visual interno antes da questao.
-- `visible_if` ou `relevance`: condicao de exibicao.
-- `other`: habilita opcao "Outro" quando aplicavel.
-- `target`: restringe a questao a uma ou mais variantes do cabecalho.
-- `explain`: texto explicativo exibido junto da questao.
-- `repeat_group_description`: cria no `.lss` um grupo proprio para a questao,
-  repetindo titulo e descricao do grupo original.
-- `hide_tip`: controla a dica padrao do LimeSurvey em questoes de multiplas respostas.
-- `min_answers` e `max_answers`: limites para questoes de multiplas respostas.
-- `allowed_filetypes`, `min_files`, `max_files`: atributos de questoes `upload`.
-
-### `explain`
-
-Use `explain` para adicionar um texto explicativo logo abaixo do enunciado da
-questao. O texto aparece no `.docx` de revisao e tambem e incorporado ao texto
-da pergunta no `.lss`.
-
-```md
-### q2001 [single]
-question: **A organizacao possui processo formal de planejamento de TI?**
-mandatory: true
-scale: sim_nao
-explain: Considere processos documentados, aprovados e usados de forma recorrente.
-```
-
-### `repeat_group_description`
-
-Use `repeat_group_description: true` quando uma questao deve ser exportada no
-`.lss` em um grupo proprio, repetindo o mesmo titulo e a mesma descricao do
-grupo original. Isso e util quando o texto do grupo apresenta um contexto que
-deve aparecer imediatamente antes daquela questao. As questoes seguintes sem
-`repeat_group_description` permanecem nesse mesmo grupo repetido, ate que outra
-questao com `repeat_group_description: true` inicie um novo grupo ou ate o
-proximo `## Grupo:`.
-
-```md
-## Grupo: g2000 | Gestao de Tecnologia da Informacao
-> Este grupo apresenta o contexto de gestao de TI que deve orientar as respostas.
-
-### q2111 [adoption]
-repeat_group_description: true
-question: **A organizacao executa processo de planejamento de TI.**
-mandatory: true
-
-### q2112 [adoption]
-repeat_group_description: true
-question: **A organizacao possui plano de TI vigente.**
-mandatory: true
-```
-
-No `.lss`, o exemplo acima gera dois grupos, cada um com a mesma descricao de
-`g2000` e com uma questao logica. Se uma pergunta comum vier apos uma questao
-com `repeat_group_description: true` e nao declarar o atributo, ela sera mantida
-no mesmo grupo repetido. Em questoes `[adoption]`, a macro inteira fica no mesmo
-grupo repetido: pergunta principal, nao aplicabilidade, justificativas,
-detalhamento e evidencia.
-
-Os codigos dos grupos repetidos sao ajustados automaticamente para evitar
-duplicidade. Por exemplo, `g2000` com `q2111` pode gerar um grupo interno como
-`g2000_q2111`.
-
-### Grupos vazios no `.lss`
-
-Um grupo sem questoes nao e descartado no `.lss`. O conversor cria
+No `.lss`, grupos sem questoes nao sao descartados. O conversor cria
 automaticamente uma questao obrigatoria de ciencia, permitindo usar o grupo como
-pagina de contexto:
+pagina de contexto.
+
+Exemplo de grupo vazio:
 
 ```md
 ## Grupo: g2000 | Gestao de Tecnologia da Informacao
@@ -237,17 +189,445 @@ Questao criada automaticamente no `.lss`:
 
 ```md
 ### qg2000_ciencia [multi]
-question: Para prosseguir, confirme que tomou ciencia do contexto apresentado nesta secao.
+question: Confirme para prosseguir para a proxima secao.
 mandatory: true
 
 subquestions:
-- ciente | Estou ciente do contexto apresentado.
+- ciente | Estou ciente das informacoes apresentadas.
 ```
+
+### Repeticao da descricao do grupo
+
+Use `repeat_group_description: true` quando uma questao deve ser exportada no
+`.lss` em um grupo proprio, repetindo o titulo e a descricao do grupo original.
+Isso e util quando o texto do grupo apresenta um contexto que deve aparecer
+imediatamente antes daquela questao.
+
+```md
+## Grupo: g2000 | Gestao de Tecnologia da Informacao
+> Este grupo apresenta o contexto de gestao de TI que deve orientar as respostas.
+
+### q2111 [adoption]
+repeat_group_description: true
+question: **A organizacao executa processo de planejamento de TI.**
+mandatory: true
+```
+
+As questoes seguintes sem `repeat_group_description` permanecem no mesmo grupo
+repetido ate outra questao iniciar novo grupo repetido ou ate o proximo
+`## Grupo:`.
+
+| Atributo | Descricao | DOCX | LSS |
+|---|---|---:|---:|
+| `repeat_group_description` | Cria/reusa grupo proprio repetindo a descricao do grupo original. | Ignorado | Sim |
+
+## Escalas
+
+Escalas permitem reutilizar conjuntos de alternativas:
+
+```md
+## Escala: sim_nao
+type: single
+- sim | Sim
+- nao | Nao
+```
+
+Uso em uma questao:
+
+```md
+### q2001 [single]
+question: **A organizacao possui plano de TI vigente?**
+mandatory: true
+scale: sim_nao
+```
+
+O parser aceita itens no formato `codigo | texto` ou `codigo: texto`. No
+`.lss`, itens de opcoes e subquestoes podem ser escritos com ou sem hifen,
+desde que mantenham um desses separadores.
+
+## Tipos de questao
+
+Declare cada questao com:
+
+```md
+### codigo [tipo]
+```
+
+| Tipo canonico | Aliases aceitos | Descricao | DOCX | LSS |
+|---|---|---|---:|---:|
+| `single` | `list`, `radio`, `lista` | Escolha unica. Use `scale` ou `options`. | Parcial | Sim |
+| `multi` | `multiple`, `checkbox`, `multipla`, `múltipla` | Multiplos checkboxes. Use `subquestions`. | Parcial | Sim |
+| `short` | `text`, `texto_curto` | Resposta curta em texto. | Parcial | Sim |
+| `long` | `textarea`, `texto_longo` | Resposta longa em texto. | Parcial | Sim |
+| `upload` | `file`, `arquivo` | Envio de arquivo no LimeSurvey. | Parcial | Sim |
+| `multi_text` | `multitext`, `varios_textos` | Varios campos de texto. Use `subquestions`. | Parcial | Sim |
+| `array` | `matrix`, `matriz` | Matriz/tabela. Use linhas em `subquestions` e colunas em `scale` ou `options`. | Parcial | Sim |
+| `array_numbers` | `array_number`, `numeric_array`, `array_numeros`, `matriz_numerica` | Matriz numerica. Use linhas em `subquestions` e colunas em `scale` ou `options`. | Sim | Sim |
+| `adoption` | `adocao`, `adoção` | Macro de grau de adocao. | Parcial | Sim |
+
+`Parcial` significa que o `.docx` renderiza a questao para revisao/impressao,
+mas nao representa toda a logica ou todos os aliases aceitos pelo `.lss`.
+
+## Estruturas auxiliares
+
+### `options`
+
+Define alternativas ou colunas de resposta.
+
+```md
+options:
+- sim | Sim
+- nao | Nao
+```
+
+No `.lss`, tambem sao aceitos: `alternatives`, `alternativas`, `opcoes`,
+`opções`, `columns`, `colunas`.
+
+| Uso | DOCX | LSS |
+|---|---:|---:|
+| Alternativas de `single` | Sim | Sim |
+| Colunas de `array` e `array_numbers` | Sim | Sim |
+| Alternativas diretas de `multi` | Parcial | Sim |
+
+### `subquestions`
+
+Define subquestoes, linhas ou itens de checkbox.
+
+```md
+subquestions:
+- plano | Plano de TI
+- relatorio | Relatorio de acompanhamento
+- ata | Ata de aprovacao
+```
+
+No `.lss`, tambem sao aceitos: `subquestoes`, `subquestões`,
+`rows`, `linhas`, `detail_options`, `detalhamento`.
+
+| Uso | DOCX | LSS |
+|---|---:|---:|
+| Itens de `multi` | Sim | Sim |
+| Campos de `multi_text` | Sim | Sim |
+| Linhas de `array` e `array_numbers` | Sim | Sim |
+| Detalhamento de `adoption` | Sim | Sim |
+
+## Atributos gerais de questao
+
+| Atributo | Descricao | DOCX | LSS |
+|---|---|---:|---:|
+| `question` | Texto/enunciado da pergunta. | Sim | Sim |
+| `title` | Alias de `question` no `.lss`; no `.docx`, prefira `question`. | Parcial | Sim |
+| Texto livre abaixo do cabecalho | Tambem vira enunciado da pergunta. | Sim | Sim |
+| `mandatory` | Torna a resposta obrigatoria. Aceita `true`, `false`, `sim`, `nao`, `1`, `0`, etc. | Parcial | Sim |
+| `scale` | Referencia uma escala criada com `## Escala:`. | Sim | Sim |
+| `help` | Texto de ajuda da questao. | Sim | Sim |
+| `subgroup` | Titulo visual interno antes da questao. | Sim | Sim |
+| `visible_if` | Condicao de exibicao. | Parcial | Sim |
+| `relevance` | Alias de `visible_if` no `.lss`. | Nao | Sim |
+| `other` | Habilita opcao "Outro" quando aplicavel no LimeSurvey. | Nao | Sim |
+| `target` | Restringe a questao a uma ou mais variantes do cabecalho. | Sim | Sim |
+| `explain` | Texto explicativo junto da pergunta. | Sim | Sim |
+| `evidence_text` | Texto de evidencia documental. No `.lss`, gera pergunta `upload` automatica; no `.docx`, aparece como chamada visual. | Sim | Sim |
+| `evidence_if` | Condicao explicita para exibir upload automatico criado por `evidence_text`. | Nao | Sim |
+
+### Exemplo de `explain`
+
+```md
+### q2001 [single]
+question: **A organizacao possui processo formal de planejamento de TI?**
+mandatory: true
+scale: sim_nao
+explain: Considere processos documentados, aprovados e usados de forma recorrente.
+```
+
+### Exemplo de `evidence_text`
+
+```md
+### q2002 [single]
+question: **A organizacao possui plano de TI vigente?**
+mandatory: true
+scale: sim_nao
+evidence_text: Anexe evidencia documental do plano de TI.
+```
+
+No `.docx`, o texto aparece como chamada de evidencia. No `.lss`, o conversor
+cria uma questao de upload automatica com sufixo `evi`, usando regras padrao de
+arquivo.
+
+## Atributos por tipo de questao
+
+### `single`
+
+Tipos: `single`, `list`, `radio`, `lista`.
+
+```md
+### q1 [single]
+question: A organizacao possui plano?
+mandatory: true
+scale: sim_nao
+```
+
+| Atributo | Descricao | DOCX | LSS |
+|---|---|---:|---:|
+| `scale` | Usa alternativas de uma escala. | Sim | Sim |
+| `options` | Define alternativas diretamente. | Sim | Sim |
+| `other` | Habilita "Outro". | Nao | Sim |
+| `evidence_text` | Solicita evidencia vinculada a resposta. | Sim | Sim |
+
+### `multi`
+
+Tipos: `multi`, `multiple`, `checkbox`, `multipla`, `múltipla`.
+
+```md
+### q2 [multi]
+question: Quais documentos existem?
+mandatory: true
+min_answers: 1
+max_answers: 3
+hide_tip: 1
+
+subquestions:
+- plano | Plano de TI
+- ata | Ata de aprovacao
+```
+
+| Atributo | Descricao | DOCX | LSS |
+|---|---|---:|---:|
+| `subquestions` | Itens marcaveis. | Sim | Sim |
+| `min_answers` | Numero minimo de respostas. | Nao | Sim |
+| `max_answers` | Numero maximo de respostas. | Nao | Sim |
+| `hide_tip` | Oculta dica padrao do LimeSurvey. Padrao pratico: `1`. | Nao | Sim |
+| `evidence_text` | Solicita evidencia quando algum item for marcado, salvo `evidence_if`. | Sim | Sim |
+
+### `short` e `long`
+
+Tipos curtos: `short`, `text`, `texto_curto`.
+
+Tipos longos: `long`, `textarea`, `texto_longo`.
+
+```md
+### q3 [short]
+question: Informe o numero do processo.
+mandatory: true
+```
+
+| Atributo | Descricao | DOCX | LSS |
+|---|---|---:|---:|
+| `mandatory` | Campo obrigatorio. | Parcial | Sim |
+| `help` | Texto de ajuda. | Sim | Sim |
+| `visible_if` | Condicao de exibicao. | Parcial | Sim |
+| `evidence_text` | Gera ou mostra solicitacao de evidencia. | Sim | Sim |
 
 ### `upload`
 
-Use `upload` para solicitar anexos no LimeSurvey. Os atributos principais sao:
-`allowed_filetypes`, `min_files` e `max_files`.
+Tipos: `upload`, `file`, `arquivo`.
+
+```md
+### q4evi [upload]
+question: Anexe evidencia documental.
+mandatory: true
+allowed_filetypes: pdf, doc, docx, zip
+min_files: 1
+max_files: 3
+```
+
+| Atributo | Descricao | DOCX | LSS |
+|---|---|---:|---:|
+| `allowed_filetypes` | Extensoes permitidas. | Nao | Sim |
+| `min_files` | Quantidade minima de arquivos. | Nao | Sim |
+| `max_files` | Quantidade maxima de arquivos. | Nao | Sim |
+| `mandatory` | Upload obrigatorio. | Parcial | Sim |
+| `visible_if` | Condicao para exibir upload. | Parcial | Sim |
+
+### `multi_text`
+
+Tipos: `multi_text`, `multitext`, `varios_textos`.
+
+```md
+### q5 [multi_text]
+question: Informe os responsaveis por area.
+
+subquestions:
+- ti | TI
+- contratos | Contratos
+```
+
+| Atributo | Descricao | DOCX | LSS |
+|---|---|---:|---:|
+| `subquestions` | Cada item vira um campo de texto. | Sim | Sim |
+| `mandatory` | Obrigatoriedade da questao. | Parcial | Sim |
+| `help` | Ajuda da questao. | Sim | Sim |
+
+### `array`
+
+Tipos: `array`, `matrix`, `matriz`.
+
+```md
+### q6 [array]
+question: Avalie cada pratica.
+scale: sim_nao
+
+subquestions:
+- p1 | Pratica 1
+- p2 | Pratica 2
+```
+
+| Atributo | Descricao | DOCX | LSS |
+|---|---|---:|---:|
+| `subquestions` / `rows` | Linhas da matriz. | Sim | Sim |
+| `scale` | Colunas da matriz. | Sim | Sim |
+| `options` / `columns` | Colunas declaradas diretamente. | Sim | Sim |
+| `visible_if` | Condicao de exibicao. | Parcial | Sim |
+
+### `array_numbers`
+
+Tipos: `array_numbers`, `array_number`, `numeric_array`, `array_numeros`,
+`matriz_numerica`.
+
+```md
+### q7 [array_numbers]
+question: Informe quantitativos por area e vinculo.
+mandatory: true
+input_boxes: 1
+multiflexible_min: 0
+multiflexible_max: 1000
+multiflexible_step: -1
+
+subquestions:
+- TI | Tecnologia da Informacao
+- SI | Seguranca da Informacao
+
+options:
+- efetivos | Efetivos
+- terceirizados | Terceirizados
+```
+
+| Atributo | Descricao | DOCX | LSS |
+|---|---|---:|---:|
+| `subquestions` | Linhas da matriz. | Sim | Sim |
+| `scale` ou `options` | Colunas da matriz. | Sim | Sim |
+| `input_boxes` | Controla caixas de entrada visiveis no LimeSurvey. Padrao: `1`. | Nao | Sim |
+| `multiflexible_min` | Valor minimo permitido. Padrao: `0`. | Nao | Sim |
+| `multiflexible_max` | Valor maximo permitido. Padrao: `1000`. | Nao | Sim |
+| `multiflexible_step` | Passo permitido. Padrao: `-1`, livre. | Nao | Sim |
+
+## Condicoes de exibicao
+
+Use `visible_if` para declarar condicoes amigaveis que o conversor transforma em
+ExpressionScript do LimeSurvey.
+
+Exemplos aceitos no `.lss`:
+
+```md
+visible_if: q1011 == sim
+visible_if: q1022 != naoap
+visible_if: q1022 in [adpar, admai]
+visible_if: q1022 not in [naoad, adfor]
+visible_if: q2112ext.B == Y
+visible_if: q2112ext[B] == Y
+visible_if: (q1 == sim and q2 in [A, B]) or q3.C == Y
+visible_if: raw: ((431594X1000X10000.NAOK == "sim"))
+```
+
+| Recurso | DOCX | LSS |
+|---|---:|---:|
+| Condicao simples `q == valor` | Sim, como dependencia visual | Sim |
+| Checkbox `q.item == Y` ou `q[item] == Y` | Parcial | Sim |
+| Expressoes compostas com `and` / `or` | Nao como logica visual completa | Sim |
+| `raw:` com ExpressionScript manual | Nao | Sim |
+
+## Macro adoption
+
+Tipos: `adoption`, `adocao`, `adoção`.
+
+A macro `adoption` representa grau de adocao. No `.lss`, ela e expandida em um
+bloco de questoes comuns: pergunta principal, nao aplicabilidade,
+justificativas, detalhamento e upload de evidencia quando configurado.
+
+```md
+### q8 [adoption]
+question: A organizacao executa processo formal de planejamento de TI.
+mandatory: true
+explain: Considere processos documentados e recorrentes.
+evidence_text: Anexe evidencia documental do processo.
+
+subquestions:
+- plano | Existe plano aprovado
+- monitoramento | Ha monitoramento periodico
+```
+
+### Escalas internas da macro
+
+Se nenhuma escala for informada, a macro usa a escala interna `adocao`:
+
+| Codigo | Texto |
+|---|---|
+| `naoad` | Nao adota. |
+| `adfor` | Ha decisao formal ou plano aprovado para adota-lo. |
+| `admen` | Adota em menor parte. |
+| `adpar` | Adota parcialmente. |
+| `admai` | Adota em maior parte ou totalmente. |
+| `naoap` | Nao se aplica. |
+
+Para justificativa de nao aplicabilidade, usa a escala interna
+`nao_aplicabilidade`:
+
+| Codigo | Texto |
+|---|---|
+| `A` | Nao se aplica porque ha lei e/ou norma, externa a organizacao, que impede a implementacao desta pratica. |
+| `B` | Nao se aplica porque ha estudos que demonstram que o custo de implementar este controle e maior que o beneficio que seria obtido. |
+| `C` | Nao se aplica por outras razoes. |
+
+### Atributos da macro
+
+| Atributo | Descricao | DOCX | LSS |
+|---|---|---:|---:|
+| `scale` | Escala da pergunta principal. Se omitido, usa `adocao`. | Parcial | Sim |
+| `adoption_scale` | Escala da pergunta principal. | Nao | Sim |
+| `nsa_scale` | Escala da justificativa de nao aplicabilidade. Padrao: `nao_aplicabilidade`. | Nao | Sim |
+| `nsa` | Habilita/desabilita bloco de nao aplicabilidade. Padrao: `true`. | Nao | Sim |
+| `nsa_text` | Texto da pergunta de justificativa de nao aplicabilidade. | Nao | Sim |
+| `lei` | Habilita pergunta sobre lei/norma impeditiva. Padrao: `true`. | Nao | Sim |
+| `lei_text` | Texto da pergunta sobre lei/norma. | Nao | Sim |
+| `est` | Habilita pergunta sobre estudos de custo-beneficio. Padrao: `true`. | Nao | Sim |
+| `est_text` | Texto da pergunta sobre estudos. | Nao | Sim |
+| `raz` | Habilita pergunta de outras razoes. Padrao: `true`. | Nao | Sim |
+| `raz_text` | Texto da pergunta de outras razoes. | Nao | Sim |
+| `detail` | Habilita detalhamento/checklist. Padrao: `true`. | Sim | Sim |
+| `detail_text` | Texto introdutorio do detalhamento. | Nao | Sim |
+| `detail_mandatory` | Torna detalhamento obrigatorio. | Nao | Sim |
+| `detail_min_answers` | Minimo de itens no detalhamento. | Nao | Sim |
+| `detail_max_answers` | Maximo de itens no detalhamento. | Nao | Sim |
+| `detail_hide_tip` | Oculta dica do LimeSurvey no detalhamento. Padrao: `1`. | Nao | Sim |
+| `subquestions` / `detail_options` | Itens do detalhamento. | Sim | Sim |
+| `evidence_text` | Texto da evidencia; no `.lss`, cria upload automatico `qcodeevi`. | Sim | Sim |
+| `nsa_suffix` | Sufixo do codigo da questao de nao aplicabilidade. Padrao: `nsa`. | Nao | Sim |
+| `lei_suffix` | Sufixo da questao de lei. Padrao: `lei`. | Nao | Sim |
+| `est_suffix` | Sufixo da questao de estudos. Padrao: `est`. | Nao | Sim |
+| `raz_suffix` | Sufixo da questao de razoes. Padrao: `raz`. | Nao | Sim |
+| `detail_suffix` | Sufixo do detalhamento. Padrao: `ext`. | Nao | Sim |
+
+### Atributos obsoletos de evidencia
+
+Nao use estes atributos em questoes `adoption`. Os conversores rejeitam esses
+campos e orientam o uso de `evidence_text`.
+
+| Atributo obsoleto | Substituicao |
+|---|---|
+| `evidence` | Use `evidence_text`. |
+| `evidence_type` | Use `evidence_text`. |
+| `evidence_mandatory` | Use `evidence_text`; uploads automaticos sao obrigatorios. |
+| `evidence_allowed_filetypes` | Use questao `upload` explicita se precisar customizar. |
+| `evidence_min_files` | Use questao `upload` explicita se precisar customizar. |
+| `evidence_max_files` | Use questao `upload` explicita se precisar customizar. |
+| `evidence_suffix` | O sufixo automatico atual e `evi`. |
+
+## Uploads e evidencias
+
+Ha duas formas de solicitar arquivos.
+
+### Questao `upload` explicita
+
+Use quando precisar controlar tipos e quantidades de arquivos.
 
 ```md
 ### q2004evi [upload]
@@ -259,148 +639,58 @@ min_files: 1
 max_files: 3
 ```
 
-No `.docx`, questoes de evidencia documental sao apresentadas como orientacao de
-revisao; o envio real do arquivo acontece no LimeSurvey importado a partir do
-`.lss`.
+### Evidencia automatica com `evidence_text`
 
-### Atributos especificos de `[adoption]`
-
-O macro `[adoption]` aceita, alem dos atributos gerais:
-
-- `adoption_scale`: escala da pergunta principal. Padrao: `adocao`.
-- `nsa_scale`: escala da justificativa de nao aplicabilidade. Padrao: `nao_aplicabilidade`.
-- `nsa`: habilita/desabilita a pergunta de nao aplicabilidade.
-- `nsa_text`, `lei_text`, `est_text`, `raz_text`: textos das perguntas auxiliares.
-- `lei`, `est`, `raz`: habilitam/desabilitam auxiliares de lei, estudo e razoes.
-- `detail`: habilita/desabilita o detalhamento.
-- `detail_text`: texto da pergunta de detalhamento.
-- `detail_mandatory`: torna o detalhamento obrigatorio.
-- `detail_min_answers`, `detail_max_answers`: limites do detalhamento.
-- `detail_hide_tip`: controla a dica padrao do LimeSurvey no detalhamento.
-- `nsa_suffix`, `lei_suffix`, `est_suffix`, `raz_suffix`, `detail_suffix`: sufixos dos codigos gerados.
-- `evidence_text`: cria pergunta `upload` obrigatoria para envio de evidencia documental.
-- `evidence_if`: condicao de exibicao da pergunta automatica de evidencia documental.
-
-Campos legados `evidence`, `evidence_type`, `evidence_mandatory`,
-`evidence_allowed_filetypes`, `evidence_min_files`, `evidence_max_files` e
-`evidence_suffix` sao reconhecidos para diagnostico, mas nao devem ser usados em
-novos questionarios. Prefira `evidence_text` ou uma questao `[upload]`
-declarada explicitamente.
-
-## Macro adoption
-
-Use `[adoption]` para gerar a pergunta principal de grau de adocao, as
-justificativas de nao aplicabilidade e, quando informado, o checklist de
-detalhamento.
-
-Quando `evidence_text` e informado em uma questao `[adoption]`, o conversor
-cria automaticamente uma pergunta `upload` obrigatoria, exibida quando a resposta
-indicar adocao parcial ou maior.
-
-Nas demais questoes, `evidence_text` tambem cria uma pergunta `upload`
-obrigatoria com os mesmos defaults (`pdf, docx, zip`, minimo 1 arquivo e maximo
-1 arquivo). Use `evidence_if` quando precisar informar explicitamente a condicao
-de exibicao da evidencia:
+Use quando a evidencia acompanha uma questao comum ou `adoption`.
 
 ```md
-### q2001 [single]
+### q2004 [single]
 question: **A organizacao possui plano de TI vigente?**
 mandatory: true
-evidence_text: Caso tenha respondido que possui plano vigente, anexe evidencia documental.
-evidence_if: q2001 == sim
-
-options:
-- sim | Sim
-- nao | Nao
+scale: sim_nao
+evidence_text: Anexe evidencia documental do plano de TI.
 ```
 
-Quando `evidence_if` nao for informado, o conversor usa uma condicao padrao:
-qualquer alternativa marcada/respondida para questoes com alternativas, ou
-evidencia sempre visivel para questoes textuais ou sem alternativas discretas.
-Se precisar de outro comportamento, declare uma pergunta `upload` normal no
-`.md`, com o tipo e a condicao desejados:
+No `.lss`, uploads automaticos usam por padrao:
 
-```md
-### q1022extDevi [upload]
-mandatory: false
-visible_if: q1022ext.D == Y
-allowed_filetypes: doc, pdf, docx, zip
-min_files: 1
-max_files: 3
+| Atributo LimeSurvey | Valor |
+|---|---|
+| `allowed_filetypes` | `pdf, docx, zip` |
+| `min_num_of_files` | `1` |
+| `max_num_of_files` | `1` |
 
-Anexe evidência documental que comprove a aprovação formal do PEDTIC.
-```
+## Recomendacoes de autoria
 
-## Opcoes principais
+Para maxima compatibilidade entre `.docx` e `.lss`, prefira os nomes canonicos:
 
-- `--template-docx`: DOCX de referencia usado como base de estilos, margens, cabecalho e rodape.
-- `--sid`, `--first-gid`, `--first-qid`: parametros do arquivo LimeSurvey `.lss`.
+- Tipos: `single`, `multi`, `short`, `long`, `upload`, `multi_text`, `array`,
+  `array_numbers`, `adoption`.
+- Listas: `options` e `subquestions`.
+- Texto da pergunta: `question`.
+- Condicao: `visible_if`.
+- Evidencia: `evidence_text`.
+- Obrigatoriedade: `mandatory: true` ou `mandatory: false`.
 
-## Planilha deprecated
+Evite depender de aliases portugueses quando o mesmo arquivo precisa gerar
+`.docx` e `.lss`, porque o `.lss` aceita mais aliases que o `.docx`.
 
-A conversao de SurveyXLSX para SurveyMD esta deprecated. Use `.md` como entrada
-do app e gere `.docx` e `.lss` diretamente a partir dele.
+Trate o `.docx` como documento de revisao visual. A representacao completa de
+regras, obrigatoriedade, condicoes, atributos LimeSurvey e uploads fica no
+`.lss`.
 
-Se precisar migrar conteudo antigo de SurveyXLSX, ainda e possivel gerar um
-`.md` inicial:
+## Validacao manual recomendada
+
+Apos alterar um questionario ou os conversores, execute ao menos uma geracao
+manual:
 
 ```bash
-python xlsx2md.py modelo_teste.xlsx modelo_teste.md
+python md2docx.py modelo_teste.md output.docx --template-docx exemplo\TSID03-ANEXO_QUESTIONARIO.docx
+python md2lss.py modelo_teste.md output.lss --sid 431594
 ```
 
-Tambem existe um comando legado que gera `.md`, `.docx` e `.lss` a partir da
-planilha. Evite esse fluxo para novos questionarios:
+Confira especialmente:
 
-```bash
-python survey_from_xlsx.py modelo_teste.xlsx --template-docx exemplo\TSID03-ANEXO_QUESTIONARIO.docx --force
-```
-
-Por padrao, as saidas ficam no mesmo diretorio da planilha:
-`modelo_teste.md`, `modelo_teste.docx` e `modelo_teste.lss`.
-
-## Variantes por organizacao
-
-Use a coluna opcional `orgs` nas abas `questions`, `subquestions` e `options`
-para restringir uma linha a uma ou mais organizacoes. Separe multiplos codigos
-por virgula, ponto e virgula ou barra vertical, por exemplo `A,B`, `A; B` ou
-`A|B`. Quando `orgs` fica vazio, a linha vale para todas as organizacoes.
-
-As organizacoes sao descobertas automaticamente pelos valores preenchidos em
-`orgs`. Quando houver mais de uma variante, a aba `survey` deve informar um SID
-por organizacao com chaves como `sid_A` e `sid_B`.
-
-Para depurar uma unica variante em Markdown:
-
-```bash
-python xlsx2md.py modelo_teste.xlsx modelo_teste_A.md --org A
-```
-
-## Scripts individuais
-
-Os conversores separados continuam disponiveis para depuracao ou uso parcial:
-
-- `xlsx2md.py`: converte `.xlsx` para SurveyMD.
-- `md2docx.py`: converte SurveyMD para DOCX.
-- `md2lss.py`: converte SurveyMD para LimeSurvey `.lss`.
-
-## Subgrupos visuais
-
-Use a aba opcional `subgroups` para criar titulos internos que aparecem no DOCX
-sem criar grupos formais no LimeSurvey. A aba deve conter `group_code`,
-`subgroup_code`, `subgroup_title` e `order`. Na aba `questions`, preencha a
-coluna `subgroup_code` nas questoes pertencentes ao bloco. O titulo e emitido
-uma vez, na primeira questao do subgrupo.
-
-## Formato gerado
-
-- Paragrafos no estilo do documento de referencia.
-- Cabecalho, rodape, margens e estilos preservados quando `--template-docx` e usado.
-- Texto da questao em negrito.
-- Ajuda em vermelho com prefixo `?`.
-- Cada grupo e cada questao comecam em nova pagina no DOCX.
-- Checkboxes e radios renderizados para revisao humana.
-- Blocos de evidencia documental usam icone de documento e chamada visual propria.
-- Tabelas de questoes `array` usam Calibri, cabecalho em negrito tamanho 10,
-  corpo tamanho 9 e primeira coluna justificada.
-- Questoes com `visible_if` simples aparecem aninhadas no DOCX de revisao.
-- O `.lss` continua sendo o artefato correto para importacao no LimeSurvey.
+- Se todas as questoes aparecem no `.docx`.
+- Se o `.lss` importa no LimeSurvey.
+- Se `visible_if` referencia apenas questoes existentes no mesmo target.
+- Se uploads e evidencias foram gerados com os limites esperados.

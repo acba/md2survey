@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard iGovTI 2026 — TCE-RJ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tcerj-theme.css') }}">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        .drop-zone {
+            border: 2px dashed var(--tcerj-cyan);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: var(--tcerj-white);
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--tcerj-lime);
+            background: var(--tcerj-light);
+            transform: translateY(-2px);
+        }
+        .plotly-chart {
+            min-height: 400px;
+        }
+        .plotly-chart-small {
+            min-height: 300px;
+        }
+        .status-green { background: #e8f5e9; color: #2e7d32; }
+        .status-yellow { background: #fff8e1; color: #f57f17; }
+        .status-red { background: #ffebee; color: #c62828; }
+        .badge-sim { background: #e8f5e9; color: #2e7d32; padding: .25rem .6rem; border-radius: 12px; font-size: .75rem; font-weight: 600; }
+        .badge-nao { background: #ffebee; color: #c62828; padding: .25rem .6rem; border-radius: 12px; font-size: .75rem; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="tcerj-header">
+    <svg width="48" height="48" viewBox="0 0 100 100" fill="none" style="flex-shrink:0">
+        <rect x="0" y="0" width="100" height="100" rx="8" fill="white"/>
+        <rect x="10" y="10" width="35" height="80" fill="#1a3a5c"/>
+        <rect x="12" y="25" width="31" height="8" fill="#0088bb"/>
+        <rect x="12" y="40" width="31" height="8" fill="#7cb342"/>
+        <rect x="55" y="10" width="35" height="80" fill="#1a3a5c"/>
+        <rect x="57" y="25" width="31" height="8" fill="#0088bb"/>
+        <rect x="57" y="40" width="31" height="8" fill="#7cb342"/>
+        <rect x="70" y="55" width="18" height="8" fill="#7cb342"/>
+    </svg>
+    <div>
+        <h1>Dashboard iGovTI 2026</h1>
+        <div class="subtitle">Análise Estatística de Governança e Gestão de TI</div>
+    </div>
+    <div class="subtitle" style="margin-left:auto;text-align:right">
+        Tribunal de Contas do Estado do RJ<br>
+        <small>Coordenadoria de Auditoria em Políticas de TI</small>
+    </div>
+</header>
+
+<!-- Upload Section -->
+<section class="upload-section" id="uploadSection">
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#0088bb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:1rem">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <h3>Carregar Respostas do Questionário</h3>
+        <p>Arraste e solte o arquivo <strong>.xlsx</strong> aqui ou clique para selecionar</p>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(this.files[0])">
+    </div>
+</section>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p style="color:var(--tcerj-navy);font-size:1.1rem;font-weight:600">Processando análise estatística...</p>
+    <p style="color:#666;font-size:.9rem">Calculando Alfa de Cronbach, KMO, ACP e indicadores</p>
+</div>
+
+<!-- Dashboard -->
+<div class="dashboard" id="dashboard">
+
+    <!-- Resumo Executivo -->
+    <h2 class="section-title">Resumo Executivo</h2>
+    <div class="cards-grid" id="cardsGrid"></div>
+
+    <!-- Estágios de Capacidade -->
+    <h2 class="section-title">Estágios de Capacidade — iGovTI Geral</h2>
+    <div class="chart-row">
+        <div class="chart-container">
+            <div id="chartEstagiosDonut" class="plotly-chart"></div>
+        </div>
+        <div class="chart-container">
+            <img id="imgIgovtiGeral" style="width:100%;border-radius:8px" alt="iGovTI Geral">
+        </div>
+    </div>
+
+    <!-- Indicadores por Prática -->
+    <h2 class="section-title">Indicadores por Prática (ACP)</h2>
+    <div class="chart-container" style="overflow-x:auto">
+        <table class="data-table" id="tabelaPraticas">
+            <thead>
+                <tr>
+                    <th>Prática</th>
+                    <th>Itens</th>
+                    <th>PC1 %</th>
+                    <th>Autovalores > 1</th>
+                    <th>Adequado</th>
+                    <th>Loading Médio</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div class="chart-container">
+        <div id="chartRadar" class="plotly-chart"></div>
+    </div>
+
+    <!-- Distribuição e Scree -->
+    <h2 class="section-title">Distribuição dos Escores</h2>
+    <div class="chart-row">
+        <div class="chart-container">
+            <img id="imgDistribuicao" style="width:100%;border-radius:8px" alt="Distribuição">
+        </div>
+        <div class="chart-container">
+            <img id="imgScree" style="width:100%;border-radius:8px" alt="Scree Plots">
+        </div>
+    </div>
+
+    <!-- Matriz de Correlação -->
+    <h2 class="section-title">Matriz de Correlações</h2>
+    <div class="chart-container">
+        <div id="chartMatrizCorr" class="plotly-chart"></div>
+    </div>
+
+    <!-- Estágios por Prática -->
+    <h2 class="section-title">Estágios de Capacidade por Prática</h2>
+    <div class="chart-container">
+        <img id="imgEstagios" style="width:100%;border-radius:8px" alt="Estágios por Prática">
+    </div>
+
+    <!-- Mapa de Calor -->
+    <h2 class="section-title">Mapa de Calor — Organizações × Práticas</h2>
+    <div class="chart-container">
+        <div id="chartHeatmapOrgs" class="plotly-chart"></div>
+    </div>
+
+    <!-- Relações Implícitas -->
+    <h2 class="section-title">Relações Implícitas entre Domínios</h2>
+    <div class="chart-row" id="correlacoesContainer"></div>
+
+    <!-- Download -->
+    <h2 class="section-title">Exportar Resultados</h2>
+    <div class="btn-group">
+        <button class="btn btn-primary" onclick="downloadAllPNGs()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Baixar Todas as Figuras (PNG)
+        </button>
+        <button class="btn btn-secondary" onclick="downloadJSON()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Baixar Dados (JSON)
+        </button>
+        <button class="btn btn-secondary" onclick="window.print()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Imprimir Página
+        </button>
+    </div>
+
+</div>
+
+<footer class="tcerj-footer">
+    <p>Dashboard iGovTI 2026 — Fiscalização TCE-RJ nº 18/2026</p>
+    <p style="opacity:.7;font-size:.8rem;margin-top:.3rem">Coordenadoria de Auditoria em Políticas de Tecnologia da Informação (CAD-TI)</p>
+</footer>
+
+<script>
+let currentData = null;
+let allPNGs = {};
+
+// ── Upload ──────────────────────────────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const loadingOverlay = document.getElementById('loadingOverlay');
+const dashboard = document.getElementById('dashboard');
+
+['dragenter','dragover','dragleave','drop'].forEach(evt => {
+    dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
+});
+['dragenter','dragover'].forEach(evt => {
+    dropZone.addEventListener(evt, () => dropZone.classList.add('dragover'), false);
+});
+['dragleave','drop'].forEach(evt => {
+    dropZone.addEventListener(evt, () => dropZone.classList.remove('dragover'), false);
+});
+dropZone.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
+
+function handleFile(file) {
+    if (!file) return;
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+        alert('Por favor, envie um arquivo Excel (.xlsx)');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    loadingOverlay.classList.add('active');
+
+    fetch('/upload', {method: 'POST', body: formData})
+        .then(r => r.json())
+        .then(data => {
+            loadingOverlay.classList.remove('active');
+            if (data.error) {
+                alert('Erro: ' + data.error);
+                return;
+            }
+            currentData = data;
+            renderDashboard(data);
+        })
+        .catch(err => {
+            loadingOverlay.classList.remove('active');
+            alert('Erro na comunicação: ' + err.message);
+        });
+}
+
+// ── Render Dashboard ────────────────────────────────────────────────
+function renderDashboard(data) {
+    document.getElementById('uploadSection').style.display = 'none';
+    dashboard.classList.add('active');
+
+    // Cards
+    const m = data.metricas;
+    let cronbachStatus = m.cronbach >= 0.9 ? 'status-green' : m.cronbach >= 0.7 ? 'status-yellow' : 'status-red';
+    let bartlettStatus = m.bartlett_p < 0.05 ? 'status-green' : 'status-red';
+    let kmoStatus = m.kmo >= 0.8 ? 'status-green' : m.kmo >= 0.6 ? 'status-yellow' : 'status-red';
+
+    document.getElementById('cardsGrid').innerHTML = `
+        <div class="metric-card">
+            <div class="label">Organizações</div>
+            <div class="value">${m.n_orgs}</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Alfa de Cronbach</div>
+            <div class="value">${m.cronbach.toFixed(3)}</div>
+            <div class="status ${cronbachStatus}">${m.cronbach >= 0.9 ? 'Excelente' : m.cronbach >= 0.7 ? 'Aceitável' : 'Baixo'}</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Bartlett χ²</div>
+            <div class="value">${m.bartlett_chi ? m.bartlett_chi.toFixed(0) : 'N/A'}</div>
+            <div class="status ${bartlettStatus}">p = ${m.bartlett_p ? m.bartlett_p.toExponential(1) : 'N/A'}</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">KMO Global</div>
+            <div class="value">${m.kmo.toFixed(3)}</div>
+            <div class="status ${kmoStatus}">${m.kmo >= 0.8 ? 'Meritório' : m.kmo >= 0.6 ? 'Mediano' : 'Inaceitável'}</div>
+        </div>
+        <div class="metric-card" style="border-left-color:#7cb342">
+            <div class="label">iGovTI Média</div>
+            <div class="value">${m.igovti_mean.toFixed(3)}</div>
+            <div class="status status-yellow">σ = ${m.igovti_std.toFixed(3)}</div>
+        </div>
+    `;
+
+    // Figuras base64
+    allPNGs = data.figuras_base64;
+    if (allPNGs.distribuicao) document.getElementById('imgDistribuicao').src = allPNGs.distribuicao;
+    if (allPNGs.scree) document.getElementById('imgScree').src = allPNGs.scree;
+    if (allPNGs.estagios) document.getElementById('imgEstagios').src = allPNGs.estagios;
+    if (allPNGs.igovti_geral) document.getElementById('imgIgovtiGeral').src = allPNGs.igovti_geral;
+
+    // Estágios donut (Plotly)
+    const estagios = data.estagios_geral;
+    const donutData = [{
+        values: [estagios['Inexpressivo']||0, estagios['Iniciando']||0, estagios['Intermediário']||0, estagios['Aprimorado']||0],
+        labels: ['Inexpressivo', 'Iniciando', 'Intermediário', 'Aprimorado'],
+        type: 'pie',
+        hole: 0.5,
+        marker: {colors: ['#d62728', '#ff7f0e', '#ffbb78', '#2ca02c']},
+        textinfo: 'percent',
+        hovertemplate: '<b>%{label}</b><br>%{value} orgs (%{percent})<extra></extra>'
+    }];
+    Plotly.newPlot('chartEstagiosDonut', donutData, {
+        title: {text:'Distribuição dos Estágios de Capacidade', font:{size:16, color:'#1a3a5c'}},
+        showlegend: true,
+        legend: {orientation:'h', y:-0.1},
+        margin: {t:40, b:40}
+    }, {responsive:true});
+
+    // Tabela de práticas
+    const tbody = document.querySelector('#tabelaPraticas tbody');
+    tbody.innerHTML = '';
+    Object.entries(data.pca_por_pratica).forEach(([nome, res]) => {
+        const loadings = Object.values(res.loadings);
+        const mediaLoad = (loadings.reduce((a,b)=>a+b,0) / loadings.length).toFixed(3);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><strong>${nome}</strong></td>
+            <td>${res.itens.length}</td>
+            <td>${res.var_pc1.toFixed(1)}%</td>
+            <td>${res.n_kaiser}</td>
+            <td><span class="badge-${res.adequado ? 'sim' : 'nao'}">${res.adequado ? 'SIM' : 'NÃO'}</span></td>
+            <td>${mediaLoad}</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    // Radar chart (Plotly)
+    const praticasNomes = Object.keys(data.pca_por_pratica);
+    const mediasPraticas = praticasNomes.map(p => {
+        const scores = data.pca_por_pratica[p].scores;
+        const vals = scores.map(v => (v - Math.min(...scores)) / (Math.max(...scores) - Math.min(...scores) || 1));
+        return vals.reduce((a,b)=>a+b,0) / vals.length;
+    });
+    const radarData = [{
+        type: 'scatterpolar',
+        r: [...mediasPraticas, mediasPraticas[0]],
+        theta: [...praticasNomes, praticasNomes[0]],
+        fill: 'toself',
+        fillcolor: 'rgba(0,136,187,0.25)',
+        line: {color: '#0088bb', width: 2},
+        marker: {size: 8, color: '#0088bb'}
+    }];
+    Plotly.newPlot('chartRadar', radarData, {
+        polar: {
+            radialaxis: {visible:true, range:[0,1], tickfont:{size:10}},
+            angularaxis: {tickfont:{size:11}}
+        },
+        title: {text:'Perfil de Maturidade por Prática (média dos scores)', font:{size:15, color:'#1a3a5c'}},
+        margin: {t:40, b:40}
+    }, {responsive:true});
+
+    // Matriz de Correlação (Plotly heatmap)
+    const corr = data.matriz_correlacao;
+    const heatmapCorr = [{
+        z: corr.z,
+        x: corr.x,
+        y: corr.y,
+        type: 'heatmap',
+        colorscale: [[0, '#d62728'], [0.5, '#fff8e1'], [1, '#2ca02c']],
+        zmin: -1, zmax: 1,
+        hovertemplate: '%{y} vs %{x}<br>r = %{z:.3f}<extra></extra>'
+    }];
+    Plotly.newPlot('chartMatrizCorr', heatmapCorr, {
+        title: {text:'Matriz de Correlações entre Itens de Verificação', font:{size:15, color:'#1a3a5c'}},
+        xaxis: {tickangle: 90, tickfont:{size:9}},
+        yaxis: {tickfont:{size:9}},
+        margin: {t:40, b:80, l:80}
+    }, {responsive:true});
+
+    // Heatmap organizações (Plotly)
+    const hm = data.heatmap_organizacoes;
+    const heatmapOrgs = [{
+        z: hm.z,
+        x: hm.x,
+        y: hm.y,
+        type: 'heatmap',
+        colorscale: [[0, '#d62728'], [0.25, '#ff7f0e'], [0.5, '#ffbb78'], [0.75, '#a5d6a7'], [1, '#2ca02c']],
+        zmin: 0, zmax: 1,
+        hovertemplate: 'Org: %{x}<br>Prática: %{y}<br>Score: %{z:.3f}<extra></extra>'
+    }];
+    Plotly.newPlot('chartHeatmapOrgs', heatmapOrgs, {
+        title: {text:'Mapa de Calor — Scores por Prática e Organização', font:{size:15, color:'#1a3a5c'}},
+        xaxis: {tickfont:{size:9}},
+        yaxis: {tickfont:{size:10}},
+        margin: {t:40, b:40, l:120}
+    }, {responsive:true});
+
+    // Correlações implícitas (Plotly subplots via criação individual)
+    const corrContainer = document.getElementById('correlacoesContainer');
+    corrContainer.innerHTML = '';
+    Object.entries(data.correlacoes_implicitas).forEach(([titulo, d], idx) => {
+        const div = document.createElement('div');
+        div.className = 'chart-container';
+        div.innerHTML = `<div id="chartCorr${idx}" class="plotly-chart-small"></div>`;
+        corrContainer.appendChild(div);
+
+        const trace1 = {
+            x: d.x, y: d.y,
+            mode: 'markers',
+            type: 'scatter',
+            marker: {size: 10, color: '#0088bb', opacity: 0.7, line:{color:'#1a3a5c', width:1}},
+            hovertemplate: 'x: %{x:.3f}<br>y: %{y:.3f}<extra></extra>'
+        };
+        // Regressão
+        const n = d.x.length;
+        const sumX = d.x.reduce((a,b)=>a+b,0);
+        const sumY = d.y.reduce((a,b)=>a+b,0);
+        const sumXY = d.x.reduce((s, xi, i) => s + xi*d.y[i], 0);
+        const sumX2 = d.x.reduce((s, xi) => s + xi*xi, 0);
+        const slope = (n*sumXY - sumX*sumY) / (n*sumX2 - sumX*sumX);
+        const intercept = (sumY - slope*sumX) / n;
+        const xLine = [Math.min(...d.x), Math.max(...d.x)];
+        const yLine = xLine.map(x => slope*x + intercept);
+        const trace2 = {
+            x: xLine, y: yLine,
+            mode: 'lines',
+            line: {color: '#d62728', dash: 'dash', width: 2},
+            hoverinfo: 'skip'
+        };
+
+        Plotly.newPlot(`chartCorr${idx}`, [trace1, trace2], {
+            title: {text:`${titulo}<br><span style="font-size:12px">r = ${d.corr}</span>`, font:{size:13, color:'#1a3a5c'}},
+            xaxis: {title: titulo.split(' vs ')[0], zeroline:false},
+            yaxis: {title: titulo.split(' vs ')[1], zeroline:false},
+            margin: {t:50, b:50, l:60, r:20},
+            showlegend: false
+        }, {responsive:true});
+    });
+
+    // Scroll to dashboard
+    dashboard.scrollIntoView({behavior:'smooth'});
+}
+
+// ── Downloads ────────────────────────────────────────────────────────
+function downloadAllPNGs() {
+    if (!allPNGs || Object.keys(allPNGs).length === 0) {
+        alert('Nenhuma figura disponível. Carregue um arquivo primeiro.');
+        return;
+    }
+    Object.entries(allPNGs).forEach(([nome, dataUrl]) => {
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `igovti2026_${nome}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    });
+}
+
+function downloadJSON() {
+    if (!currentData) {
+        alert('Nenhum dado disponível. Carregue um arquivo primeiro.');
+        return;
+    }
+    const blob = new Blob([JSON.stringify(currentData, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'resultados_igovti2026.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
