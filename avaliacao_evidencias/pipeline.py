@@ -7,7 +7,10 @@ import json
 import datetime as dt
 import os
 import re
+import shutil
+import sys
 import tempfile
+import time
 import unicodedata
 import urllib.error
 import urllib.request
@@ -15,7 +18,7 @@ import zipfile
 from urllib.parse import unquote
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 import md2lss
 from openpyxl import Workbook, load_workbook
@@ -86,6 +89,54 @@ class PacoteEvidencia:
     erro: str = ""
 
 
+REMOTE_PROVIDERS = {"gemini", "openrouter"}
+
+
+def log_event(event: str, message: str, *, quiet: bool = False, level: str = "info", **fields: Any) -> None:
+    if quiet:
+        return
+    payload = {
+        "ts": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "level": level,
+        "event": event,
+        "message": message,
+        **fields,
+    }
+    print(json.dumps(payload, ensure_ascii=False, default=str), file=sys.stdout, flush=True)
+
+
+def validar_rpm(valor: str) -> int:
+    try:
+        rpm = int(valor)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("--rpm deve ser um numero inteiro maior ou igual a zero") from exc
+    if rpm < 0:
+        raise argparse.ArgumentTypeError("--rpm deve ser maior ou igual a zero")
+    return rpm
+
+
+@dataclass
+class RequestsPerMinuteLimiter:
+    rpm: int
+    clock: Callable[[], float] = time.monotonic
+    sleeper: Callable[[float], None] = time.sleep
+    last_started_at: float | None = None
+
+    def wait_seconds(self) -> float:
+        if self.rpm <= 0 or self.last_started_at is None:
+            return 0.0
+        elapsed = self.clock() - self.last_started_at
+        return max(0.0, (60.0 / self.rpm) - elapsed)
+
+    def wait_and_mark(self, wait_seconds: float | None = None) -> float:
+        if wait_seconds is None:
+            wait_seconds = self.wait_seconds()
+        if wait_seconds > 0:
+            self.sleeper(wait_seconds)
+        self.last_started_at = self.clock()
+        return wait_seconds
+
+
 def coluna_evidencia(nome: str) -> bool:
     return "evi" in nome and not nome.endswith("[filecount]")
 
@@ -115,11 +166,14 @@ def _parse_upload(valor: Any) -> tuple[dict[str, Any] | None, str]:
 
 def _rows_from_xlsx(caminho_xlsx: Path) -> Iterable[dict[str, Any]]:
     workbook = load_workbook(caminho_xlsx, read_only=True, data_only=True)
-    sheet = workbook.active
-    rows = sheet.iter_rows(values_only=True)
-    headers = [str(value) if value is not None else "" for value in next(rows)]
-    for values in rows:
-        yield dict(zip(headers, values))
+    try:
+        sheet = workbook.active
+        rows = sheet.iter_rows(values_only=True)
+        headers = [str(value) if value is not None else "" for value in next(rows)]
+        for values in rows:
+            yield dict(zip(headers, values))
+    finally:
+        workbook.close()
 
 
 def inventariar_analises(
@@ -260,7 +314,7 @@ def carregar_contexto_questionario(caminho_questionario: str | Path) -> Contexto
         for question in group.questions:
             if question.type == "upload":
                 continue
-            itens = {option.code: option.text for option in question.subquestions}
+            itens = {option.code: option.text for option in (question.subquestions or question.alternatives)}
             questoes[question.code] = QuestaoContexto(
                 codigo=question.code,
                 tipo=question.type,
@@ -277,6 +331,15 @@ def _base_coluna_evidencia(coluna_evidencia: str) -> tuple[str, str | None]:
     return base, suffix or None
 
 
+def _valor_afirmativo(valor: Any) -> bool:
+    if isinstance(valor, str):
+        return valor.strip().casefold() in {"sim", "y", "yes", "true", "1"}
+    return valor is True or valor == 1
+
+
+ADOPTION_VALUES = {"naoad", "adfor", "admen", "adpar", "admai", "naoap"}
+
+
 def selecionar_itens_afirmados(
     contexto: ContextoQuestionario,
     coluna_evidencia: str,
@@ -289,12 +352,12 @@ def selecionar_itens_afirmados(
 
     if item_especifico:
         valor = resposta.get(f"{base}[{item_especifico}]")
-        if valor == "sim":
+        if _valor_afirmativo(valor):
             return [
                 ItemAfirmado(
                     codigo=f"{base}[{item_especifico}]",
                     texto=questao.itens.get(item_especifico, item_especifico),
-                    afirmacao="sim",
+                    afirmacao=str(valor),
                 )
             ]
         return []
@@ -316,11 +379,25 @@ def selecionar_itens_afirmados(
                 )
         return itens
 
+    if questao.tipo == "single" and valor_base in ADOPTION_VALUES:
+        return []
+
+    if questao.tipo == "single" and valor_base not in (None, ""):
+        valor_codigo = str(valor_base)
+        return [
+            ItemAfirmado(
+                codigo=f"{base}[{valor_codigo}]",
+                texto=questao.itens.get(valor_codigo, questao.texto),
+                afirmacao=valor_codigo,
+            )
+        ]
+
     itens = []
     for codigo_item, texto in questao.itens.items():
         chave = f"{base}[{codigo_item}]"
-        if resposta.get(chave) == "sim":
-            itens.append(ItemAfirmado(codigo=chave, texto=texto, afirmacao="sim"))
+        valor = resposta.get(chave)
+        if _valor_afirmativo(valor):
+            itens.append(ItemAfirmado(codigo=chave, texto=texto, afirmacao=str(valor)))
     return itens
 
 
@@ -434,40 +511,39 @@ def normalizar_evidencia(caminho: str | Path) -> PacoteEvidencia:
             return PacoteEvidencia(caminho=path, tipo="zip", documentos=[], inventario=[], erro="zip invalido")
     if suffix == ".xlsx":
         workbook = load_workbook(path, read_only=True, data_only=True)
-        documentos = []
-        for sheet in workbook.worksheets:
-            linhas = []
-            for row in sheet.iter_rows(values_only=True):
-                valores = ["" if value is None else str(value) for value in row]
-                if any(valores):
-                    linhas.append("\t".join(valores))
-            documentos.append({"nome": sheet.title, "texto": "\n".join(linhas)})
-        return PacoteEvidencia(
-            caminho=path,
-            tipo="xlsx",
-            documentos=documentos,
-            inventario=[sheet.title for sheet in workbook.worksheets],
-        )
-    if suffix == ".docx":
         try:
-            from docx import Document
-        except ModuleNotFoundError:
+            documentos = []
+            inventario = []
+            for sheet in workbook.worksheets:
+                inventario.append(sheet.title)
+                linhas = []
+                for row in sheet.iter_rows(values_only=True):
+                    valores = ["" if value is None else str(value) for value in row]
+                    if any(valores):
+                        linhas.append("\t".join(valores))
+                documentos.append({"nome": sheet.title, "texto": "\n".join(linhas)})
+            return PacoteEvidencia(
+                caminho=path,
+                tipo="xlsx",
+                documentos=documentos,
+                inventario=inventario,
+            )
+        finally:
+            workbook.close()
+    if suffix == ".docx":
+        texto, erro = _extrair_texto_docx(path)
+        if erro:
             return PacoteEvidencia(
                 caminho=path,
                 tipo="docx",
                 documentos=[],
                 inventario=[path.name],
-                erro="python-docx nao instalado para normalizar DOCX",
+                erro=erro,
             )
-        document = Document(path)
-        partes = [paragraph.text for paragraph in document.paragraphs if paragraph.text]
-        for table in document.tables:
-            for row in table.rows:
-                partes.append("\t".join(cell.text for cell in row.cells))
         return PacoteEvidencia(
             caminho=path,
             tipo="docx",
-            documentos=[{"nome": path.name, "texto": "\n".join(partes)}],
+            documentos=[{"nome": path.name, "texto": texto}],
             inventario=[path.name],
         )
     return PacoteEvidencia(
@@ -479,25 +555,110 @@ def normalizar_evidencia(caminho: str | Path) -> PacoteEvidencia:
     )
 
 
-EXTENSOES_UPLOAD_COMPATIVEIS = {".pdf", ".txt", ".md", ".csv", ".docx", ".xlsx", ".png", ".jpg", ".jpeg"}
+EXTENSOES_UPLOAD_DIRETO = {".pdf", ".txt", ".md", ".csv", ".xlsx", ".png", ".jpg", ".jpeg"}
+EXTENSOES_UPLOAD_PREPARAVEIS = EXTENSOES_UPLOAD_DIRETO | {".docx"}
+
+
+def _extrair_texto_docx(caminho: str | Path) -> tuple[str, str]:
+    try:
+        from docx import Document
+    except ModuleNotFoundError:
+        return "", "python-docx nao instalado para normalizar DOCX"
+    document = Document(caminho)
+    partes = [paragraph.text for paragraph in document.paragraphs if paragraph.text]
+    for table in document.tables:
+        for row in table.rows:
+            partes.append("\t".join(cell.text for cell in row.cells))
+    return "\n".join(partes), ""
+
+
+def _slug_ascii(valor: str, *, fallback: str = "evidencia", max_len: int = 80) -> str:
+    normalizado = unicodedata.normalize("NFKD", valor)
+    ascii_text = normalizado.encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^A-Za-z0-9._-]+", "-", ascii_text).strip("._-").lower()
+    slug = re.sub(r"-{2,}", "-", slug)
+    if not slug:
+        slug = fallback
+    return slug[:max_len].strip("._-") or fallback
+
+
+def _nome_upload_seguro(nome_original: str, sufixo: str) -> str:
+    suffix = sufixo.lower()
+    stem = Path(nome_original).stem or "evidencia"
+    slug = _slug_ascii(stem)
+    digest = hashlib.sha256(nome_original.encode("utf-8", errors="ignore")).hexdigest()[:10]
+    return f"{slug}-{digest}{suffix}"
+
+
+def _caminho_unico(destino: Path, nome: str) -> Path:
+    candidato = destino / nome
+    if not candidato.exists():
+        return candidato
+    stem = candidato.stem
+    suffix = candidato.suffix
+    contador = 2
+    while True:
+        proximo = destino / f"{stem}-{contador}{suffix}"
+        if not proximo.exists():
+            return proximo
+        contador += 1
+
+
+def _copiar_upload_seguro(origem: Path, destino: Path, nome_original: str | None = None) -> Path:
+    destino.mkdir(parents=True, exist_ok=True)
+    nome = _nome_upload_seguro(nome_original or origem.name, origem.suffix)
+    target = _caminho_unico(destino, nome)
+    shutil.copyfile(origem, target)
+    return target
+
+
+def _gravar_upload_texto(destino: Path, nome_original: str, texto: str) -> Path:
+    destino.mkdir(parents=True, exist_ok=True)
+    nome = _nome_upload_seguro(nome_original, ".txt")
+    target = _caminho_unico(destino, nome)
+    target.write_text(texto, encoding="utf-8")
+    return target
+
+
+def _preparar_docx_para_upload(caminho: Path, destino: Path, nome_original: str | None = None) -> Path | None:
+    texto, erro = _extrair_texto_docx(caminho)
+    if erro:
+        return None
+    return _gravar_upload_texto(destino, nome_original or caminho.name, texto)
 
 
 def arquivos_compativeis_upload(caminho: str | Path, destino_zip: str | Path | None = None) -> list[str]:
     path = Path(caminho)
-    if path.suffix.lower() in EXTENSOES_UPLOAD_COMPATIVEIS and path.is_file():
-        return [str(path)]
+    if path.is_file() and path.suffix.lower() in EXTENSOES_UPLOAD_PREPARAVEIS and path.suffix.lower() != ".zip":
+        if destino_zip is None:
+            return [str(path)] if path.suffix.lower() in EXTENSOES_UPLOAD_DIRETO else []
+        destino = Path(destino_zip)
+        if path.suffix.lower() == ".docx":
+            preparado = _preparar_docx_para_upload(path, destino)
+            return [str(preparado)] if preparado else []
+        return [str(_copiar_upload_seguro(path, destino))]
     if path.suffix.lower() == ".zip" and destino_zip is not None:
         destino = Path(destino_zip)
+        destino.mkdir(parents=True, exist_ok=True)
         arquivos = []
         with zipfile.ZipFile(path) as archive:
             for name in archive.namelist():
                 if name.endswith("/") or not _zip_member_safe(name):
                     continue
                 member = Path(name)
-                if member.suffix.lower() not in EXTENSOES_UPLOAD_COMPATIVEIS:
+                suffix = member.suffix.lower()
+                if suffix not in EXTENSOES_UPLOAD_PREPARAVEIS:
                     continue
-                target = destino / member
-                target.parent.mkdir(parents=True, exist_ok=True)
+                if suffix == ".docx":
+                    staging_dir = destino / "_docx_sources"
+                    staging_dir.mkdir(parents=True, exist_ok=True)
+                    staging = _caminho_unico(staging_dir, _nome_upload_seguro(name, ".docx"))
+                    staging.write_bytes(archive.read(name))
+                    preparado = _preparar_docx_para_upload(staging, destino, name)
+                    if preparado:
+                        arquivos.append(str(preparado))
+                    continue
+                target = _caminho_unico(destino, _nome_upload_seguro(name, suffix))
                 target.write_bytes(archive.read(name))
                 arquivos.append(str(target))
         return arquivos
@@ -929,7 +1090,7 @@ def _join_value(value: Any) -> str:
     return str(value)
 
 
-def gerar_relatorio_conformidade(checkpoint: str | Path, destino: str | Path) -> None:
+def gerar_relatorio_conformidade(checkpoint: str | Path, destino: str | Path) -> int:
     registros = carregar_registros_analise(checkpoint)
     workbook = Workbook()
     sheet = workbook.active
@@ -950,6 +1111,7 @@ def gerar_relatorio_conformidade(checkpoint: str | Path, destino: str | Path) ->
         "status_revisao_humana",
     ]
     sheet.append(headers)
+    total_linhas = 0
     for registro in registros.values():
         result = registro.get("result") if isinstance(registro.get("result"), dict) else {}
         conclusoes = result.get("conclusoes") if isinstance(result, dict) else None
@@ -965,6 +1127,7 @@ def gerar_relatorio_conformidade(checkpoint: str | Path, destino: str | Path) ->
                 }
             ]
         for conclusao in conclusoes or []:
+            total_linhas += 1
             sheet.append(
                 [
                     registro.get("auditado", ""),
@@ -985,6 +1148,7 @@ def gerar_relatorio_conformidade(checkpoint: str | Path, destino: str | Path) ->
     destino_path = Path(destino)
     destino_path.parent.mkdir(parents=True, exist_ok=True)
     workbook.save(destino_path)
+    return total_linhas
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -998,6 +1162,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--checklists-dir", default=None, help="Alias legado para --prompts-dir.")
     parser.add_argument("--out-dir", default=".saida_analise")
     parser.add_argument("--prompt-version", default="v1")
+    parser.add_argument(
+        "--rpm",
+        type=validar_rpm,
+        default=0,
+        help="Limita requests por minuto para providers remotos; 0 desativa.",
+    )
     parser.add_argument("--skip-errors", action="store_true")
     parser.add_argument(
         "--include-unsubmitted",
@@ -1005,29 +1175,103 @@ def main(argv: list[str] | None = None) -> int:
         help="Inclui respostas sem submitdate. Por padrao, somente respostas submetidas sao analisadas.",
     )
     parser.add_argument("--list-only", action="store_true")
+    parser.add_argument("--quiet", action="store_true", help="Nao emite logs estruturados durante a execucao.")
     args = parser.parse_args(argv)
     prompts_dir = args.prompts_dir or args.checklists_dir or "checklists"
+    rate_limiter = RequestsPerMinuteLimiter(args.rpm)
+    log_event(
+        "pipeline_started",
+        "Inicio da avaliacao de evidencias.",
+        quiet=args.quiet,
+        respostas=args.respostas,
+        evidencias=args.evidencias,
+        questionario=args.questionario,
+        prompts_dir=prompts_dir,
+        provider=args.provider,
+        model=args.model,
+        out_dir=args.out_dir,
+        prompt_version=args.prompt_version,
+        rpm=args.rpm,
+        include_unsubmitted=args.include_unsubmitted,
+        skip_errors=args.skip_errors,
+        list_only=args.list_only,
+    )
     analises = inventariar_analises(
         args.respostas,
         args.evidencias,
         args.questionario,
         include_unsubmitted=args.include_unsubmitted,
     )
+    log_event(
+        "inventory_completed",
+        "Inventario de evidencias concluido.",
+        quiet=args.quiet,
+        total_analises=len(analises),
+        analises_com_erro=sum(1 for analise in analises if analise.erro),
+        auditados=sorted({analise.auditado for analise in analises if analise.auditado}),
+    )
     if args.list_only:
+        log_event(
+            "list_only_started",
+            "Listando analises candidatas sem processar evidencias.",
+            quiet=args.quiet,
+            total_analises=len(analises),
+        )
         for analise in analises:
             print(json.dumps(analise.__dict__, ensure_ascii=False, default=str))
+        log_event(
+            "pipeline_finished",
+            "Execucao finalizada em modo list-only.",
+            quiet=args.quiet,
+            total_analises=len(analises),
+        )
         return 0
     contexto = carregar_contexto_questionario(args.questionario)
     out_dir = Path(args.out_dir)
     checkpoint = out_dir / "analyses.jsonl"
     registros = carregar_registros_analise(checkpoint)
-    for analise in analises:
+    log_event(
+        "checkpoint_loaded",
+        "Checkpoint carregado para deduplicacao.",
+        quiet=args.quiet,
+        checkpoint=str(checkpoint),
+        registros=len(registros),
+    )
+    total_processadas = 0
+    total_puladas = 0
+    total_erros = 0
+    total_concluidas = 0
+    for index, analise in enumerate(analises, start=1):
         questao_base, _ = _base_coluna_evidencia(analise.coluna_evidencia)
+        base_log = {
+            "index": index,
+            "total": len(analises),
+            "auditado": analise.auditado,
+            "questao": questao_base,
+            "coluna_evidencia": analise.coluna_evidencia,
+            "evidencia": analise.nome_original_evidencia,
+        }
+        log_event(
+            "analysis_started",
+            "Analise candidata iniciada.",
+            quiet=args.quiet,
+            **base_log,
+        )
         if analise.erro:
             identity = hashlib.sha256(
                 json.dumps(analise.__dict__, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
             ).hexdigest()
-            if deve_processar_identidade(registros, identity, skip_errors=args.skip_errors):
+            if not deve_processar_identidade(registros, identity, skip_errors=args.skip_errors):
+                total_puladas += 1
+                log_event(
+                    "analysis_skipped",
+                    "Analise com erro de inventario ignorada por checkpoint.",
+                    quiet=args.quiet,
+                    identity=identity,
+                    reason="checkpoint",
+                    **base_log,
+                )
+            else:
                 gravar_registro_analise(
                     checkpoint,
                     {
@@ -1043,6 +1287,18 @@ def main(argv: list[str] | None = None) -> int:
                         "finished_at": dt.datetime.now(dt.timezone.utc).isoformat(),
                     },
                 )
+                registros[identity] = {"identity": identity, "status": "error"}
+                total_processadas += 1
+                total_erros += 1
+                log_event(
+                    "analysis_recorded_error",
+                    "Erro de inventario registrado no checkpoint.",
+                    quiet=args.quiet,
+                    level="error",
+                    identity=identity,
+                    error=analise.erro,
+                    **base_log,
+                )
             continue
         resolucao = resolver_evidencia(
             analise.auditado,
@@ -1051,7 +1307,27 @@ def main(argv: list[str] | None = None) -> int:
             resposta_id=analise.resposta_id,
             evidence_index=analise.evidence_index,
         )
+        log_event(
+            "evidence_resolved",
+            "Resolucao do arquivo de evidencia concluida.",
+            quiet=args.quiet,
+            level="error" if resolucao.erro else "info",
+            caminho=str(resolucao.caminho) if resolucao.caminho else "",
+            nome_decodificado=resolucao.nome_decodificado,
+            error=resolucao.erro,
+            **base_log,
+        )
         prompt = resolver_prompt(prompts_dir, analise.coluna_evidencia)
+        log_event(
+            "prompt_resolved",
+            "Resolucao do prompt de analise concluida.",
+            quiet=args.quiet,
+            level="error" if prompt.erro else "info",
+            prompt=prompt.nome,
+            prompt_hash=prompt.hash_conteudo,
+            error=prompt.erro,
+            **base_log,
+        )
         if resolucao.erro:
             hash_conteudo = ""
         else:
@@ -1067,6 +1343,15 @@ def main(argv: list[str] | None = None) -> int:
             prompt_version=args.prompt_version,
         )
         if not deve_processar_identidade(registros, identity, skip_errors=args.skip_errors):
+            total_puladas += 1
+            log_event(
+                "analysis_skipped",
+                "Analise ignorada por ja existir no checkpoint.",
+                quiet=args.quiet,
+                identity=identity,
+                reason="checkpoint",
+                **base_log,
+            )
             continue
         erro = resolucao.erro or prompt.erro
         if erro:
@@ -1085,12 +1370,81 @@ def main(argv: list[str] | None = None) -> int:
                     "finished_at": dt.datetime.now(dt.timezone.utc).isoformat(),
                 },
             )
+            registros[identity] = {"identity": identity, "status": "error"}
+            total_processadas += 1
+            total_erros += 1
+            log_event(
+                "analysis_recorded_error",
+                "Erro antes da chamada ao provider registrado no checkpoint.",
+                quiet=args.quiet,
+                level="error",
+                identity=identity,
+                error=erro,
+                **base_log,
+            )
             continue
         itens = selecionar_itens_afirmados(contexto, analise.coluna_evidencia, _linha_por_id(args.respostas, analise.resposta_id))
+        log_event(
+            "items_selected",
+            "Itens afirmados pelo auditado selecionados para avaliacao.",
+            quiet=args.quiet,
+            identity=identity,
+            total_itens=len(itens),
+            itens=[item.codigo for item in itens],
+            **base_log,
+        )
         pacote = normalizar_evidencia(resolucao.caminho)
+        log_event(
+            "evidence_normalized",
+            "Evidencia normalizada para envio ao provider.",
+            quiet=args.quiet,
+            level="warning" if pacote.erro else "info",
+            identity=identity,
+            tipo=pacote.tipo,
+            documentos=len(pacote.documentos),
+            inventario=len(pacote.inventario),
+            error=pacote.erro,
+            **base_log,
+        )
         env_key = {"gemini": "GEMINI_API_KEY", "openrouter": "OPENROUTER_API_KEY"}.get(args.provider, "")
         api_key = os.environ.get(env_key, "") if env_key else ""
         with tempfile.TemporaryDirectory() as upload_tmp:
+            arquivos_upload = arquivos_compativeis_upload(resolucao.caminho, upload_tmp)
+            log_event(
+                "upload_prepared",
+                "Arquivos preparados para upload ao provider.",
+                quiet=args.quiet,
+                identity=identity,
+                total_arquivos=len(arquivos_upload),
+                arquivos=[Path(arquivo).name for arquivo in arquivos_upload],
+                **base_log,
+            )
+            if args.provider in REMOTE_PROVIDERS and api_key:
+                wait_seconds = rate_limiter.wait_seconds()
+                if wait_seconds > 0:
+                    log_event(
+                        "rate_limit_wait",
+                        "Aguardando limite de requests por minuto antes da chamada ao provider.",
+                        quiet=args.quiet,
+                        identity=identity,
+                        provider=args.provider,
+                        model=args.model,
+                        rpm=args.rpm,
+                        wait_seconds=round(wait_seconds, 3),
+                        resposta_id=analise.resposta_id,
+                        itens=[item.codigo for item in itens],
+                        **base_log,
+                    )
+                rate_limiter.wait_and_mark(wait_seconds)
+            log_event(
+                "provider_started",
+                "Chamada ao provider iniciada.",
+                quiet=args.quiet,
+                identity=identity,
+                provider=args.provider,
+                model=args.model,
+                **base_log,
+            )
             result = executar_provider(
                 provider=args.provider,
                 model=args.model,
@@ -1104,9 +1458,23 @@ def main(argv: list[str] | None = None) -> int:
                     "documentos": pacote.documentos,
                     "inventario": pacote.inventario,
                     "erro": pacote.erro,
-                    "arquivos_upload": arquivos_compativeis_upload(resolucao.caminho, upload_tmp),
+                    "arquivos_upload": arquivos_upload,
                 },
             )
+        conclusoes = result.get("conclusoes") if isinstance(result, dict) else None
+        log_event(
+            "provider_finished",
+            "Chamada ao provider finalizada.",
+            quiet=args.quiet,
+            level="error" if result.get("status") == "error" else "info",
+            identity=identity,
+            provider=args.provider,
+            model=args.model,
+            status=result.get("status"),
+            conclusoes=len(conclusoes or []),
+            error=result.get("error", ""),
+            **base_log,
+        )
         gravar_registro_analise(
             checkpoint,
             {
@@ -1124,7 +1492,41 @@ def main(argv: list[str] | None = None) -> int:
             },
         )
         registros[identity] = {"identity": identity, "status": result["status"]}
-    gerar_relatorio_conformidade(checkpoint, out_dir / "relatorio_conformidade.xlsx")
+        total_processadas += 1
+        if result["status"] == "error":
+            total_erros += 1
+        else:
+            total_concluidas += 1
+        log_event(
+            "analysis_recorded",
+            "Resultado da analise gravado no checkpoint.",
+            quiet=args.quiet,
+            identity=identity,
+            status=result["status"],
+            checkpoint=str(checkpoint),
+            **base_log,
+        )
+    relatorio = out_dir / "relatorio_conformidade.xlsx"
+    linhas_relatorio = gerar_relatorio_conformidade(checkpoint, relatorio)
+    log_event(
+        "report_generated",
+        "Relatorio de conformidade gerado.",
+        quiet=args.quiet,
+        relatorio=str(relatorio),
+        linhas=linhas_relatorio,
+    )
+    log_event(
+        "pipeline_finished",
+        "Execucao do pipeline finalizada.",
+        quiet=args.quiet,
+        total_analises=len(analises),
+        processadas=total_processadas,
+        puladas=total_puladas,
+        concluidas=total_concluidas,
+        erros=total_erros,
+        checkpoint=str(checkpoint),
+        relatorio=str(relatorio),
+    )
     return 0
 
 

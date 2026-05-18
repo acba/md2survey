@@ -104,6 +104,22 @@ _Avoid_: planilha final.
 The model-assisted assessment that suggests **Conclusões de conformidade** for human auditor review.
 _Avoid_: decisão final.
 
+**Opinião de modelo**:
+The **Conclusões de conformidade** and rationale emitted by one **Provedor de IA** for one **Análise de evidência**.
+_Avoid_: voto when it implies a binding decision.
+
+**Opinião da equipe de auditoria**:
+An optional human audit note supplied as input to compare against **Opiniões de modelo** during consolidation.
+_Avoid_: gabarito when it is not a formal final decision.
+
+**Juiz avaliador**:
+The configured AI model that critically compares **Opiniões de modelo**, the **Evidência enviada**, and optional **Opinião da equipe de auditoria**.
+_Avoid_: auditor final.
+
+**Parecer consolidado de evidência**:
+The model-assisted synthesis produced by a **Juiz avaliador** for one **Evidência enviada**, preserving **Conclusões de conformidade** as reviewable audit support.
+_Avoid_: decisão final, veredito final.
+
 **Julgamento consolidado**:
 The model-assisted decision step that evaluates a complete **Pacote de evidência** against all **Itens afirmados** in scope for one **Análise de evidência**.
 _Avoid_: uma chamada por item.
@@ -133,6 +149,10 @@ _Avoid_: modelo when referring to the service integration rather than the model 
 - One **Análise de evidência** produces one **Registro de análise**.
 - One **Relatório de conformidade** consolidates many **Conclusões de conformidade**.
 - One **Relatório de conformidade** presents **Pré-análises de auditoria** rather than final audit decisions.
+- One **Análise de evidência** by one **Provedor de IA** produces one **Opinião de modelo**.
+- Many **Opiniões de modelo** about the same **Evidência enviada** can be consolidated by one **Juiz avaliador**.
+- One **Parecer consolidado de evidência** may consider zero or one **Opinião da equipe de auditoria**.
+- One **Parecer consolidado de evidência** remains a **Pré-análise de auditoria**, not a final audit decision.
 
 ## Example Dialogue
 

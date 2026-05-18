@@ -1,3 +1,4 @@
+import argparse
 import json
 import subprocess
 import sys
@@ -24,10 +25,12 @@ from avaliacao_evidencias.pipeline import (
     executar_julgamento_fake,
     gerar_relatorio_conformidade,
     normalizar_evidencia,
+    RequestsPerMinuteLimiter,
     resolver_prompt,
     resolver_checklist,
     resolver_evidencia,
     selecionar_itens_afirmados,
+    validar_rpm,
 )
 from avaliacao_evidencias.prompt_catalog import (
     build_prompt_set,
@@ -44,6 +47,20 @@ type: single
 - nao | Nao
 
 ## Grupo: g1 | Grupo 1
+
+### q0101 [single]
+question: Modelo de operacao predominante da TI.
+
+options:
+- A | Centralizada Interna
+- B | Centralizada Terceirizada
+
+### q0103 [multi]
+question: Atribuicoes formalizadas da area de TI.
+
+options:
+- A | Sustentacao de infraestrutura
+- C | Seguranca da informacao
 
 ### q1001 [adoption]
 question: A organizacao estabeleceu modelo de gestao de TI.
@@ -241,6 +258,40 @@ class ItensAfirmadosTests(unittest.TestCase):
         self.assertEqual([item.codigo for item in itens], ["q1001", "q1001ext[A]"])
         self.assertIn("modelo de gestao", itens[0].texto)
         self.assertEqual(itens[1].texto, "Modelo aprovado")
+
+    def test_seleciona_alternativa_single_com_texto_da_opcao(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            survey_path = Path(tmp) / "survey.md"
+            survey_path.write_text(SURVEY_MD, encoding="utf-8")
+            contexto = carregar_contexto_questionario(survey_path)
+
+            itens = selecionar_itens_afirmados(
+                contexto,
+                "q0101evi",
+                {"q0101": "A"},
+            )
+
+        self.assertEqual(len(itens), 1)
+        self.assertEqual(itens[0].codigo, "q0101[A]")
+        self.assertEqual(itens[0].texto, "Centralizada Interna")
+        self.assertEqual(itens[0].afirmacao, "A")
+
+    def test_seleciona_itens_multi_marcados_com_y(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            survey_path = Path(tmp) / "survey.md"
+            survey_path.write_text(SURVEY_MD, encoding="utf-8")
+            contexto = carregar_contexto_questionario(survey_path)
+
+            itens = selecionar_itens_afirmados(
+                contexto,
+                "q0103evi",
+                {"q0103[A]": None, "q0103[C]": "Y"},
+            )
+
+        self.assertEqual(len(itens), 1)
+        self.assertEqual(itens[0].codigo, "q0103[C]")
+        self.assertEqual(itens[0].texto, "Seguranca da informacao")
+        self.assertEqual(itens[0].afirmacao, "Y")
 
     def test_ignora_adocao_fraca_ou_negativa(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -507,6 +558,78 @@ class ProviderAbstractionTests(unittest.TestCase):
         self.assertEqual(uploaded, ["evidencia.txt"])
 
 
+class RequestsPerMinuteLimiterTests(unittest.TestCase):
+    def test_rpm_zero_nao_aguarda(self):
+        sleeps = []
+        limiter = RequestsPerMinuteLimiter(
+            0,
+            clock=lambda: 100.0,
+            sleeper=sleeps.append,
+            last_started_at=99.0,
+        )
+
+        waited = limiter.wait_and_mark()
+
+        self.assertEqual(waited, 0.0)
+        self.assertEqual(sleeps, [])
+        self.assertEqual(limiter.last_started_at, 100.0)
+
+    def test_primeira_chamada_com_rpm_nao_aguarda(self):
+        sleeps = []
+        limiter = RequestsPerMinuteLimiter(30, clock=lambda: 100.0, sleeper=sleeps.append)
+
+        self.assertEqual(limiter.wait_seconds(), 0.0)
+        waited = limiter.wait_and_mark()
+
+        self.assertEqual(waited, 0.0)
+        self.assertEqual(sleeps, [])
+        self.assertEqual(limiter.last_started_at, 100.0)
+
+    def test_segunda_chamada_antes_do_intervalo_aguarda_restante(self):
+        current_time = [101.0]
+
+        def clock():
+            return current_time[0]
+
+        def sleeper(seconds):
+            current_time[0] += seconds
+
+        limiter = RequestsPerMinuteLimiter(
+            30,
+            clock=clock,
+            sleeper=sleeper,
+            last_started_at=100.0,
+        )
+
+        wait_seconds = limiter.wait_seconds()
+        waited = limiter.wait_and_mark(wait_seconds)
+
+        self.assertEqual(wait_seconds, 1.0)
+        self.assertEqual(waited, 1.0)
+        self.assertEqual(limiter.last_started_at, 102.0)
+
+    def test_chamada_apos_intervalo_nao_aguarda(self):
+        sleeps = []
+        limiter = RequestsPerMinuteLimiter(
+            30,
+            clock=lambda: 103.0,
+            sleeper=sleeps.append,
+            last_started_at=100.0,
+        )
+
+        self.assertEqual(limiter.wait_and_mark(), 0.0)
+        self.assertEqual(sleeps, [])
+        self.assertEqual(limiter.last_started_at, 103.0)
+
+    def test_validar_rpm_rejeita_negativo(self):
+        with self.assertRaises(argparse.ArgumentTypeError):
+            validar_rpm("-1")
+
+    def test_validar_rpm_rejeita_nao_inteiro(self):
+        with self.assertRaises(argparse.ArgumentTypeError):
+            validar_rpm("1.5")
+
+
 class NormalizacaoEvidenciaTests(unittest.TestCase):
     def test_normaliza_texto_direto(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -593,8 +716,76 @@ class NormalizacaoEvidenciaTests(unittest.TestCase):
             relativos = sorted(str(Path(path).relative_to(destino)) for path in arquivos)
             conteudos = sorted(Path(path).read_text(encoding="utf-8") for path in arquivos)
 
-        self.assertEqual(relativos, ["docs/interno.txt", "outros/interno.txt"])
+        self.assertEqual(len(relativos), 2)
+        self.assertTrue(all(nome.endswith(".txt") for nome in relativos))
+        self.assertTrue(all("\\" not in nome and "/" not in nome for nome in relativos))
         self.assertEqual(conteudos, ["outro texto", "texto interno"])
+
+    def test_arquivos_compativeis_upload_sanitiza_nome_acentuado(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            evidencia = root / "resolução política de segurança.pdf"
+            evidencia.write_bytes(b"%PDF-1.4 teste")
+            destino = root / "upload"
+
+            arquivos = arquivos_compativeis_upload(evidencia, destino)
+            self.assertEqual(len(arquivos), 1)
+            upload_path = Path(arquivos[0])
+            self.assertEqual(upload_path.suffix, ".pdf")
+            upload_path.name.encode("ascii")
+            self.assertNotIn("ç", upload_path.name)
+            self.assertEqual(upload_path.read_bytes(), b"%PDF-1.4 teste")
+
+    def test_arquivos_compativeis_upload_converte_docx_para_txt(self):
+        try:
+            from docx import Document
+        except ModuleNotFoundError:
+            self.skipTest("python-docx nao instalado")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            evidencia = root / "relatório controles acesso.docx"
+            document = Document()
+            document.add_paragraph("controle de acesso documentado")
+            document.save(evidencia)
+            destino = root / "upload"
+
+            arquivos = arquivos_compativeis_upload(evidencia, destino)
+            self.assertEqual(len(arquivos), 1)
+            upload_path = Path(arquivos[0])
+            self.assertEqual(upload_path.suffix, ".txt")
+            upload_path.name.encode("ascii")
+            self.assertIn("controle de acesso documentado", upload_path.read_text(encoding="utf-8"))
+
+    def test_arquivos_compativeis_upload_zip_sanitiza_e_converte_docx(self):
+        try:
+            from docx import Document
+        except ModuleNotFoundError:
+            self.skipTest("python-docx nao instalado")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            docx_path = root / "origem.docx"
+            document = Document()
+            document.add_paragraph("competencias formalizadas")
+            document.save(docx_path)
+
+            zip_path = root / "evidencia.zip"
+            with zipfile.ZipFile(zip_path, "w") as archive:
+                archive.writestr("Decreto 49.691 - Competências.pdf", b"%PDF-1.4 interno")
+                archive.writestr("Relatório de atribuições.docx", docx_path.read_bytes())
+            destino = root / "upload"
+
+            arquivos = arquivos_compativeis_upload(zip_path, destino)
+            nomes = sorted(Path(path).name for path in arquivos)
+            sufixos = sorted(Path(path).suffix for path in arquivos)
+            self.assertEqual(sufixos, [".pdf", ".txt"])
+            for nome in nomes:
+                nome.encode("ascii")
+            textos = "\n".join(
+                Path(path).read_text(encoding="utf-8")
+                for path in arquivos
+                if Path(path).suffix == ".txt"
+            )
+            self.assertIn("competencias formalizadas", textos)
 
 
 class CheckpointTests(unittest.TestCase):

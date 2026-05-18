@@ -152,10 +152,11 @@ Execute:
   --prompt-version v2 \
   --provider gemini \
   --model gemini-2.5-flash \
+  --rpm 30 \
   --out-dir .saida_analise
 ```
 
-O Gemini usa `google-genai`. Arquivos compativeis sao enviados pela Files API. Evidencias ZIP sao validadas contra path traversal e arquivos internos compativeis sao extraidos temporariamente para upload.
+O Gemini usa `google-genai`. Arquivos compativeis sao enviados pela Files API com nomes temporarios seguros em ASCII, para evitar falhas de upload por caracteres especiais no caminho/nome do arquivo. Evidencias ZIP sao validadas contra path traversal e arquivos internos compativeis sao extraidos temporariamente para upload. Arquivos `.docx` nao sao enviados diretamente ao Gemini: o pipeline extrai o texto com `python-docx`, gera um `.txt` temporario com nome seguro e envia esse texto para a API.
 
 ## Executar com OpenRouter
 
@@ -178,6 +179,12 @@ Execute:
 ```
 
 O OpenRouter recebe o prompt e o pacote de evidencia normalizado em texto pela API de Chat Completions. O request inclui `response_format` com JSON schema quando suportado pelo modelo.
+
+## Controlar requests por minuto
+
+Use `--rpm N` para limitar a taxa de chamadas aos providers remotos. Por exemplo, `--rpm 30` limita a execucao a no maximo 30 chamadas por minuto para `gemini` ou `openrouter`.
+
+O valor padrao e `0`, que desativa o limite e preserva o comportamento anterior. O provider `fake` nao e limitado por RPM.
 
 ## Listar analises sem processar
 
@@ -243,6 +250,45 @@ Estados possiveis:
 - `inconclusivo`: ha indicios, mas falta elemento essencial para concluir.
 - `erro`: a analise nao pode ser realizada por falha tecnica.
 
+## Consolidar opinioes de modelos
+
+Depois de executar a pre-analise com mais de um provider/modelo, gere um parecer consolidado por evidencia com:
+
+```bash
+.venv/bin/python -m avaliacao_evidencias.consolidacao \
+  .saida_analise/teste_gemini/analyses.jsonl \
+  .saida_analise/teste_openrouter/analyses.jsonl \
+  --evidencias-root evidencias \
+  --judge-provider gemini \
+  --judge-model gemini-2.5-flash \
+  --out-dir .saida_analise/consolidado
+```
+
+A etapa le um ou mais `analyses.jsonl`, agrupa os resultados por `auditado + questao + coluna_evidencia + evidencia`, coleta as conclusoes emitidas pelos modelos e chama um modelo juiz para produzir um `Parecer consolidado de evidencia`.
+
+A evidencia e reenviada ao juiz quando `--evidencias-root` e informado. Sem essa opcao, o juiz recebe apenas as opinioes dos modelos e deve registrar a lacuna de evidencia direta.
+
+Opcionalmente, informe uma opiniao da equipe de auditoria:
+
+```bash
+.venv/bin/python -m avaliacao_evidencias.consolidacao .saida_analise/*/analyses.jsonl \
+  --auditor-opinions opinioes_auditoria.jsonl \
+  --judge-provider openrouter \
+  --judge-model google/gemini-2.5-flash
+```
+
+`--auditor-opinions` aceita JSONL, JSON ou CSV com campos como `auditado`, `questao`, `coluna_evidencia`, `evidencia` e `opiniao_auditoria`.
+
+Saidas:
+
+```text
+.saida_analise/
+  consolidated.jsonl
+  pareceres_consolidados.xlsx
+```
+
+O parecer consolidado continua sendo pre-analise de auditoria e deve ser revisado por auditor humano.
+
 ## Manutencao de prompts
 
 Para melhorar prompts:
@@ -269,3 +315,20 @@ Para rodar todos os testes do pacote:
 O resultado e uma pre-analise automatizada. O relatorio deve ser tratado como insumo para revisao humana, nao como decisao final de auditoria.
 
 Os prompts v2 adotam postura conservadora: na duvida entre `conforme` e `inconclusivo`, o modelo deve usar `inconclusivo`; na ausencia de suporte direto, deve usar `nao_conforme`.
+
+## Logs de execucao
+
+Durante a execucao, o pipeline emite logs estruturados no `stdout`, em formato JSON Lines. Cada linha possui, no minimo, `ts`, `level`, `event` e `message`, alem de campos de contexto como `auditado`, `questao`, `coluna_evidencia`, `provider`, `model`, `status` e `error` quando aplicavel.
+
+Exemplos de eventos: `pipeline_started`, `inventory_completed`, `checkpoint_loaded`, `analysis_started`, `evidence_resolved`, `prompt_resolved`, `items_selected`, `evidence_normalized`, `upload_prepared`, `rate_limit_wait`, `provider_started`, `provider_finished`, `analysis_recorded`, `report_generated` e `pipeline_finished`.
+
+Para suprimir os logs em automacoes, use:
+
+```bash
+.venv/bin/python -m avaliacao_evidencias respostas.xlsx evidencias/ \
+  --questionario igovti_2026.md \
+  --prompts-dir avaliacao_evidencias/prompts/igovti_2026_conservador_v2 \
+  --provider fake \
+  --model fake \
+  --quiet
+```

@@ -9,6 +9,7 @@ __pycache__/
 
 # Generated converter outputs
 saida/
+.saida_analise/
 *.docx
 *.lss
 !exemplo/TSID03-ANEXO_QUESTIONARIO.docx
