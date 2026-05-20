@@ -1,0 +1,214 @@
+metadata:
+  nome: iGovTI
+  versao: "2026"
+  raiz: iGovTI
+
+preprocessamento:
+  nao_se_aplica: parcial
+
+categorias:
+  "Não adota": 0
+  "Há decisão formal ou plano aprovado para adotá-lo": 0.05
+  "Adota em menor parte": 0.15
+  "Adota parcialmente": 0.5
+  "Não se aplica": 0.5
+  "Adota": 1
+  "Adota em maior parte ou totalmente": 1
+  "Sim": 1
+  "Não": 0
+  "Nao": 0
+  "N/A": 0
+
+niveis_maturidade:
+  - nome: Inexpressivo
+    min: 0
+    max: 0.15
+    inclui_min: true
+    inclui_max: false
+  - nome: Iniciando
+    min: 0.15
+    max: 0.4
+    inclui_min: true
+    inclui_max: false
+  - nome: Intermediário
+    min: 0.4
+    max: 0.7
+    inclui_min: true
+    inclui_max: false
+  - nome: Aprimorado
+    min: 0.7
+    max: 1
+    inclui_min: true
+    inclui_max: true
+
+agregados:
+  ResultadoTI:
+    componentes:
+      - id: q1133
+        peso: 0.327394510063567
+      - id: q1131
+        peso: 0.309912761764135
+      - id: q1132
+        peso: 0.362692728172297
+  ModeloTI:
+    componentes:
+      - id: q1111
+        peso: 1
+  MonitorAvaliaTI:
+    componentes:
+      - id: q1121
+        peso: 0.239954113847665
+      - id: q1122D
+        peso: 0.380399470228791
+      - id: q1122E
+        peso: 0.379646415923544
+  PessoasTI:
+    componentes:
+      - id: q2211
+        peso: 0.200015591427986
+      - id: q2212
+        peso: 0.189707149747752
+      - id: q2213
+        peso: 0.138620127809127
+      - id: q2221
+        peso: 0.17980424931722
+      - id: q2231
+        peso: 0.167513819607624
+      - id: q2241
+        peso: 0.124339062090292
+  PlanejamentoTI:
+    componentes:
+      - id: q2111
+        peso: 0.5
+      - id: q2112
+        peso: 0.5
+  iGestServicosTI:
+    componentes:
+      - id: q2121
+        peso: 0.236308617074049
+      - id: q2122
+        peso: 0.262957173833819
+      - id: q2123
+        peso: 0.235636430094488
+      - id: q2124
+        peso: 0.265097778997645
+  iGestNiveisServicoTI:
+    componentes:
+      - id: q2131
+        peso: 1
+  iGestRiscosTI:
+    componentes:
+      - id: q2141
+        peso: 0.135195390704305
+      - id: q2142
+        peso: 0.114370438771681
+      - id: q2146
+        peso: 0.160657263976458
+      - id: q2147
+        peso: 0.154558443847086
+      - id: q2143
+        peso: 0.172921049657911
+      - id: q2144
+        peso: 0.165393181316535
+      - id: q2145
+        peso: 0.0969042317260227
+  EstruturaSegInfo:
+    componentes:
+      - id: q2151
+        peso: 0.337225127598945
+      - id: q2152
+        peso: 0.328584171771053
+      - id: q2153
+        peso: 0.334190700630002
+  ProcessoSegInfo:
+    componentes:
+      - id: q2161
+        peso: 0.169100077513301
+      - id: q2162
+        peso: 0.181906589345358
+      - id: q2163
+        peso: 0.168444883055573
+      - id: q2164
+        peso: 0.146840126078019
+      - id: q2165
+        peso: 0.180269707258143
+      - id: q2166
+        peso: 0.153438616749606
+  ProcessoSoftware:
+    componentes:
+      - id: q2171
+        peso: 1
+  iGestProjetosTI:
+    componentes:
+      - id: q2181
+        peso: 1
+  iGestContratosTI:
+    componentes:
+      - id: q2311
+        peso: 0.308686396585945
+      - id: q2321A
+        peso: 0.358650374345277
+      - id: q2322A
+        peso: 0.332663229068778
+  GovernancaTI:
+    componentes:
+      - id: ModeloTI
+        peso: 0.34248477689372
+      - id: MonitorAvaliaTI
+        peso: 0.344356081316603
+      - id: ResultadoTI
+        peso: 0.313159141789676
+  iGestSegInfo:
+    componentes:
+      - id: EstruturaSegInfo
+        peso: 0.185207883709867
+      - id: ProcessoSegInfo
+        peso: 0.219713326377589
+      - id: q2145
+        peso: 0.143292869064277
+      - id: q2142
+        peso: 0.198007190889671
+      - id: q2171F
+        peso: 0.133404667143688
+      - id: q1122E
+        peso: 0.120374062814908
+  ProcessosTI:
+    componentes:
+      - id: iGestServicosTI
+        peso: 0.167073137421224
+      - id: iGestNiveisServicoTI
+        peso: 0.134705191897048
+      - id: iGestRiscosTI
+        peso: 0.137263981410149
+      - id: iGestSegInfo
+        peso: 0.170654806089732
+      - id: ProcessoSoftware
+        peso: 0.138678880790189
+      - id: iGestProjetosTI
+        peso: 0.148415256905944
+      - id: iGestContratosTI
+        peso: 0.103208745485713
+  iGestTI:
+    componentes:
+      - id: PlanejamentoTI
+        peso: 0.330476319864886
+      - id: PessoasTI
+        peso: 0.301194908895905
+      - id: ProcessosTI
+        peso: 0.368328771239209
+  iGovTI:
+    componentes:
+      - id: GovernancaTI
+        peso: 0.5
+      - id: iGestTI
+        peso: 0.5
+  ProcessosContratacao:
+    componentes:
+      - id: q2331
+        peso: 0.167173482808753
+      - id: q2341
+        peso: 0.288160971623168
+      - id: q2342
+        peso: 0.272246466624149
+      - id: q2343
+        peso: 0.272419078943929

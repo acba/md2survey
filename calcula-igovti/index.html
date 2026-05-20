@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calculadora iGovTI</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <style>
+    :root {
+      --ink: #152033;
+      --muted: #5f6b7a;
+      --line: #d9e0e8;
+      --surface: #f6f8fb;
+      --panel: #ffffff;
+      --accent: #087c8f;
+      --accent-2: #6d8f21;
+      --danger: #b42318;
+      --warn: #a15c07;
+      --ok: #147a3d;
+      --shadow: 0 1px 2px rgba(20, 32, 51, 0.08), 0 8px 24px rgba(20, 32, 51, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--surface);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 20px;
+      color: #fff;
+      background: #183247;
+      border-bottom: 4px solid var(--accent);
+    }
+
+    h1, h2, h3 { margin: 0; line-height: 1.2; }
+    h1 { font-size: 20px; font-weight: 720; }
+    h2 { font-size: 15px; font-weight: 700; }
+    h3 { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+
+    button, input[type="file"], select {
+      font: inherit;
+    }
+
+    button {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 11px;
+      color: var(--ink);
+      background: #fff;
+      cursor: pointer;
+    }
+
+    button.primary {
+      color: #fff;
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.35fr) minmax(300px, 0.85fr);
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .panel {
+      min-width: 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-body { padding: 14px; }
+
+    .stack { display: grid; gap: 12px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+    textarea {
+      width: 100%;
+      min-height: 640px;
+      resize: vertical;
+      padding: 12px;
+      color: #0f172a;
+      background: #fbfcfe;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 10px;
+      background: #fbfcfe;
+    }
+
+    .metric b { display: block; font-size: 20px; }
+    .metric span { color: var(--muted); font-size: 12px; }
+
+    .notice {
+      padding: 10px 12px;
+      border-left: 4px solid var(--accent);
+      background: #eef8fa;
+      border-radius: 6px;
+      color: #174454;
+    }
+
+    .issue {
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .issue.error { border-color: #f1b8b4; background: #fff5f4; color: var(--danger); }
+    .issue.warn { border-color: #f1d4a6; background: #fff8eb; color: var(--warn); }
+    .issue.ok { border-color: #b8dfc8; background: #f0fbf4; color: var(--ok); }
+
+    .tree {
+      overflow: auto;
+      max-height: 680px;
+      padding-right: 4px;
+    }
+
+    .node {
+      margin: 8px 0 8px 18px;
+      border-left: 2px solid #d7e2ea;
+      padding-left: 10px;
+    }
+
+    .node.root { margin-left: 0; border-left-color: var(--accent); }
+
+    .node-line {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .node-id { font-weight: 700; }
+    .node-kind { color: var(--muted); font-size: 12px; }
+    .node-value { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+    .formula {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 5px 0 0 8px;
+      overflow-wrap: anywhere;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 8px 9px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #edf3f7;
+      font-size: 12px;
+      color: #32445a;
+    }
+
+    .table-wrap {
+      max-height: 420px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+    }
+
+    .full {
+      padding: 0 14px 14px;
+    }
+
+    .muted { color: var(--muted); }
+    .small { font-size: 12px; }
+    .hidden { display: none; }
+
+    @media (max-width: 1150px) {
+      .shell { grid-template-columns: 1fr; }
+      textarea { min-height: 420px; }
+      .tree { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Calculadora iGovTI</h1>
+      <div class="small">Pré-processamento categórico, cálculo ponderado e visualização da árvore do índice.</div>
+    </div>
+    <div class="actions">
+      <button id="downloadYamlBtn">Exportar YAML</button>
+      <button id="downloadJsonBtn" disabled>Exportar resultados JSON</button>
+      <button id="downloadCsvBtn" disabled>Exportar resultados CSV</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Estrutura YAML</h2>
+        <div class="actions">
+          <input id="yamlInput" type="file" accept=".yaml,.yml,text/yaml">
+          <button id="applyYamlBtn" class="primary">Aplicar</button>
+        </div>
+      </div>
+      <div class="panel-body stack">
+        <div class="notice small">O YAML define categorias, níveis de maturidade, raiz do índice, agregados, componentes e pesos. IDs iniciados por <b>q</b> são tratados como questões.</div>
+        <textarea id="yamlEditor" spellcheck="false"></textarea>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Árvore e cálculo</h2>
+        <div class="actions">
+          <select id="entitySelect" disabled></select>
+          <button id="calculateBtn" class="primary" disabled>Calcular</button>
+        </div>
+      </div>
+      <div class="panel-body stack">
+        <div class="meta-grid">
+          <div class="metric"><b id="rootValue">-</b><span>Índice raiz</span></div>
+          <div class="metric"><b id="maturityValue">-</b><span>Nível de maturidade</span></div>
+          <div class="metric"><b id="entitiesValue">0</b><span>Registros importados</span></div>
+        </div>
+        <div id="tree" class="tree"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Dados e validações</h2>
+      </div>
+      <div class="panel-body stack">
+        <div class="actions">
+          <input id="xlsxInput" type="file" accept=".xlsx,.xls">
+        </div>
+        <div id="status" class="notice small">Importe a planilha XLSX de respostas e aplique a estrutura YAML.</div>
+        <div>
+          <h3>Validações</h3>
+          <div id="issues" class="stack"></div>
+        </div>
+        <div>
+          <h3>Pré-processamento</h3>
+          <div id="preprocessInfo" class="small muted">Aguardando planilha.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <section class="full">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Resultados</h2>
+        <span class="small muted">Valores por registro, incluindo questões calculadas, agregados e nível de maturidade.</span>
+      </div>
+      <div class="panel-body">
+        <div id="resultsTable" class="table-wrap"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const DEFAULT_YAML = `metadata:
+  nome: iGovTI
+  versao: "2026"
+  raiz: iGovTI
+
+preprocessamento:
+  nao_se_aplica: parcial
+
+categorias:
+  "Não adota": 0
+  "Há decisão formal ou plano aprovado para adotá-lo": 0.05
+  "Adota em menor parte": 0.15
+  "Adota parcialmente": 0.5
+  "Não se aplica": 0.5
+  "Adota": 1
+  "Adota em maior parte ou totalmente": 1
+  "Sim": 1
+  "Não": 0
+  "Nao": 0
+  "N/A": 0
+
+niveis_maturidade:
+  - nome: Inexpressivo
+    min: 0
+    max: 0.15
+    inclui_min: true
+    inclui_max: false
+  - nome: Iniciando
+    min: 0.15
+    max: 0.4
+    inclui_min: true
+    inclui_max: false
+  - nome: Intermediário
+    min: 0.4
+    max: 0.7
+    inclui_min: true
+    inclui_max: false
+  - nome: Aprimorado
+    min: 0.7
+    max: 1
+    inclui_min: true
+    inclui_max: true
+
+agregados:
+  ResultadoTI:
+    componentes:
+      - id: q1133
+        peso: 0.327394510063567
+      - id: q1131
+        peso: 0.309912761764135
+      - id: q1132
+        peso: 0.362692728172297
+  ModeloTI:
+    componentes:
+      - id: q1111
+        peso: 1
+  MonitorAvaliaTI:
+    componentes:
+      - id: q1121
+        peso: 0.239954113847665
+      - id: q1122D
+        peso: 0.380399470228791
+      - id: q1122E
+        peso: 0.379646415923544
+  PessoasTI:
+    componentes:
+      - id: q2211
+        peso: 0.200015591427986
+      - id: q2212
+        peso: 0.189707149747752
+      - id: q2213
+        peso: 0.138620127809127
+      - id: q2221
+        peso: 0.17980424931722
+      - id: q2231
+        peso: 0.167513819607624
+      - id: q2241
+        peso: 0.124339062090292
+  PlanejamentoTI:
+    componentes:
+      - id: q2111
+        peso: 0.5
+      - id: q2112
+        peso: 0.5
+  iGestServicosTI:
+    componentes:
+      - id: q2121
+        peso: 0.236308617074049
+      - id: q2122
+        peso: 0.262957173833819
+      - id: q2123
+        peso: 0.235636430094488
+      - id: q2124
+        peso: 0.265097778997645
+  iGestNiveisServicoTI:
+    componentes:
+      - id: q2131
+        peso: 1
+  iGestRiscosTI:
+    componentes:
+      - id: q2141
+        peso: 0.135195390704305
+      - id: q2142
+        peso: 0.114370438771681
+      - id: q2146
+        peso: 0.160657263976458
+      - id: q2147
+        peso: 0.154558443847086
+      - id: q2143
+        peso: 0.172921049657911
+      - id: q2144
+        peso: 0.165393181316535
+      - id: q2145
+        peso: 0.0969042317260227
+  EstruturaSegInfo:
+    componentes:
+      - id: q2151
+        peso: 0.337225127598945
+      - id: q2152
+        peso: 0.328584171771053
+      - id: q2153
+        peso: 0.334190700630002
+  ProcessoSegInfo:
+    componentes:
+      - id: q2161
+        peso: 0.169100077513301
+      - id: q2162
+        peso: 0.181906589345358
+      - id: q2163
+        peso: 0.168444883055573
+      - id: q2164
+        peso: 0.146840126078019
+      - id: q2165
+        peso: 0.180269707258143
+      - id: q2166
+        peso: 0.153438616749606
+  ProcessoSoftware:
+    componentes:
+      - id: q2171
+        peso: 1
+  iGestProjetosTI:
+    componentes:
+      - id: q2181
+        peso: 1
+  iGestContratosTI:
+    componentes:
+      - id: q2311
+        peso: 0.308686396585945
+      - id: q2321A
+        peso: 0.358650374345277
+      - id: q2322A
+        peso: 0.332663229068778
+  GovernancaTI:
+    componentes:
+      - id: ModeloTI
+        peso: 0.34248477689372
+      - id: MonitorAvaliaTI
+        peso: 0.344356081316603
+      - id: ResultadoTI
+        peso: 0.313159141789676
+  iGestSegInfo:
+    componentes:
+      - id: EstruturaSegInfo
+        peso: 0.185207883709867
+      - id: ProcessoSegInfo
+        peso: 0.219713326377589
+      - id: q2145
+        peso: 0.143292869064277
+      - id: q2142
+        peso: 0.198007190889671
+      - id: q2171F
+        peso: 0.133404667143688
+      - id: q1122E
+        peso: 0.120374062814908
+  ProcessosTI:
+    componentes:
+      - id: iGestServicosTI
+        peso: 0.167073137421224
+      - id: iGestNiveisServicoTI
+        peso: 0.134705191897048
+      - id: iGestRiscosTI
+        peso: 0.137263981410149
+      - id: iGestSegInfo
+        peso: 0.170654806089732
+      - id: ProcessoSoftware
+        peso: 0.138678880790189
+      - id: iGestProjetosTI
+        peso: 0.148415256905944
+      - id: iGestContratosTI
+        peso: 0.103208745485713
+  iGestTI:
+    componentes:
+      - id: PlanejamentoTI
+        peso: 0.330476319864886
+      - id: PessoasTI
+        peso: 0.301194908895905
+      - id: ProcessosTI
+        peso: 0.368328771239209
+  iGovTI:
+    componentes:
+      - id: GovernancaTI
+        peso: 0.5
+      - id: iGestTI
+        peso: 0.5
+  ProcessosContratacao:
+    componentes:
+      - id: q2331
+        peso: 0.167173482808753
+      - id: q2341
+        peso: 0.288160971623168
+      - id: q2342
+        peso: 0.272246466624149
+      - id: q2343
+        peso: 0.272419078943929
+`;
+
+    const state = {
+      config: null,
+      rawRows: [],
+      processedRows: [],
+      results: [],
+      idColumn: null,
+      availableQuestions: new Set(),
+      selectedEntity: null
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    $('yamlEditor').value = DEFAULT_YAML;
+    $('applyYamlBtn').addEventListener('click', applyYaml);
+    $('yamlInput').addEventListener('change', readYamlFile);
+    $('xlsxInput').addEventListener('change', readXlsxFile);
+    $('calculateBtn').addEventListener('click', calculateAll);
+    $('entitySelect').addEventListener('change', () => {
+      state.selectedEntity = $('entitySelect').value;
+      renderSelectedEntity();
+    });
+    $('downloadYamlBtn').addEventListener('click', () => downloadText('estrutura-igovti.yaml', $('yamlEditor').value, 'text/yaml'));
+    $('downloadJsonBtn').addEventListener('click', () => downloadText('resultado-igovti.json', JSON.stringify(state.results, null, 2), 'application/json'));
+    $('downloadCsvBtn').addEventListener('click', () => downloadText('resultado-igovti.csv', toCsv(state.results), 'text/csv'));
+
+    applyYaml();
+
+    function readYamlFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        $('yamlEditor').value = reader.result;
+        applyYaml();
+      };
+      reader.readAsText(file);
+    }
+
+    function readXlsxFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        state.rawRows = XLSX.utils.sheet_to_json(firstSheet, { defval: null });
+        processRows();
+        renderStatus(`Planilha importada: ${state.rawRows.length} registros da aba "${workbook.SheetNames[0]}".`);
+        validateAndRender();
+        toggleCalculate();
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function applyYaml() {
+      try {
+        state.config = jsyaml.load($('yamlEditor').value);
+        validateConfigShape(state.config);
+        renderStatus('Estrutura YAML aplicada.');
+        if (state.rawRows.length) processRows();
+      } catch (error) {
+        state.config = null;
+        renderStatus(`Erro no YAML: ${error.message}`, true);
+      }
+      validateAndRender();
+      toggleCalculate();
+      renderTree();
+    }
+
+    function validateConfigShape(config) {
+      if (!config || typeof config !== 'object') throw new Error('documento vazio');
+      if (!config.metadata || !config.metadata.raiz) throw new Error('metadata.raiz é obrigatório');
+      if (!config.categorias || typeof config.categorias !== 'object') throw new Error('categorias é obrigatório');
+      if (!Array.isArray(config.niveis_maturidade)) throw new Error('niveis_maturidade deve ser uma lista');
+      if (!config.agregados || typeof config.agregados !== 'object') throw new Error('agregados é obrigatório');
+    }
+
+    function processRows() {
+      const config = state.config;
+      if (!config || !state.rawRows.length) return;
+
+      const columns = Object.keys(state.rawRows[0] || {});
+      state.idColumn = detectIdColumn(columns);
+      state.processedRows = state.rawRows.map((row, index) => {
+        const normalized = {};
+        const rawAnswers = {};
+        for (const [key, value] of Object.entries(row)) {
+          const clean = normalizeColumnName(key);
+          if (!isQuestionColumn(clean)) continue;
+          const questionId = normalizeQuestionId(clean);
+          normalized[questionId] = normalizeAnswer(value, config);
+          rawAnswers[questionId] = normalizeTextAnswer(value);
+        }
+
+        const questionScores = Object.fromEntries(
+          Object.entries(normalized).map(([id, value]) => [id, toNumber(value, 0)])
+        );
+        const baseQuestions = Object.keys(normalized).filter((id) => /^q\d{4}$/i.test(id));
+        for (const base of baseQuestions) {
+          const detailCols = Object.keys(normalized).filter((col) => col !== base && col.startsWith(base));
+          questionScores[base] = calculateQuestion(rawAnswers[base], normalized[base], detailCols.map((col) => normalized[col]));
+        }
+
+        return {
+          __id: String(row[state.idColumn] ?? `Registro ${index + 1}`),
+          __raw: row,
+          __normalized: normalized,
+          __questions: questionScores
+        };
+      });
+      state.availableQuestions = new Set(state.processedRows.flatMap((row) => Object.keys(row.__questions)));
+      $('entitiesValue').textContent = String(state.processedRows.length);
+      $('preprocessInfo').textContent = `${state.processedRows.length} registros processados; ${state.availableQuestions.size} questões calculáveis identificadas; coluna identificadora: ${state.idColumn || 'primeira coluna'}.`;
+      fillEntitySelect();
+    }
+
+    function detectIdColumn(columns) {
+      const candidates = ['attribute_1', 'orgao', 'órgão', 'entidade', 'auditado', 'name', 'id'];
+      const lower = new Map(columns.map((col) => [String(col).toLowerCase(), col]));
+      for (const candidate of candidates) {
+        if (lower.has(candidate)) return lower.get(candidate);
+      }
+      return columns[0] || null;
+    }
+
+    function normalizeColumnName(name) {
+      return String(name)
+        .replace(/\./g, '')
+        .replace(/\[/g, '')
+        .replace(/\]/g, '')
+        .replace(/ext/g, '')
+        .trim();
+    }
+
+    function isQuestionColumn(name) {
+      if (!/\d{4}/.test(name)) return false;
+      if (/lei|est|evi|nsa|raz|SQ/i.test(name)) return false;
+      return true;
+    }
+
+    function getQuestionBase(name) {
+      const match = String(name).match(/^q?\d{4}/i);
+      return match ? `q${match[0].replace(/^q/i, '')}` : name;
+    }
+
+    function normalizeQuestionId(name) {
+      const clean = String(name).trim();
+      return clean.startsWith('q') || clean.startsWith('Q') ? `q${clean.slice(1)}` : `q${clean}`;
+    }
+
+    function questionColumnSort(a, b) {
+      const abase = /^q?\d{4}$/i.test(a) ? 0 : 1;
+      const bbase = /^q?\d{4}$/i.test(b) ? 0 : 1;
+      if (abase !== bbase) return abase - bbase;
+      return a.localeCompare(b);
+    }
+
+    function normalizeTextAnswer(value) {
+      if (value === null || value === undefined || value === '') return '';
+      const raw = String(value).trim();
+      return raw.endsWith('.') ? raw.slice(0, -1) : raw;
+    }
+
+    function normalizeAnswer(value, config) {
+      if (value === null || value === undefined || value === '') return 0;
+      if (typeof value === 'number') return value;
+      const raw = String(value).trim();
+      const clean = raw.endsWith('.') ? raw.slice(0, -1) : raw;
+      if (Object.prototype.hasOwnProperty.call(config.categorias, raw)) return config.categorias[raw];
+      if (Object.prototype.hasOwnProperty.call(config.categorias, clean)) return config.categorias[clean];
+      const numeric = Number(String(raw).replace(',', '.'));
+      return Number.isFinite(numeric) ? numeric : raw;
+    }
+
+    function calculateQuestion(baseText, baseValue, details) {
+      const baseNumeric = toNumber(baseValue, 0);
+      const adoptionFull = baseText === 'Adota em maior parte ou totalmente' || baseText === 'Adota';
+      const adoptionPartial = baseText === 'Adota parcialmente';
+      if (!details.length || (!adoptionFull && !adoptionPartial)) return baseNumeric;
+      const discountMax = adoptionFull ? 0.85 : 0.35;
+      const missing = details.map((value) => 1 - toNumber(value, 0)).reduce((a, b) => a + b, 0);
+      const score = baseNumeric - ((missing * discountMax) / details.length);
+      return clamp(score, 0, 1);
+    }
+
+    function calculateAll() {
+      if (!state.config || !state.processedRows.length) return;
+      const root = state.config.metadata.raiz;
+      state.results = state.processedRows.map((row) => {
+        const values = { ...row.__questions };
+        const trace = {};
+        const visiting = new Set();
+        const visit = (id) => {
+          if (id.startsWith('q')) return toNumber(values[id], 0);
+          if (Object.prototype.hasOwnProperty.call(values, id)) return values[id];
+          if (visiting.has(id)) throw new Error(`ciclo detectado em ${id}`);
+          const spec = state.config.agregados[id];
+          if (!spec) return 0;
+          visiting.add(id);
+          const components = normalizeComponents(spec);
+          const parts = components.map((component) => {
+            const value = visit(component.id);
+            return { ...component, value, contribution: value * component.peso };
+          });
+          visiting.delete(id);
+          const total = parts.reduce((sum, part) => sum + part.contribution, 0);
+          values[id] = clamp(total, 0, 1);
+          trace[id] = parts;
+          return values[id];
+        };
+        visit(root);
+        for (const aggregateId of Object.keys(state.config.agregados)) {
+          visit(aggregateId);
+        }
+        return {
+          id: row.__id,
+          indice: root,
+          valor: values[root],
+          nivel_maturidade: classifyMaturity(values[root], state.config),
+          valores: values,
+          memoria: trace
+        };
+      });
+      $('downloadJsonBtn').disabled = false;
+      $('downloadCsvBtn').disabled = false;
+      renderResultsTable();
+      fillEntitySelect();
+      renderSelectedEntity();
+    }
+
+    function normalizeComponents(spec) {
+      return (spec.componentes || []).map((component) => ({
+        id: String(component.id),
+        peso: Number(component.peso)
+      }));
+    }
+
+    function classifyMaturity(value, config) {
+      for (const level of config.niveis_maturidade || []) {
+        const minOk = level.inclui_min === false ? value > Number(level.min) : value >= Number(level.min);
+        const maxOk = level.inclui_max === true ? value <= Number(level.max) : value < Number(level.max);
+        if (minOk && maxOk) return level.nome;
+      }
+      return 'Sem classificação';
+    }
+
+    function validateAndRender() {
+      const issues = [];
+      if (!state.config) {
+        issues.push({ type: 'error', message: 'YAML inválido ou não aplicado.' });
+        renderIssues(issues);
+        return;
+      }
+      const config = state.config;
+      const root = config.metadata.raiz;
+      if (!config.agregados[root]) issues.push({ type: 'error', message: `Raiz "${root}" não existe em agregados.` });
+
+      for (const [id, spec] of Object.entries(config.agregados)) {
+        const components = normalizeComponents(spec);
+        if (!components.length) issues.push({ type: 'error', message: `Agregado "${id}" não possui componentes.` });
+        const sum = components.reduce((acc, component) => acc + component.peso, 0);
+        if (Math.abs(sum - 1) > 0.000001) issues.push({ type: 'error', message: `Pesos de "${id}" somam ${sum.toFixed(6)}, não 1.` });
+        for (const component of components) {
+          if (!Number.isFinite(component.peso)) issues.push({ type: 'error', message: `Peso inválido em "${id}" -> "${component.id}".` });
+          if (!component.id.startsWith('q') && !config.agregados[component.id]) {
+            issues.push({ type: 'error', message: `Agregado "${id}" referencia subagregado inexistente "${component.id}".` });
+          }
+          if (component.id.startsWith('q') && state.availableQuestions.size && !state.availableQuestions.has(component.id)) {
+            issues.push({ type: 'warn', message: `Questão "${component.id}" referenciada por "${id}" não foi encontrada na planilha.` });
+          }
+        }
+      }
+      for (const cycle of findCycles(config.agregados)) {
+        issues.push({ type: 'error', message: `Ciclo detectado: ${cycle.join(' -> ')}.` });
+      }
+      for (const issue of validateMaturityLevels(config.niveis_maturidade)) issues.push(issue);
+      if (!issues.length) issues.push({ type: 'ok', message: 'Estrutura válida para cálculo.' });
+      renderIssues(issues);
+    }
+
+    function findCycles(aggregates) {
+      const cycles = [];
+      const visited = new Set();
+      const stack = [];
+      const inStack = new Set();
+      const visit = (id) => {
+        if (inStack.has(id)) {
+          cycles.push(stack.slice(stack.indexOf(id)).concat(id));
+          return;
+        }
+        if (visited.has(id) || !aggregates[id]) return;
+        visited.add(id);
+        inStack.add(id);
+        stack.push(id);
+        for (const component of normalizeComponents(aggregates[id])) {
+          if (!component.id.startsWith('q')) visit(component.id);
+        }
+        stack.pop();
+        inStack.delete(id);
+      };
+      Object.keys(aggregates || {}).forEach(visit);
+      return cycles;
+    }
+
+    function validateMaturityLevels(levels) {
+      const issues = [];
+      const sorted = [...(levels || [])].sort((a, b) => Number(a.min) - Number(b.min));
+      let cursor = 0;
+      for (const level of sorted) {
+        const min = Number(level.min);
+        const max = Number(level.max);
+        if (!level.nome || !Number.isFinite(min) || !Number.isFinite(max) || min >= max) {
+          issues.push({ type: 'error', message: `Nível de maturidade inválido: ${level.nome || '(sem nome)'}.` });
+          continue;
+        }
+        if (Math.abs(min - cursor) > 0.000001) issues.push({ type: 'warn', message: `Lacuna ou sobreposição nos níveis perto de ${cursor.toFixed(2)}.` });
+        cursor = max;
+      }
+      if (sorted.length && Math.abs(cursor - 1) > 0.000001) issues.push({ type: 'warn', message: `Níveis de maturidade terminam em ${cursor}, não em 1.` });
+      return issues;
+    }
+
+    function renderIssues(issues) {
+      $('issues').innerHTML = issues.map((issue) => `<div class="issue ${issue.type}">${escapeHtml(issue.message)}</div>`).join('');
+    }
+
+    function renderTree(values = null, trace = null) {
+      if (!state.config) {
+        $('tree').innerHTML = '';
+        return;
+      }
+      const root = state.config.metadata.raiz;
+      $('tree').innerHTML = renderNode(root, values, trace, true);
+    }
+
+    function renderNode(id, values, trace, isRoot = false) {
+      const isQuestion = id.startsWith('q');
+      const value = values && Object.prototype.hasOwnProperty.call(values, id) ? values[id] : null;
+      const spec = state.config.agregados[id];
+      const parts = trace && trace[id] ? trace[id] : normalizeComponents(spec || {});
+      const formula = !isQuestion && parts.length
+        ? parts.map((part) => `${part.peso.toFixed(4)} x ${part.id}${part.value !== undefined ? ` (${formatNumber(part.value)})` : ''}`).join(' + ')
+        : '';
+      const children = !isQuestion && spec
+        ? parts.map((part) => renderNode(part.id, values, trace, false)).join('')
+        : '';
+      return `<div class="node ${isRoot ? 'root' : ''}">
+        <div class="node-line">
+          <div><span class="node-id">${escapeHtml(id)}</span> <span class="node-kind">${isQuestion ? 'questão' : 'agregado'}</span></div>
+          <div class="node-value">${value === null ? '-' : formatNumber(value)}</div>
+        </div>
+        ${formula ? `<div class="formula">${escapeHtml(formula)}</div>` : ''}
+        ${children}
+      </div>`;
+    }
+
+    function renderResultsTable() {
+      if (!state.results.length) {
+        $('resultsTable').innerHTML = '';
+        return;
+      }
+      const root = state.config.metadata.raiz;
+      const aggregateIds = Object.keys(state.config.agregados);
+      const columns = ['id', root, 'nivel_maturidade', ...aggregateIds.filter((id) => id !== root)];
+      const rows = state.results.map((result) => {
+        return `<tr>${columns.map((col) => {
+          const value = col === 'id' ? result.id : col === 'nivel_maturidade' ? result.nivel_maturidade : result.valores[col];
+          return `<td>${escapeHtml(formatCell(value))}</td>`;
+        }).join('')}</tr>`;
+      }).join('');
+      $('resultsTable').innerHTML = `<table><thead><tr>${columns.map((col) => `<th>${escapeHtml(col)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
+    }
+
+    function renderSelectedEntity() {
+      const selected = state.results.find((result) => result.id === state.selectedEntity) || state.results[0];
+      if (!selected) {
+        $('rootValue').textContent = '-';
+        $('maturityValue').textContent = '-';
+        renderTree();
+        return;
+      }
+      state.selectedEntity = selected.id;
+      $('entitySelect').value = selected.id;
+      $('rootValue').textContent = formatNumber(selected.valor);
+      $('maturityValue').textContent = selected.nivel_maturidade;
+      renderTree(selected.valores, selected.memoria);
+    }
+
+    function fillEntitySelect() {
+      const source = state.results.length ? state.results.map((r) => r.id) : state.processedRows.map((r) => r.__id);
+      $('entitySelect').innerHTML = source.map((id) => `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`).join('');
+      $('entitySelect').disabled = !source.length;
+      if (source.length && !source.includes(state.selectedEntity)) state.selectedEntity = source[0];
+    }
+
+    function toggleCalculate() {
+      $('calculateBtn').disabled = !(state.config && state.processedRows.length);
+    }
+
+    function renderStatus(message, isError = false) {
+      $('status').textContent = message;
+      $('status').style.borderLeftColor = isError ? 'var(--danger)' : 'var(--accent)';
+      $('status').style.background = isError ? '#fff5f4' : '#eef8fa';
+    }
+
+    function toNumber(value, fallback = 0) {
+      const number = typeof value === 'number' ? value : Number(String(value).replace(',', '.'));
+      return Number.isFinite(number) ? number : fallback;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function formatNumber(value) {
+      return Number.isFinite(value) ? value.toFixed(4) : '-';
+    }
+
+    function formatCell(value) {
+      return typeof value === 'number' ? formatNumber(value) : value ?? '';
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function downloadText(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function toCsv(results) {
+      if (!results.length) return '';
+      const root = state.config.metadata.raiz;
+      const columns = ['id', root, 'nivel_maturidade', ...Object.keys(state.config.agregados).filter((id) => id !== root)];
+      const lines = [columns.join(',')];
+      for (const result of results) {
+        lines.push(columns.map((col) => {
+          const value = col === 'id' ? result.id : col === 'nivel_maturidade' ? result.nivel_maturidade : result.valores[col];
+          return `"${String(formatCell(value)).replace(/"/g, '""')}"`;
+        }).join(','));
+      }
+      return lines.join('\n');
+    }
+  </script>
+</body>
+</html>

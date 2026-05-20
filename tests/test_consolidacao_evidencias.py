@@ -2,6 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from avaliacao_evidencias.consolidacao import (
     agrupar_opinioes_por_evidencia,
@@ -195,6 +196,47 @@ class ConsolidacaoEvidenciasTests(unittest.TestCase):
             self.assertEqual(len(registros), 1)
             self.assertEqual(registros[0]["status"], "completed")
             self.assertEqual(registros[0]["opinion_count"], 2)
+
+    def test_cli_consolidacao_continua_apos_erro_transiente_esgotado(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            analyses = root / "analyses.jsonl"
+            out_dir = root / "out"
+            analyses.write_text(
+                "\n".join(
+                    [
+                        json.dumps(_registro(identity="a", provider="gemini", model="modelo-a", questao="q0101"), ensure_ascii=False),
+                        json.dumps(_registro(identity="b", provider="gemini", model="modelo-a", questao="q0102"), ensure_ascii=False),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            calls = []
+
+            def fake_provider(**kwargs):
+                calls.append(kwargs["questao_base"])
+                if kwargs["questao_base"] == "q0101":
+                    return {"status": "error", "error": "erro ao chamar Gemini: 503 UNAVAILABLE"}
+                return {"status": "completed", "conclusoes": []}
+
+            with patch("avaliacao_evidencias.consolidacao.executar_provider", side_effect=fake_provider):
+                exit_code = main([
+                    str(analyses),
+                    "--out-dir",
+                    str(out_dir),
+                    "--judge-provider",
+                    "gemini",
+                    "--judge-model",
+                    "gemini-3.1-flash-lite",
+                    "--quiet",
+                ])
+
+            registros = [json.loads(line) for line in (out_dir / "consolidated.jsonl").read_text(encoding="utf-8").splitlines()]
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(calls, ["q0101", "q0102"])
+        self.assertEqual([registro["status"] for registro in registros], ["error", "completed"])
 
     def test_relatorio_usa_parecer_mais_recente_por_evidencia_e_juiz(self):
         antigo = {

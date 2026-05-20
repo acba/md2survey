@@ -23,13 +23,13 @@ from .pipeline import (
     arquivos_compativeis_upload,
     carregar_registros_analise,
     deve_processar_identidade,
-    executar_provider,
     gravar_registro_analise,
     hash_arquivo,
     log_event,
     normalizar_evidencia,
     validar_rpm,
 )
+from .providers_ai_service import executar_provider
 
 
 PROMPT_JUIZ_PADRAO = """Voce e um juiz avaliador de evidencias de auditoria.

@@ -5,7 +5,9 @@ import sys
 import tempfile
 import types
 import unittest
+import urllib.error
 import zipfile
+from email.utils import formatdate
 from pathlib import Path
 from unittest.mock import patch
 
@@ -17,13 +19,11 @@ from avaliacao_evidencias.pipeline import (
     carregar_contexto_questionario,
     calcular_identidade_analise,
     deve_processar_identidade,
-    executar_provider,
-    validar_resultado_ia,
     arquivos_compativeis_upload,
     gravar_registro_analise,
     carregar_registros_analise,
-    executar_julgamento_fake,
     gerar_relatorio_conformidade,
+    main as pipeline_main,
     normalizar_evidencia,
     RequestsPerMinuteLimiter,
     resolver_prompt,
@@ -31,6 +31,14 @@ from avaliacao_evidencias.pipeline import (
     resolver_evidencia,
     selecionar_itens_afirmados,
     validar_rpm,
+)
+from avaliacao_evidencias.providers_ai_service import (
+    carregar_json_modelo,
+    executar_com_retry_transiente,
+    executar_julgamento_fake,
+    executar_provider,
+    parse_retry_after,
+    validar_resultado_ia,
 )
 from avaliacao_evidencias.prompt_catalog import (
     build_prompt_set,
@@ -419,6 +427,17 @@ class ContratoJsonTests(unittest.TestCase):
                 }
             )
 
+    def test_carrega_json_modelo_com_json_repair(self):
+        resultado = carregar_json_modelo('{status: "completed", conclusoes: []}')
+
+        self.assertEqual(resultado, {"status": "completed", "conclusoes": []})
+
+    def test_carrega_json_modelo_com_markdown_fence(self):
+        resultado = carregar_json_modelo('```json\n{"status":"completed","conclusoes":[]}\n```')
+
+        self.assertEqual(resultado["status"], "completed")
+        self.assertEqual(resultado["conclusoes"], [])
+
 
 class ProviderAbstractionTests(unittest.TestCase):
     def test_openrouter_sem_credencial_registra_erro_sem_rede(self):
@@ -480,7 +499,7 @@ class ProviderAbstractionTests(unittest.TestCase):
             captured["timeout"] = timeout
             return FakeResponse()
 
-        with patch("avaliacao_evidencias.pipeline.urllib.request.urlopen", side_effect=fake_urlopen):
+        with patch("avaliacao_evidencias.providers_ai_service.urllib.request.urlopen", side_effect=fake_urlopen):
             result = executar_provider(
                 provider="openrouter",
                 model="modelo/teste",
@@ -499,6 +518,128 @@ class ProviderAbstractionTests(unittest.TestCase):
         self.assertIn("Prompt especifico", captured["body"]["messages"][0]["content"])
         self.assertIn("conteudo", captured["body"]["messages"][0]["content"])
         self.assertEqual(captured["body"]["response_format"]["type"], "json_schema")
+
+    def test_openrouter_repara_json_quase_valido(self):
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def read(self):
+                return json.dumps({
+                    "choices": [
+                        {
+                            "message": {
+                                "content": '{status: "completed", conclusoes: []}'
+                            }
+                        }
+                    ]
+                }).encode("utf-8")
+
+        with patch("avaliacao_evidencias.providers_ai_service.urllib.request.urlopen", return_value=FakeResponse()):
+            result = executar_provider(
+                provider="openrouter",
+                model="modelo/teste",
+                api_key="token",
+                prompt="Prompt especifico",
+                auditado="SEFAZ",
+                questao_base="q1",
+                coluna_evidencia="q1evi",
+                itens_afirmados=[],
+                pacote={"documentos": []},
+            )
+
+        self.assertEqual(result, {"status": "completed", "conclusoes": []})
+
+    def test_openrouter_erro_json_irreparavel_inclui_trecho_bruto(self):
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def read(self):
+                return json.dumps({
+                    "choices": [
+                        {
+                            "message": {
+                                "content": "nao ha json aqui"
+                            }
+                        }
+                    ]
+                }).encode("utf-8")
+
+        with patch("avaliacao_evidencias.providers_ai_service.urllib.request.urlopen", return_value=FakeResponse()):
+            result = executar_provider(
+                provider="openrouter",
+                model="modelo/teste",
+                api_key="token",
+                prompt="Prompt especifico",
+                auditado="SEFAZ",
+                questao_base="q1",
+                coluna_evidencia="q1evi",
+                itens_afirmados=[],
+                pacote={"documentos": []},
+            )
+
+        self.assertEqual(result["status"], "error")
+        self.assertIn("raw_response_excerpt", result)
+        self.assertIn("nao ha json", result["raw_response_excerpt"])
+
+    def test_openrouter_respeita_retry_after_em_429(self):
+        calls = []
+        sleeps = []
+
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def read(self):
+                return json.dumps({
+                    "choices": [
+                        {
+                            "message": {
+                                "content": json.dumps({"status": "completed", "conclusoes": []})
+                            }
+                        }
+                    ]
+                }).encode("utf-8")
+
+        def fake_urlopen(request, timeout):
+            calls.append(request)
+            if len(calls) == 1:
+                raise urllib.error.HTTPError(
+                    request.full_url,
+                    429,
+                    "Too Many Requests",
+                    {"Retry-After": "7"},
+                    None,
+                )
+            return FakeResponse()
+
+        with patch("avaliacao_evidencias.providers_ai_service.urllib.request.urlopen", side_effect=fake_urlopen), \
+             patch("avaliacao_evidencias.providers_ai_service.time.sleep", side_effect=sleeps.append):
+            result = executar_provider(
+                provider="openrouter",
+                model="modelo/teste",
+                api_key="token",
+                prompt="Prompt especifico",
+                auditado="SEFAZ",
+                questao_base="q1",
+                coluna_evidencia="q1evi",
+                itens_afirmados=[],
+                pacote={"documentos": []},
+            )
+
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(sleeps, [7.0])
 
     def test_gemini_usa_google_genai_e_upload_de_arquivo_compativel(self):
         uploaded = []
@@ -556,6 +697,99 @@ class ProviderAbstractionTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "completed")
         self.assertEqual(uploaded, ["evidencia.txt"])
+
+    def test_gemini_retries_503_e_depois_conclui(self):
+        from google.genai import errors
+
+        sleeps = []
+        calls = []
+
+        class FakeFiles:
+            def upload(self, file):
+                return {"uri": f"uploaded://{Path(file).name}"}
+
+        class FakeModels:
+            def generate_content(self, model, contents, config):
+                calls.append(model)
+                if len(calls) == 1:
+                    raise errors.ServerError(
+                        503,
+                        {"error": {"code": 503, "status": "UNAVAILABLE", "message": "high demand"}},
+                        response=types.SimpleNamespace(headers={}),
+                    )
+                return types.SimpleNamespace(text=json.dumps({"status": "completed", "conclusoes": []}))
+
+        class FakeClient:
+            def __init__(self, api_key):
+                self.files = FakeFiles()
+                self.models = FakeModels()
+
+        fake_genai = types.SimpleNamespace(Client=FakeClient)
+        fake_google = types.SimpleNamespace(genai=fake_genai)
+
+        with patch.dict(sys.modules, {"google": fake_google, "google.genai": fake_genai}), \
+             patch("avaliacao_evidencias.providers_ai_service.time.sleep", side_effect=sleeps.append):
+            result = executar_provider(
+                provider="gemini",
+                model="gemini-3.1-flash-lite",
+                api_key="token",
+                prompt="Prompt especifico",
+                auditado="FUNARJ",
+                questao_base="q0103",
+                coluna_evidencia="q0103evi",
+                itens_afirmados=[],
+                pacote={"arquivos_upload": [], "documentos": []},
+            )
+
+        self.assertEqual(result, {"status": "completed", "conclusoes": []})
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(sleeps, [30.0])
+
+    def test_gemini_registra_erro_apos_retries_esgotados(self):
+        from google.genai import errors
+
+        sleeps = []
+        calls = []
+
+        class FakeFiles:
+            def upload(self, file):
+                return {"uri": f"uploaded://{Path(file).name}"}
+
+        class FakeModels:
+            def generate_content(self, model, contents, config):
+                calls.append(model)
+                raise errors.ServerError(
+                    503,
+                    {"error": {"code": 503, "status": "UNAVAILABLE", "message": "high demand"}},
+                    response=types.SimpleNamespace(headers={}),
+                )
+
+        class FakeClient:
+            def __init__(self, api_key):
+                self.files = FakeFiles()
+                self.models = FakeModels()
+
+        fake_genai = types.SimpleNamespace(Client=FakeClient)
+        fake_google = types.SimpleNamespace(genai=fake_genai)
+
+        with patch.dict(sys.modules, {"google": fake_google, "google.genai": fake_genai}), \
+             patch("avaliacao_evidencias.providers_ai_service.time.sleep", side_effect=sleeps.append):
+            result = executar_provider(
+                provider="gemini",
+                model="gemini-3.1-flash-lite",
+                api_key="token",
+                prompt="Prompt especifico",
+                auditado="FUNARJ",
+                questao_base="q0103",
+                coluna_evidencia="q0103evi",
+                itens_afirmados=[],
+                pacote={"arquivos_upload": [], "documentos": []},
+            )
+
+        self.assertEqual(result["status"], "error")
+        self.assertIn("503", result["error"])
+        self.assertEqual(len(calls), 4)
+        self.assertEqual(sleeps, [30.0, 60.0, 120.0])
 
 
 class RequestsPerMinuteLimiterTests(unittest.TestCase):
@@ -629,8 +863,100 @@ class RequestsPerMinuteLimiterTests(unittest.TestCase):
         with self.assertRaises(argparse.ArgumentTypeError):
             validar_rpm("1.5")
 
+    def test_parse_retry_after_segundos(self):
+        self.assertEqual(parse_retry_after("10"), 10.0)
+
+    def test_parse_retry_after_http_date(self):
+        retry_after = formatdate(1_700_000_030, usegmt=True)
+
+        self.assertEqual(parse_retry_after(retry_after, now=lambda: 1_700_000_000), 30.0)
+
+    def test_parse_retry_after_invalido(self):
+        self.assertIsNone(parse_retry_after("sem-data"))
+
+    def test_retry_after_usa_header_para_503(self):
+        from google.genai import errors
+
+        sleeps = []
+        calls = []
+
+        def unstable():
+            calls.append(1)
+            if len(calls) == 1:
+                raise errors.ServerError(
+                    503,
+                    {"error": {"code": 503, "status": "UNAVAILABLE", "message": "high demand"}},
+                    response=types.SimpleNamespace(headers={"Retry-After": "9"}),
+                )
+            return "ok"
+
+        result = executar_com_retry_transiente(unstable, sleeper=sleeps.append)
+
+        self.assertEqual(result, "ok")
+        self.assertEqual(sleeps, [9.0])
+        self.assertEqual(len(calls), 2)
+
+    def test_cli_usa_rpm_padrao_12(self):
+        capturados = []
+
+        class FakeLimiter:
+            def __init__(self, rpm):
+                capturados.append(rpm)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            survey_path = root / "survey.md"
+            survey_path.write_text(SURVEY_MD, encoding="utf-8")
+            respostas = root / "respostas.xlsx"
+            workbook = Workbook()
+            sheet = workbook.active
+            sheet.append(["id", "submitdate", "firstname"])
+            sheet.append([1, "2026-05-14 09:26:21.000", "SEFAZ"])
+            workbook.save(respostas)
+            evidencias = root / "evidencias"
+            evidencias.mkdir()
+
+            with patch("avaliacao_evidencias.pipeline.RequestsPerMinuteLimiter", FakeLimiter):
+                status = pipeline_main([
+                    str(respostas),
+                    str(evidencias),
+                    "--questionario",
+                    str(survey_path),
+                    "--list-only",
+                    "--quiet",
+                ])
+
+        self.assertEqual(status, 0)
+        self.assertEqual(capturados, [12])
+
 
 class NormalizacaoEvidenciaTests(unittest.TestCase):
+    def _write_pdf_simples(self, path, texto="Texto PDF teste"):
+        stream = f"BT /F1 12 Tf 72 720 Td ({texto}) Tj ET".encode("latin-1")
+        objetos = [
+            b"<< /Type /Catalog /Pages 2 0 R >>",
+            b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+            b"<< /Length " + str(len(stream)).encode("ascii") + b" >>\nstream\n" + stream + b"\nendstream",
+        ]
+        partes = [b"%PDF-1.4\n"]
+        offsets = [0]
+        for idx, obj in enumerate(objetos, start=1):
+            offsets.append(sum(len(parte) for parte in partes))
+            partes.append(f"{idx} 0 obj\n".encode("ascii") + obj + b"\nendobj\n")
+        xref_offset = sum(len(parte) for parte in partes)
+        xref = [b"xref\n0 6\n", b"0000000000 65535 f \n"]
+        for offset in offsets[1:]:
+            xref.append(f"{offset:010d} 00000 n \n".encode("ascii"))
+        partes.extend(xref)
+        partes.append(
+            b"trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n"
+            + str(xref_offset).encode("ascii")
+            + b"\n%%EOF\n"
+        )
+        path.write_bytes(b"".join(partes))
+
     def test_normaliza_texto_direto(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "evidencia.txt"
@@ -654,6 +980,53 @@ class NormalizacaoEvidenciaTests(unittest.TestCase):
         self.assertEqual(pacote.inventario, ["interno.txt"])
         self.assertEqual(pacote.documentos[0]["nome"], "interno.txt")
         self.assertEqual(pacote.documentos[0]["texto"], "texto interno")
+
+    def test_normaliza_pdf_com_texto_por_pagina(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "evidencia.pdf"
+            self._write_pdf_simples(path, "Texto PDF teste")
+
+            pacote = normalizar_evidencia(path)
+
+        self.assertEqual(pacote.erro, "")
+        self.assertEqual(pacote.tipo, "pdf")
+        self.assertEqual(pacote.documentos[0]["nome"], "evidencia.pdf")
+        self.assertEqual(pacote.documentos[0]["pagina"], 1)
+        self.assertIn("Texto PDF teste", pacote.documentos[0]["texto"])
+
+    def test_normaliza_pdf_sem_texto_retorna_lacuna(self):
+        try:
+            from pypdf import PdfWriter
+        except ModuleNotFoundError:
+            self.skipTest("pypdf nao instalado")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "sem_texto.pdf"
+            writer = PdfWriter()
+            writer.add_blank_page(width=72, height=72)
+            with path.open("wb") as file:
+                writer.write(file)
+
+            pacote = normalizar_evidencia(path)
+
+        self.assertEqual(pacote.tipo, "pdf")
+        self.assertEqual(pacote.documentos, [])
+        self.assertIn("pdf sem texto extraivel", pacote.erro)
+
+    def test_normaliza_zip_com_pdf_interno(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            pdf_path = root / "documento.pdf"
+            self._write_pdf_simples(pdf_path, "Texto PDF no zip")
+            zip_path = root / "evidencia.zip"
+            with zipfile.ZipFile(zip_path, "w") as archive:
+                archive.write(pdf_path, "documento.pdf")
+
+            pacote = normalizar_evidencia(zip_path)
+
+        self.assertEqual(pacote.erro, "")
+        self.assertEqual(pacote.documentos[0]["nome"], "documento.pdf")
+        self.assertEqual(pacote.documentos[0]["pagina"], 1)
+        self.assertIn("Texto PDF no zip", pacote.documentos[0]["texto"])
 
     def test_zip_com_path_traversal_retorna_erro(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -957,6 +1330,55 @@ class FluxoEndToEndTests(unittest.TestCase):
         self.assertIn('"status": "completed"', lines[0])
         self.assertEqual(report_rows[1][0], "SEFAZ")
         self.assertEqual(report_rows[1][2], "q2804[A]")
+
+    def test_cli_nao_chama_provider_quando_nao_ha_item_afirmado(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            survey_path = root / "survey.md"
+            survey_path.write_text(SURVEY_MD, encoding="utf-8")
+            respostas = root / "respostas.xlsx"
+            workbook = Workbook()
+            sheet = workbook.active
+            sheet.append(["id", "submitdate", "firstname", "q2804[A]", "q2804eviA", "q2804eviA[filecount]"])
+            sheet.append([
+                1,
+                "2026-05-14 09:26:21.000",
+                "SEFAZ",
+                "nao",
+                json.dumps([{"name": "Contratacao.txt", "filename": "fu_def", "ext": "txt"}]),
+                1,
+            ])
+            workbook.save(respostas)
+            evidencias = root / "evidencias"
+            auditado_dir = evidencias / "SEFAZ"
+            auditado_dir.mkdir(parents=True)
+            (auditado_dir / "Contratacao.txt").write_text("contratacao aprovada", encoding="utf-8")
+            prompts = root / "prompts"
+            prompts.mkdir()
+            (prompts / "q2804_A.md").write_text("criterios", encoding="utf-8")
+            out_dir = root / "out"
+
+            with patch("avaliacao_evidencias.pipeline.executar_provider", side_effect=AssertionError("provider chamado")):
+                status = pipeline_main([
+                    str(respostas),
+                    str(evidencias),
+                    "--questionario",
+                    str(survey_path),
+                    "--provider",
+                    "fake",
+                    "--prompts-dir",
+                    str(prompts),
+                    "--out-dir",
+                    str(out_dir),
+                    "--quiet",
+                ])
+
+            registro = json.loads((out_dir / "analyses.jsonl").read_text(encoding="utf-8").strip())
+
+        self.assertEqual(status, 0)
+        self.assertEqual(registro["status"], "completed")
+        self.assertEqual(registro["result"]["conclusoes"], [])
+        self.assertEqual(registro["result"]["skip_reason"], "nenhum_item_afirmado")
 
     def test_cli_gemini_sem_credencial_registra_erro_sem_rede(self):
         with tempfile.TemporaryDirectory() as tmp:

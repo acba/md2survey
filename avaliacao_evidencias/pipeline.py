@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import difflib
 import hashlib
+import io
 import json
 import datetime as dt
 import os
@@ -12,8 +13,6 @@ import sys
 import tempfile
 import time
 import unicodedata
-import urllib.error
-import urllib.request
 import zipfile
 from urllib.parse import unquote
 from dataclasses import dataclass
@@ -22,6 +21,8 @@ from typing import Any, Callable, Iterable
 
 import md2lss
 from openpyxl import Workbook, load_workbook
+
+from .providers_ai_service import executar_provider
 
 
 @dataclass(frozen=True)
@@ -497,18 +498,34 @@ def normalizar_evidencia(caminho: str | Path) -> PacoteEvidencia:
                 for name in names:
                     if name.endswith("/"):
                         continue
-                    if Path(name).suffix.lower() in {".txt", ".md", ".csv"}:
+                    suffix_interno = Path(name).suffix.lower()
+                    if suffix_interno in {".txt", ".md", ".csv"}:
                         data = archive.read(name)
                         try:
                             texto = data.decode("utf-8")
                         except UnicodeDecodeError:
                             texto = data.decode("latin-1")
                         documentos.append({"nome": name, "texto": texto})
+                    elif suffix_interno == ".pdf":
+                        pdf_docs, erro_pdf = _extrair_texto_pdf_bytes(name, archive.read(name))
+                        if pdf_docs:
+                            documentos.extend(pdf_docs)
+                        else:
+                            documentos.append({"nome": name, "erro": erro_pdf})
                     else:
                         documentos.append({"nome": name, "nao_suportado": True})
                 return PacoteEvidencia(caminho=path, tipo="zip", documentos=documentos, inventario=names)
         except zipfile.BadZipFile:
             return PacoteEvidencia(caminho=path, tipo="zip", documentos=[], inventario=[], erro="zip invalido")
+    if suffix == ".pdf":
+        documentos, erro = _extrair_texto_pdf(path)
+        return PacoteEvidencia(
+            caminho=path,
+            tipo="pdf",
+            documentos=documentos,
+            inventario=[path.name],
+            erro=erro,
+        )
     if suffix == ".xlsx":
         workbook = load_workbook(path, read_only=True, data_only=True)
         try:
@@ -570,6 +587,40 @@ def _extrair_texto_docx(caminho: str | Path) -> tuple[str, str]:
         for row in table.rows:
             partes.append("\t".join(cell.text for cell in row.cells))
     return "\n".join(partes), ""
+
+
+def _extrair_texto_pdf_reader(nome: str, reader: Any) -> tuple[list[dict[str, Any]], str]:
+    documentos: list[dict[str, Any]] = []
+    for index, page in enumerate(reader.pages, start=1):
+        texto = (page.extract_text() or "").strip()
+        if texto:
+            documentos.append({"nome": nome, "pagina": index, "texto": texto})
+    if not documentos:
+        return [], "pdf sem texto extraivel"
+    return documentos, ""
+
+
+def _extrair_texto_pdf(caminho: str | Path) -> tuple[list[dict[str, Any]], str]:
+    try:
+        from pypdf import PdfReader
+    except ModuleNotFoundError:
+        return [], "pypdf nao instalado para normalizar PDF"
+    try:
+        path = Path(caminho)
+        return _extrair_texto_pdf_reader(path.name, PdfReader(path))
+    except Exception as exc:
+        return [], f"erro ao normalizar PDF: {exc}"
+
+
+def _extrair_texto_pdf_bytes(nome: str, data: bytes) -> tuple[list[dict[str, Any]], str]:
+    try:
+        from pypdf import PdfReader
+    except ModuleNotFoundError:
+        return [], "pypdf nao instalado para normalizar PDF"
+    try:
+        return _extrair_texto_pdf_reader(nome, PdfReader(io.BytesIO(data)))
+    except Exception as exc:
+        return [], f"erro ao normalizar PDF: {exc}"
 
 
 def _slug_ascii(valor: str, *, fallback: str = "evidencia", max_len: int = 80) -> str:
@@ -732,356 +783,6 @@ def deve_processar_identidade(
     return True
 
 
-def executar_julgamento_fake(
-    *,
-    auditado: str,
-    questao_base: str,
-    coluna_evidencia: str,
-    itens_afirmados: list[ItemAfirmado],
-    checklist: str,
-    pacote: dict[str, Any],
-) -> dict[str, Any]:
-    del auditado, questao_base, checklist
-    documentos = pacote.get("documentos", []) if isinstance(pacote, dict) else []
-    referencias = [
-        documento.get("nome")
-        for documento in documentos
-        if isinstance(documento, dict) and documento.get("nome")
-    ]
-    conclusoes = []
-    for item in itens_afirmados:
-        conclusoes.append(
-            {
-                "item_codigo": item.codigo,
-                "item_texto": item.texto,
-                "afirmacao_auditado": item.afirmacao,
-                "estado": "inconclusivo",
-                "justificativa": "Provider fake nao emite conclusao substantiva.",
-                "lacunas": ["Analise real de IA nao executada."],
-                "arquivos_referenciados": referencias,
-                "trechos_ou_elementos": [],
-                "paginas_ou_localizacao": [],
-                "coluna_evidencia": coluna_evidencia,
-            }
-        )
-    return {"status": "completed", "conclusoes": conclusoes}
-
-
-ESTADOS_CONFORMIDADE = {"conforme", "nao_conforme", "inconclusivo", "erro"}
-CONCLUSAO_CAMPOS_OBRIGATORIOS = {
-    "item_codigo",
-    "item_texto",
-    "afirmacao_auditado",
-    "estado",
-    "justificativa",
-    "lacunas",
-    "arquivos_referenciados",
-    "trechos_ou_elementos",
-    "paginas_ou_localizacao",
-}
-
-
-def validar_resultado_ia(resultado: dict[str, Any]) -> dict[str, Any]:
-    if not isinstance(resultado, dict):
-        raise ValueError("resultado de IA deve ser objeto JSON")
-    status = resultado.get("status", "completed")
-    if status not in {"completed", "error"}:
-        raise ValueError(f"status invalido: {status}")
-    if status == "error":
-        if not resultado.get("error"):
-            raise ValueError("resultado error precisa de campo error")
-        return resultado
-    conclusoes = resultado.get("conclusoes")
-    if not isinstance(conclusoes, list):
-        raise ValueError("resultado completed precisa de lista conclusoes")
-    for idx, conclusao in enumerate(conclusoes):
-        if not isinstance(conclusao, dict):
-            raise ValueError(f"conclusao {idx} deve ser objeto")
-        faltantes = CONCLUSAO_CAMPOS_OBRIGATORIOS.difference(conclusao)
-        if faltantes:
-            raise ValueError(f"conclusao {idx} sem campos: {', '.join(sorted(faltantes))}")
-        if conclusao["estado"] not in ESTADOS_CONFORMIDADE:
-            raise ValueError(f"estado invalido: {conclusao['estado']}")
-        for campo in ["lacunas", "arquivos_referenciados", "trechos_ou_elementos", "paginas_ou_localizacao"]:
-            if not isinstance(conclusao[campo], list):
-                raise ValueError(f"campo {campo} deve ser lista")
-    resultado["status"] = status
-    return resultado
-
-
-def executar_provider(
-    *,
-    provider: str,
-    model: str,
-    api_key: str,
-    prompt: str,
-    auditado: str,
-    questao_base: str,
-    coluna_evidencia: str,
-    itens_afirmados: list[ItemAfirmado],
-    pacote: dict[str, Any],
-) -> dict[str, Any]:
-    if provider == "fake":
-        return validar_resultado_ia(
-            executar_julgamento_fake(
-                auditado=auditado,
-                questao_base=questao_base,
-                coluna_evidencia=coluna_evidencia,
-                itens_afirmados=itens_afirmados,
-                checklist=prompt,
-                pacote=pacote,
-            )
-        )
-    if provider == "openrouter" and not api_key:
-        return {"status": "error", "error": "OPENROUTER_API_KEY nao configurada para provider openrouter"}
-    if provider == "gemini" and not api_key:
-        return {"status": "error", "error": "GEMINI_API_KEY nao configurada para provider gemini"}
-    if provider == "openrouter":
-        return executar_julgamento_openrouter(
-            api_key=api_key,
-            model=model,
-            prompt=prompt,
-            auditado=auditado,
-            questao_base=questao_base,
-            coluna_evidencia=coluna_evidencia,
-            itens_afirmados=itens_afirmados,
-            pacote=pacote,
-        )
-    if provider == "gemini":
-        return executar_julgamento_gemini_genai(
-            api_key=api_key,
-            model=model,
-            prompt=prompt,
-            auditado=auditado,
-            questao_base=questao_base,
-            coluna_evidencia=coluna_evidencia,
-            itens_afirmados=itens_afirmados,
-            pacote=pacote,
-        )
-    return {"status": "error", "error": f"provider nao suportado: {provider}/{model}"}
-
-
-def _conteudo_provider_textual(
-    *,
-    prompt: str,
-    auditado: str,
-    questao_base: str,
-    coluna_evidencia: str,
-    itens_afirmados: list[ItemAfirmado],
-    pacote: dict[str, Any],
-) -> str:
-    payload = {
-        "prompt_de_analise": prompt,
-        "auditado": auditado,
-        "questao_base": questao_base,
-        "coluna_evidencia": coluna_evidencia,
-        "itens_afirmados": [item.__dict__ for item in itens_afirmados],
-        "pacote_evidencia": pacote,
-        "saida_obrigatoria": {
-            "status": "completed",
-            "conclusoes": [
-                {
-                    "item_codigo": "...",
-                    "item_texto": "...",
-                    "afirmacao_auditado": "...",
-                    "estado": "conforme|nao_conforme|inconclusivo|erro",
-                    "justificativa": "...",
-                    "lacunas": [],
-                    "arquivos_referenciados": [],
-                    "trechos_ou_elementos": [],
-                    "paginas_ou_localizacao": [],
-                }
-            ],
-        },
-    }
-    return json.dumps(payload, ensure_ascii=False, indent=2)
-
-
-def _json_schema_response_format() -> dict[str, Any]:
-    properties = {
-        "item_codigo": {"type": "string"},
-        "item_texto": {"type": "string"},
-        "afirmacao_auditado": {"type": "string"},
-        "estado": {"type": "string", "enum": sorted(ESTADOS_CONFORMIDADE)},
-        "justificativa": {"type": "string"},
-        "lacunas": {"type": "array", "items": {"type": "string"}},
-        "arquivos_referenciados": {"type": "array", "items": {"type": "string"}},
-        "trechos_ou_elementos": {"type": "array", "items": {"type": "string"}},
-        "paginas_ou_localizacao": {"type": "array", "items": {"type": "string"}},
-    }
-    return {
-        "type": "json_schema",
-        "json_schema": {
-            "name": "resultado_avaliacao_evidencia",
-            "strict": True,
-            "schema": {
-                "type": "object",
-                "additionalProperties": False,
-                "properties": {
-                    "status": {"type": "string", "enum": ["completed", "error"]},
-                    "conclusoes": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "additionalProperties": False,
-                            "properties": properties,
-                            "required": sorted(CONCLUSAO_CAMPOS_OBRIGATORIOS),
-                        },
-                    },
-                    "error": {"type": "string"},
-                },
-                "required": ["status"],
-            },
-        },
-    }
-
-
-def executar_julgamento_openrouter(
-    *,
-    api_key: str,
-    model: str,
-    prompt: str,
-    auditado: str,
-    questao_base: str,
-    coluna_evidencia: str,
-    itens_afirmados: list[ItemAfirmado],
-    pacote: dict[str, Any],
-) -> dict[str, Any]:
-    body = {
-        "model": model,
-        "messages": [
-            {
-                "role": "user",
-                "content": _conteudo_provider_textual(
-                    prompt=prompt,
-                    auditado=auditado,
-                    questao_base=questao_base,
-                    coluna_evidencia=coluna_evidencia,
-                    itens_afirmados=itens_afirmados,
-                    pacote=pacote,
-                ),
-            }
-        ],
-        "response_format": _json_schema_response_format(),
-    }
-    request = urllib.request.Request(
-        "https://openrouter.ai/api/v1/chat/completions",
-        data=json.dumps(body).encode("utf-8"),
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=120) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-        content = payload["choices"][0]["message"]["content"]
-        return validar_resultado_ia(json.loads(content))
-    except (urllib.error.URLError, TimeoutError, KeyError, IndexError, TypeError, json.JSONDecodeError, ValueError) as exc:
-        return {"status": "error", "error": f"erro ao chamar OpenRouter: {exc}"}
-
-
-def executar_julgamento_gemini_genai(
-    *,
-    api_key: str,
-    model: str,
-    prompt: str,
-    auditado: str,
-    questao_base: str,
-    coluna_evidencia: str,
-    itens_afirmados: list[ItemAfirmado],
-    pacote: dict[str, Any],
-) -> dict[str, Any]:
-    try:
-        from google import genai
-    except Exception as exc:
-        return {"status": "error", "error": f"google-genai nao disponivel: {exc}"}
-    client = genai.Client(api_key=api_key)
-    uploaded = []
-    for arquivo in pacote.get("arquivos_upload", []):
-        try:
-            uploaded.append(client.files.upload(file=arquivo))
-        except Exception as exc:
-            return {"status": "error", "error": f"erro ao fazer upload Gemini de {arquivo}: {exc}"}
-    contents = [
-        _conteudo_provider_textual(
-            prompt=prompt,
-            auditado=auditado,
-            questao_base=questao_base,
-            coluna_evidencia=coluna_evidencia,
-            itens_afirmados=itens_afirmados,
-            pacote={k: v for k, v in pacote.items() if k != "arquivos_upload"},
-        )
-    ]
-    contents.extend(uploaded)
-    try:
-        response = client.models.generate_content(
-            model=model,
-            contents=contents,
-            config={"response_mime_type": "application/json"},
-        )
-        return validar_resultado_ia(json.loads(response.text))
-    except (TypeError, json.JSONDecodeError, ValueError, Exception) as exc:
-        return {"status": "error", "error": f"erro ao chamar Gemini: {exc}"}
-
-
-def executar_julgamento_gemini(
-    *,
-    api_key: str,
-    model: str,
-    auditado: str,
-    questao_base: str,
-    coluna_evidencia: str,
-    itens_afirmados: list[ItemAfirmado],
-    checklist: str,
-    pacote: dict[str, Any],
-) -> dict[str, Any]:
-    prompt = {
-        "auditado": auditado,
-        "questao_base": questao_base,
-        "coluna_evidencia": coluna_evidencia,
-        "itens_afirmados": [item.__dict__ for item in itens_afirmados],
-        "checklist": checklist,
-        "pacote_evidencia": pacote,
-        "instrucoes": [
-            "Avalie somente os criterios do checklist.",
-            "Nao use conhecimento externo para suprir lacunas.",
-            "Retorne somente JSON com status e conclusoes.",
-            "Use estados: conforme, nao_conforme, inconclusivo, erro.",
-        ],
-    }
-    body = {
-        "contents": [
-            {
-                "parts": [
-                    {
-                        "text": json.dumps(prompt, ensure_ascii=False),
-                    }
-                ]
-            }
-        ],
-        "generationConfig": {"responseMimeType": "application/json"},
-    }
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-    request = urllib.request.Request(
-        url,
-        data=json.dumps(body).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=120) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
-        return {"status": "error", "error": f"erro ao chamar Gemini: {exc}"}
-    try:
-        text = payload["candidates"][0]["content"]["parts"][0]["text"]
-        result = json.loads(text)
-    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-        return {"status": "error", "error": f"resposta Gemini invalida: {exc}", "raw": payload}
-    if result.get("status") not in {"completed", "error"}:
-        result["status"] = "completed"
-    return result
-
-
 def _join_value(value: Any) -> str:
     if isinstance(value, list):
         return "; ".join(str(item) for item in value)
@@ -1165,8 +866,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--rpm",
         type=validar_rpm,
-        default=0,
-        help="Limita requests por minuto para providers remotos; 0 desativa.",
+        default=12,
+        help="Limita requests por minuto para providers remotos; padrao 12, 0 desativa.",
     )
     parser.add_argument("--skip-errors", action="store_true")
     parser.add_argument(
@@ -1393,6 +1094,40 @@ def main(argv: list[str] | None = None) -> int:
             itens=[item.codigo for item in itens],
             **base_log,
         )
+        if not itens:
+            result = {
+                "status": "completed",
+                "conclusoes": [],
+                "skip_reason": "nenhum_item_afirmado",
+            }
+            gravar_registro_analise(
+                checkpoint,
+                {
+                    "identity": identity,
+                    "status": result["status"],
+                    "auditado": analise.auditado,
+                    "questao": questao_base,
+                    "coluna_evidencia": analise.coluna_evidencia,
+                    "evidencia": analise.nome_original_evidencia,
+                    "provider": args.provider,
+                    "model": args.model,
+                    "result": result,
+                    "error": "",
+                    "finished_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+                },
+            )
+            registros[identity] = {"identity": identity, "status": result["status"]}
+            total_processadas += 1
+            total_concluidas += 1
+            log_event(
+                "analysis_skipped_no_items",
+                "Analise concluida sem chamada ao provider porque nenhum item foi afirmado.",
+                quiet=args.quiet,
+                identity=identity,
+                checkpoint=str(checkpoint),
+                **base_log,
+            )
+            continue
         pacote = normalizar_evidencia(resolucao.caminho)
         log_event(
             "evidence_normalized",

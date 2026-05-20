@@ -4,6 +4,12 @@ Pipeline generico para pre-analise de evidencias enviadas por auditados em quest
 
 O pipeline e generico. Os prompts nao sao genericos: cada questionario deve ter seu proprio diretorio de prompts, com um arquivo por questao ou item especifico.
 
+## Organizacao da camada de IA
+
+A logica de providers de IA fica isolada em `avaliacao_evidencias/providers_ai_service.py`. Esse modulo nao importa `pipeline.py` nem depende das dataclasses do questionario: ele recebe itens afirmados por interface estrutural, como objetos com atributos `codigo`, `texto` e `afirmacao`, ou dicionarios equivalentes.
+
+`pipeline.py` e `consolidacao.py` apenas preparam contexto, evidencias, checkpoint e controle de fluxo; a chamada a Gemini, OpenRouter, provider fake, retry transiente, reparo de JSON e validacao da resposta ficam no servico de providers.
+
 ## O que o pipeline faz
 
 1. Le a planilha de respostas `.xlsx`.
@@ -12,10 +18,11 @@ O pipeline e generico. Os prompts nao sao genericos: cada questionario deve ter 
 4. Para cada evidencia, localiza o arquivo em `evidencias/<auditado>/<name>`, usando o atributo `name` do JSON de upload.
 5. Resolve o prompt especifico da questao.
 6. Monta o pacote de evidencia, incluindo texto extraido, inventario de ZIP e arquivos compativeis para upload no Gemini.
-7. Chama o provider configurado: `fake`, `gemini` ou `openrouter`.
-8. Valida a resposta JSON do modelo.
-9. Grava checkpoint incremental em JSONL.
-10. Gera `relatorio_conformidade.xlsx`.
+7. Se nenhum item foi afirmado pelo auditado, grava a analise como concluida sem chamar provider.
+8. Chama o provider configurado: `fake`, `gemini` ou `openrouter`.
+9. Repara e valida a resposta JSON do modelo com `json-repair`.
+10. Grava checkpoint incremental em JSONL.
+11. Gera `relatorio_conformidade.xlsx`.
 
 ## Estrutura esperada
 
@@ -178,13 +185,15 @@ Execute:
   --out-dir .saida_analise
 ```
 
-O OpenRouter recebe o prompt e o pacote de evidencia normalizado em texto pela API de Chat Completions. O request inclui `response_format` com JSON schema quando suportado pelo modelo.
+O OpenRouter recebe o prompt e o pacote de evidencia normalizado em texto pela API de Chat Completions. O request inclui `response_format` com JSON schema quando suportado pelo modelo. Para PDFs, o pipeline extrai texto com `pypdf` e envia o conteudo textual normalizado; PDFs sem texto extraivel ficam registrados como lacuna tecnica no pacote.
 
 ## Controlar requests por minuto
 
 Use `--rpm N` para limitar a taxa de chamadas aos providers remotos. Por exemplo, `--rpm 30` limita a execucao a no maximo 30 chamadas por minuto para `gemini` ou `openrouter`.
 
-O valor padrao e `0`, que desativa o limite e preserva o comportamento anterior. O provider `fake` nao e limitado por RPM.
+O valor padrao e `12`, equivalente a uma chamada a cada 5 segundos. Use `--rpm 0` para desativar o limite. O provider `fake` nao e limitado por RPM.
+
+Quando o provider retorna erro transiente (`429`, `500`, `502`, `503` ou `504`), o pipeline tenta novamente antes de gravar erro no checkpoint. Se houver header `Retry-After`, esse tempo e respeitado; sem o header, sao usados intervalos de `30s`, `60s` e `120s`. Se todas as tentativas falharem, o item recebe `status = error` e o processamento segue para o proximo item.
 
 ## Listar analises sem processar
 
@@ -267,6 +276,8 @@ Depois de executar a pre-analise com mais de um provider/modelo, gere um parecer
 A etapa le um ou mais `analyses.jsonl`, agrupa os resultados por `auditado + questao + coluna_evidencia + evidencia`, coleta as conclusoes emitidas pelos modelos e chama um modelo juiz para produzir um `Parecer consolidado de evidencia`.
 
 A evidencia e reenviada ao juiz quando `--evidencias-root` e informado. Sem essa opcao, o juiz recebe apenas as opinioes dos modelos e deve registrar a lacuna de evidencia direta.
+
+A consolidacao usa a mesma camada de provider do processamento principal, portanto tambem aplica retries para erros transientes antes de registrar erro em `consolidated.jsonl`.
 
 Opcionalmente, informe uma opiniao da equipe de auditoria:
 
