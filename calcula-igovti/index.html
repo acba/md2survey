@@ -6,6 +6,9 @@
   <title>Calculadora iGovTI</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/simple-statistics@7.8.8/dist/simple-statistics.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tsne-js@1.0.3/build/tsne.min.js"></script>
   <style>
     :root {
       --ink: #152033;
@@ -152,6 +155,144 @@
       padding-right: 4px;
     }
 
+    .diagram-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .toggle-field {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .diagram-stage {
+      min-height: 460px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(#f7fafc 1px, transparent 1px),
+        linear-gradient(90deg, #f7fafc 1px, transparent 1px),
+        #ffffff;
+      background-size: 24px 24px;
+    }
+
+    .diagram-svg {
+      display: block;
+      min-width: 100%;
+    }
+
+    .diagram-link {
+      fill: none;
+      stroke: #c7d3de;
+      stroke-width: 2;
+    }
+
+    .diagram-link.active {
+      stroke: var(--accent);
+      stroke-width: 3;
+    }
+
+    .diagram-node {
+      cursor: pointer;
+    }
+
+    .diagram-node rect {
+      fill: #fff;
+      stroke: #cbd6e2;
+      stroke-width: 1.2;
+      rx: 8;
+    }
+
+    .diagram-node.aggregate rect { fill: #f8fbfd; }
+    .diagram-node.question rect { fill: #fffdf7; stroke: #e8d49b; }
+    .diagram-node.invalid rect { fill: #fff8eb; stroke: #d39128; }
+    .diagram-node.selected rect { stroke: var(--accent); stroke-width: 2.5; }
+    .diagram-node.path rect { stroke: #72a5b0; }
+
+    .diagram-title {
+      font-size: 12px;
+      font-weight: 700;
+      fill: var(--ink);
+    }
+
+    .diagram-subtitle {
+      font-size: 10.5px;
+      fill: var(--muted);
+    }
+
+    .diagram-value {
+      font-size: 12px;
+      font-weight: 700;
+      fill: var(--accent);
+    }
+
+    .diagram-toggle {
+      fill: #eaf4f6;
+      stroke: var(--accent);
+      stroke-width: 1;
+    }
+
+    .diagram-toggle-label {
+      pointer-events: none;
+    }
+
+    .diagram-empty {
+      display: grid;
+      place-items: center;
+      min-height: 420px;
+      color: var(--muted);
+    }
+
+    .node-detail {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfcfe;
+    }
+
+    .detail-item {
+      min-width: 0;
+    }
+
+    .detail-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .detail-item b {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .tree-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
     .node {
       margin: 8px 0 8px 18px;
       border-left: 2px solid #d7e2ea;
@@ -169,6 +310,17 @@
       border: 1px solid var(--line);
       border-radius: 6px;
       background: #fff;
+    }
+
+    .node.invalid > .node-line {
+      border-color: #f1d4a6;
+      background: #fff8eb;
+    }
+
+    .validation-note {
+      color: var(--warn);
+      font-size: 12px;
+      margin: 5px 0 0 8px;
     }
 
     .node-id { font-weight: 700; }
@@ -219,10 +371,146 @@
     .small { font-size: 12px; }
     .hidden { display: none; }
 
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 10px 14px 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tab-btn {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      background: #eef3f7;
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .tab-panel.active.shell { display: grid; }
+
+    .analytics-shell {
+      display: grid;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .analytics-controls {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(160px, 1fr));
+      gap: 10px;
+      align-items: end;
+    }
+
+    .field {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .field input, .field select {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 9px;
+      background: #fff;
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .analytics-card {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .analytics-card.span-3 { grid-column: span 3; }
+    .analytics-card.span-4 { grid-column: span 4; }
+    .analytics-card.span-5 { grid-column: span 5; }
+    .analytics-card.span-6 { grid-column: span 6; }
+    .analytics-card.span-7 { grid-column: span 7; }
+    .analytics-card.span-8 { grid-column: span 8; }
+    .analytics-card.span-12 { grid-column: span 12; }
+
+    .analytics-card .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .analytics-card .card-body { padding: 12px; }
+
+    .chart {
+      width: 100%;
+      min-height: 340px;
+    }
+
+    .chart.small-chart { min-height: 260px; }
+
+    .insight-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .insight {
+      padding: 9px 10px;
+      border-left: 4px solid var(--accent);
+      border-radius: 6px;
+      background: #f4fafb;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 8px;
+      color: var(--muted);
+      background: #fff;
+      font-size: 12px;
+    }
+
     @media (max-width: 1150px) {
       .shell { grid-template-columns: 1fr; }
       textarea { min-height: 420px; }
       .tree { max-height: none; }
+      .node-detail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .analytics-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .analytics-card.span-3,
+      .analytics-card.span-4,
+      .analytics-card.span-5,
+      .analytics-card.span-6,
+      .analytics-card.span-7,
+      .analytics-card.span-8 { grid-column: span 12; }
+    }
+
+    @media (max-width: 680px) {
+      .tabs { overflow-x: auto; }
+      .analytics-controls { grid-template-columns: 1fr; }
+      .meta-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -239,7 +527,13 @@
     </div>
   </header>
 
-  <main class="shell">
+  <nav class="tabs" aria-label="Navegação principal">
+    <button class="tab-btn active" type="button" data-tab="calculatorTab">Calculadora</button>
+    <button class="tab-btn" type="button" data-tab="resultsTab">Resultados</button>
+    <button class="tab-btn" type="button" data-tab="analyticsTab">Análises Estatísticas</button>
+  </nav>
+
+  <main id="calculatorTab" class="tab-panel active shell">
     <section class="panel">
       <div class="panel-head">
         <h2>Estrutura YAML</h2>
@@ -268,6 +562,23 @@
           <div class="metric"><b id="maturityValue">-</b><span>Nível de maturidade</span></div>
           <div class="metric"><b id="entitiesValue">0</b><span>Registros importados</span></div>
         </div>
+        <div class="diagram-toolbar">
+          <h3>Diagrama do índice</h3>
+          <div class="actions">
+            <label class="toggle-field"><input id="showDetachedAggregates" type="checkbox"> Agregados avulsos</label>
+            <button id="expandDiagramBtn" type="button">Expandir</button>
+            <button id="collapseDiagramBtn" type="button">Recolher</button>
+            <button id="fitDiagramBtn" type="button">Centralizar</button>
+            <button id="downloadSvgBtn" type="button">Exportar SVG</button>
+            <button id="downloadPngBtn" type="button">Exportar PNG</button>
+          </div>
+        </div>
+        <div id="diagramStage" class="diagram-stage"></div>
+        <div id="nodeDetail" class="node-detail"></div>
+        <div class="tree-title">
+          <h3>Memória de cálculo</h3>
+          <span class="small muted" id="treeSummary"></span>
+        </div>
         <div id="tree" class="tree"></div>
       </div>
     </section>
@@ -293,7 +604,7 @@
     </section>
   </main>
 
-  <section class="full">
+  <section id="resultsTab" class="tab-panel full">
     <div class="panel">
       <div class="panel-head">
         <h2>Resultados</h2>
@@ -301,6 +612,79 @@
       </div>
       <div class="panel-body">
         <div id="resultsTable" class="table-wrap"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="analyticsTab" class="tab-panel">
+    <div class="analytics-shell">
+      <div id="analyticsEmpty" class="notice">Calcule os resultados antes de acessar as análises estatísticas.</div>
+      <div id="analyticsContent" class="stack hidden">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Análises Estatísticas</h2>
+            <div class="actions">
+              <button id="downloadAnalyticsCsvBtn" type="button">Exportar análise CSV</button>
+              <button id="downloadAnalyticsJsonBtn" type="button">Exportar análise JSON</button>
+            </div>
+          </div>
+          <div class="panel-body analytics-controls">
+            <div class="field">
+              <label for="analyticsVariableScope">Variáveis</label>
+              <select id="analyticsVariableScope">
+                <option value="aggregates">Agregados</option>
+                <option value="all">Tudo numérico</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="analyticsClusterCount">Clusters</label>
+              <input id="analyticsClusterCount" type="number" min="2" max="10" value="4">
+            </div>
+            <div class="field">
+              <label for="analyticsEmbeddingMethod">Projeção</label>
+              <select id="analyticsEmbeddingMethod">
+                <option value="tsne">t-SNE</option>
+                <option value="pca">PCA 2D</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="analyticsEntitySelect">Organização</label>
+              <select id="analyticsEntitySelect"></select>
+            </div>
+            <div class="field">
+              <label for="analyticsSearch">Busca</label>
+              <input id="analyticsSearch" type="search" placeholder="Filtrar organização">
+            </div>
+          </div>
+        </div>
+
+        <div class="analytics-grid">
+          <div class="analytics-card span-3"><div class="card-head"><h3>Organizações</h3></div><div class="card-body metric"><b id="anOrgCount">-</b><span>registros analisados</span></div></div>
+          <div class="analytics-card span-3"><div class="card-head"><h3>Média iGovTI</h3></div><div class="card-body metric"><b id="anMeanRoot">-</b><span>índice raiz médio</span></div></div>
+          <div class="analytics-card span-3"><div class="card-head"><h3>Mediana</h3></div><div class="card-body metric"><b id="anMedianRoot">-</b><span>índice raiz mediano</span></div></div>
+          <div class="analytics-card span-3"><div class="card-head"><h3>Desvio padrão</h3></div><div class="card-body metric"><b id="anStdRoot">-</b><span>dispersão geral</span></div></div>
+
+          <div class="analytics-card span-4"><div class="card-head"><h3>Níveis de maturidade</h3></div><div class="card-body"><div id="maturityChart" class="chart small-chart"></div></div></div>
+          <div class="analytics-card span-4"><div class="card-head"><h3>Ranking geral</h3></div><div class="card-body"><div id="rankingTable" class="table-wrap"></div></div></div>
+          <div class="analytics-card span-4"><div class="card-head"><h3>Insights automáticos</h3></div><div class="card-body"><div id="insightsList" class="insight-list"></div></div></div>
+
+          <div class="analytics-card span-6"><div class="card-head"><h3>Correlação Pearson</h3><span id="correlationSummary" class="pill"></span></div><div class="card-body"><div id="pearsonHeatmap" class="chart"></div></div></div>
+          <div class="analytics-card span-6"><div class="card-head"><h3>Rede de dependências</h3></div><div class="card-body"><div id="correlationNetwork" class="chart"></div></div></div>
+          <div class="analytics-card span-12"><div class="card-head"><h3>Ranking de correlações e dependências</h3></div><div class="card-body"><div id="correlationTable" class="table-wrap"></div></div></div>
+
+          <div class="analytics-card span-6"><div class="card-head"><h3>Clusters PCA</h3></div><div class="card-body"><div id="pcaScatter" class="chart"></div></div></div>
+          <div class="analytics-card span-6"><div class="card-head"><h3>Clusters t-SNE / projeção 2D</h3></div><div class="card-body"><div id="embeddingScatter" class="chart"></div></div></div>
+
+          <div class="analytics-card span-6"><div class="card-head"><h3>Benchmarking</h3></div><div class="card-body"><div id="benchmarkTable" class="table-wrap"></div></div></div>
+          <div class="analytics-card span-6"><div class="card-head"><h3>Fragilidades sistêmicas</h3></div><div class="card-body"><div id="weaknessChart" class="chart"></div></div></div>
+
+          <div class="analytics-card span-7"><div class="card-head"><h3>Exploração individual</h3><span id="selectedOrgBadge" class="pill"></span></div><div class="card-body"><div id="individualRadar" class="chart"></div></div></div>
+          <div class="analytics-card span-5"><div class="card-head"><h3>Perfil e gaps</h3></div><div class="card-body"><div id="individualProfile" class="table-wrap"></div></div></div>
+
+          <div class="analytics-card span-6"><div class="card-head"><h3>Distribuições</h3></div><div class="card-body"><div id="distributionChart" class="chart"></div></div></div>
+          <div class="analytics-card span-6"><div class="card-head"><h3>PCA e explicabilidade</h3></div><div class="card-body"><div id="pcaExplainChart" class="chart"></div></div></div>
+          <div class="analytics-card span-12"><div class="card-head"><h3>Estatística descritiva</h3></div><div class="card-body"><div id="descriptiveTable" class="table-wrap"></div></div></div>
+        </div>
       </div>
     </div>
   </section>
@@ -315,13 +699,32 @@ preprocessamento:
   nao_se_aplica: parcial
 
 categorias:
+  # Codigos exportados pelo LimeSurvey para questoes [adoption]
+  naoad: 0
+  adfor: 0.05
+  admen: 0.15
+  adpar: 0.5
+  admai: 1
+  naoap: 0.5
+
+  # Codigos exportados pelas escalas sim/nao
+  sim: 1
+  nao: 0
+
+  # Rotulos mantidos como fallback para planilhas ja decodificadas
   "Não adota": 0
+  "Não adota.": 0
   "Há decisão formal ou plano aprovado para adotá-lo": 0.05
+  "Há decisão formal ou plano aprovado para adotá-lo.": 0.05
   "Adota em menor parte": 0.15
+  "Adota em menor parte.": 0.15
   "Adota parcialmente": 0.5
+  "Adota parcialmente.": 0.5
   "Não se aplica": 0.5
+  "Não se aplica.": 0.5
   "Adota": 1
   "Adota em maior parte ou totalmente": 1
+  "Adota em maior parte ou totalmente.": 1
   "Sim": 1
   "Não": 0
   "Nao": 0
@@ -529,7 +932,18 @@ agregados:
       results: [],
       idColumn: null,
       availableQuestions: new Set(),
-      selectedEntity: null
+      selectedEntity: null,
+      selectedNodeId: null,
+      collapsedNodes: new Set(),
+      aggregateValidation: new Map(),
+      showDetachedAggregates: false,
+      activeTab: 'calculatorTab',
+      analytics: null,
+      analyticsVariableScope: 'aggregates',
+      clusterCount: 4,
+      embeddingMethod: 'tsne',
+      selectedAnalyticsEntity: null,
+      analyticsSearch: ''
     };
 
     const $ = (id) => document.getElementById(id);
@@ -539,6 +953,21 @@ agregados:
     $('yamlInput').addEventListener('change', readYamlFile);
     $('xlsxInput').addEventListener('change', readXlsxFile);
     $('calculateBtn').addEventListener('click', calculateAll);
+    $('expandDiagramBtn').addEventListener('click', () => {
+      state.collapsedNodes.clear();
+      renderSelectedEntity();
+    });
+    $('collapseDiagramBtn').addEventListener('click', () => {
+      collapseDiagramToFirstLevel();
+      renderSelectedEntity();
+    });
+    $('fitDiagramBtn').addEventListener('click', centerDiagram);
+    $('downloadSvgBtn').addEventListener('click', downloadDiagramSvg);
+    $('downloadPngBtn').addEventListener('click', downloadDiagramPng);
+    $('showDetachedAggregates').addEventListener('change', () => {
+      state.showDetachedAggregates = $('showDetachedAggregates').checked;
+      renderSelectedEntity();
+    });
     $('entitySelect').addEventListener('change', () => {
       state.selectedEntity = $('entitySelect').value;
       renderSelectedEntity();
@@ -546,6 +975,36 @@ agregados:
     $('downloadYamlBtn').addEventListener('click', () => downloadText('estrutura-igovti.yaml', $('yamlEditor').value, 'text/yaml'));
     $('downloadJsonBtn').addEventListener('click', () => downloadText('resultado-igovti.json', JSON.stringify(state.results, null, 2), 'application/json'));
     $('downloadCsvBtn').addEventListener('click', () => downloadText('resultado-igovti.csv', toCsv(state.results), 'text/csv'));
+    document.querySelectorAll('.tab-btn').forEach((button) => {
+      button.addEventListener('click', () => setActiveTab(button.dataset.tab));
+    });
+    $('analyticsVariableScope').addEventListener('change', () => {
+      state.analyticsVariableScope = $('analyticsVariableScope').value;
+      refreshAnalytics();
+    });
+    $('analyticsClusterCount').addEventListener('change', () => {
+      state.clusterCount = clamp(Math.round(toNumber($('analyticsClusterCount').value, 4)), 2, 10);
+      $('analyticsClusterCount').value = String(state.clusterCount);
+      refreshAnalytics();
+    });
+    $('analyticsEmbeddingMethod').addEventListener('change', () => {
+      state.embeddingMethod = $('analyticsEmbeddingMethod').value;
+      refreshAnalytics();
+    });
+    $('analyticsEntitySelect').addEventListener('change', () => {
+      state.selectedAnalyticsEntity = $('analyticsEntitySelect').value;
+      renderAnalytics();
+    });
+    $('analyticsSearch').addEventListener('input', () => {
+      state.analyticsSearch = $('analyticsSearch').value.trim().toLowerCase();
+      renderAnalytics();
+    });
+    $('downloadAnalyticsCsvBtn').addEventListener('click', () => {
+      if (state.analytics) downloadText('analise-estatistica-igovti.csv', analyticsToCsv(state.analytics), 'text/csv');
+    });
+    $('downloadAnalyticsJsonBtn').addEventListener('click', () => {
+      if (state.analytics) downloadText('analise-estatistica-igovti.json', JSON.stringify(state.analytics, analyticsJsonReplacer, 2), 'application/json');
+    });
 
     applyYaml();
 
@@ -580,6 +1039,7 @@ agregados:
       try {
         state.config = jsyaml.load($('yamlEditor').value);
         validateConfigShape(state.config);
+        collapseDiagramToFirstLevel();
         renderStatus('Estrutura YAML aplicada.');
         if (state.rawRows.length) processRows();
       } catch (error) {
@@ -624,6 +1084,13 @@ agregados:
           const detailCols = Object.keys(normalized).filter((col) => col !== base && col.startsWith(base));
           questionScores[base] = calculateQuestion(rawAnswers[base], normalized[base], detailCols.map((col) => normalized[col]));
         }
+        for (const [id, value] of Object.entries(normalized)) {
+          for (const alias of questionIdAliases(id)) {
+            if (!Object.prototype.hasOwnProperty.call(questionScores, alias)) {
+              questionScores[alias] = toNumber(value, 0);
+            }
+          }
+        }
 
         return {
           __id: String(row[state.idColumn] ?? `Registro ${index + 1}`),
@@ -650,9 +1117,6 @@ agregados:
     function normalizeColumnName(name) {
       return String(name)
         .replace(/\./g, '')
-        .replace(/\[/g, '')
-        .replace(/\]/g, '')
-        .replace(/ext/g, '')
         .trim();
     }
 
@@ -670,6 +1134,21 @@ agregados:
     function normalizeQuestionId(name) {
       const clean = String(name).trim();
       return clean.startsWith('q') || clean.startsWith('Q') ? `q${clean.slice(1)}` : `q${clean}`;
+    }
+
+    function questionIdAliases(id) {
+      const value = normalizeQuestionId(id);
+      const aliases = [value];
+      const extMatch = value.match(/^q(\d{4})ext\[([^\]]+)\]$/i);
+      if (extMatch) aliases.push(`q${extMatch[1]}${extMatch[2]}`);
+      const bracketMatch = value.match(/^q(\d{4})\[([^\]]+)\]$/i);
+      if (bracketMatch) aliases.push(`q${bracketMatch[1]}${bracketMatch[2]}`);
+      const compactMatch = value.match(/^q(\d{4})([A-Za-z])$/);
+      if (compactMatch) {
+        aliases.push(`q${compactMatch[1]}[${compactMatch[2]}]`);
+        aliases.push(`q${compactMatch[1]}ext[${compactMatch[2]}]`);
+      }
+      return [...new Set(aliases)];
     }
 
     function questionColumnSort(a, b) {
@@ -698,8 +1177,8 @@ agregados:
 
     function calculateQuestion(baseText, baseValue, details) {
       const baseNumeric = toNumber(baseValue, 0);
-      const adoptionFull = baseText === 'Adota em maior parte ou totalmente' || baseText === 'Adota';
-      const adoptionPartial = baseText === 'Adota parcialmente';
+      const adoptionFull = ['admai', 'Adota em maior parte ou totalmente', 'Adota em maior parte ou totalmente.', 'Adota'].includes(baseText);
+      const adoptionPartial = ['adpar', 'Adota parcialmente', 'Adota parcialmente.'].includes(baseText);
       if (!details.length || (!adoptionFull && !adoptionPartial)) return baseNumeric;
       const discountMax = adoptionFull ? 0.85 : 0.35;
       const missing = details.map((value) => 1 - toNumber(value, 0)).reduce((a, b) => a + b, 0);
@@ -750,6 +1229,7 @@ agregados:
       renderResultsTable();
       fillEntitySelect();
       renderSelectedEntity();
+      refreshAnalytics();
     }
 
     function normalizeComponents(spec) {
@@ -777,13 +1257,14 @@ agregados:
       }
       const config = state.config;
       const root = config.metadata.raiz;
+      state.aggregateValidation = aggregateValidationMap(config);
       if (!config.agregados[root]) issues.push({ type: 'error', message: `Raiz "${root}" não existe em agregados.` });
 
       for (const [id, spec] of Object.entries(config.agregados)) {
         const components = normalizeComponents(spec);
         if (!components.length) issues.push({ type: 'error', message: `Agregado "${id}" não possui componentes.` });
-        const sum = components.reduce((acc, component) => acc + component.peso, 0);
-        if (Math.abs(sum - 1) > 0.000001) issues.push({ type: 'error', message: `Pesos de "${id}" somam ${sum.toFixed(6)}, não 1.` });
+        const validation = state.aggregateValidation.get(id);
+        if (validation && !validation.ok) issues.push({ type: 'error', message: validation.message });
         for (const component of components) {
           if (!Number.isFinite(component.peso)) issues.push({ type: 'error', message: `Peso inválido em "${id}" -> "${component.id}".` });
           if (!component.id.startsWith('q') && !config.agregados[component.id]) {
@@ -800,6 +1281,21 @@ agregados:
       for (const issue of validateMaturityLevels(config.niveis_maturidade)) issues.push(issue);
       if (!issues.length) issues.push({ type: 'ok', message: 'Estrutura válida para cálculo.' });
       renderIssues(issues);
+    }
+
+    function aggregateValidationMap(config) {
+      const validations = new Map();
+      for (const [id, spec] of Object.entries(config.agregados || {})) {
+        const components = normalizeComponents(spec);
+        const sum = components.reduce((acc, component) => acc + component.peso, 0);
+        const ok = components.length > 0 && Math.abs(sum - 1) <= 0.000001;
+        validations.set(id, {
+          ok,
+          sum,
+          message: `Pesos de "${id}" somam ${sum.toFixed(6)}, não 1.`
+        });
+      }
+      return validations;
     }
 
     function findCycles(aggregates) {
@@ -848,13 +1344,320 @@ agregados:
       $('issues').innerHTML = issues.map((issue) => `<div class="issue ${issue.type}">${escapeHtml(issue.message)}</div>`).join('');
     }
 
+    function renderDiagram(values = null, trace = null) {
+      if (!state.config) {
+        $('diagramStage').innerHTML = '<div class="diagram-empty">Sem estrutura aplicada.</div>';
+        $('nodeDetail').innerHTML = '';
+        $('treeSummary').textContent = '';
+        return;
+      }
+      const root = state.config.metadata.raiz;
+      const tree = buildDiagramTree(root, values, trace, null, 0, null);
+      const detachedIds = state.showDetachedAggregates ? detachedAggregateRootIds(root) : [];
+      const detachedTrees = detachedIds.map((id) => buildDiagramTree(id, values, trace, null, 0, null));
+      const trees = [tree, ...detachedTrees];
+      const stats = trees.map(structureStats).reduce((total, item) => ({
+        aggregates: total.aggregates + item.aggregates,
+        questions: total.questions + item.questions
+      }), { aggregates: 0, questions: 0 });
+      const detachedLabel = detachedIds.length ? `; ${detachedIds.length} avulso${detachedIds.length === 1 ? '' : 's'}` : '';
+      $('treeSummary').textContent = `${stats.aggregates} agregados, ${stats.questions} questões`;
+
+      const visibleNodes = [];
+      const links = [];
+      assignDiagramForestLayout(trees, visibleNodes, links);
+      const selectedPath = new Set(findDiagramPathInForest(trees, state.selectedNodeId || root) || [root]);
+      let selectedNode = visibleNodes.find((node) => node.id === state.selectedNodeId);
+      if (!selectedNode) {
+        selectedNode = visibleNodes[0] || tree;
+        state.selectedNodeId = selectedNode.id;
+      }
+      $('treeSummary').textContent += detachedLabel;
+
+      const nodeWidth = 190;
+      const nodeHeight = 54;
+      const width = Math.max(680, Math.max(...visibleNodes.map((node) => node.x + nodeWidth + 40), 680));
+      const height = Math.max(420, Math.max(...visibleNodes.map((node) => node.y + nodeHeight + 40), 420));
+      const linkMarkup = links.map((link) => renderDiagramLink(link, nodeWidth, nodeHeight, selectedPath)).join('');
+      const nodeMarkup = visibleNodes.map((node) => renderDiagramNode(node, nodeWidth, nodeHeight, selectedPath)).join('');
+
+      $('diagramStage').innerHTML = `<svg class="diagram-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Diagrama da estrutura do índice">${linkMarkup}${nodeMarkup}</svg>`;
+      $('diagramStage').querySelectorAll('.diagram-node').forEach((element) => {
+        element.addEventListener('click', (event) => {
+          const id = element.getAttribute('data-id');
+          if (!id) return;
+          if (event.target.closest('.diagram-toggle-hit')) {
+            toggleDiagramNode(id);
+          } else {
+            state.selectedNodeId = id;
+          }
+          renderSelectedEntity();
+        });
+      });
+      renderNodeDetail(selectedNode);
+      focusDiagramNode(selectedNode);
+    }
+
+    function buildDiagramTree(id, values, trace, parentId, depth, incoming) {
+      const isQuestion = id.startsWith('q');
+      const spec = state.config.agregados[id];
+      const parts = !isQuestion && spec
+        ? (trace && trace[id] ? trace[id] : normalizeComponents(spec))
+        : [];
+      const collapsed = state.collapsedNodes.has(id);
+      const children = collapsed ? [] : parts.map((part) => buildDiagramTree(part.id, values, trace, id, depth + 1, part));
+      return {
+        id,
+        parentId,
+        depth,
+        isQuestion,
+        collapsed,
+        children,
+        childCount: parts.length,
+        peso: incoming ? incoming.peso : null,
+        contribution: incoming && incoming.contribution !== undefined ? incoming.contribution : null,
+        validation: state.aggregateValidation.get(id) || null,
+        value: values && Object.prototype.hasOwnProperty.call(values, id) ? values[id] : incoming && incoming.value !== undefined ? incoming.value : null
+      };
+    }
+
+    function structureStats(node) {
+      const here = node.isQuestion ? { aggregates: 0, questions: 1 } : { aggregates: 1, questions: 0 };
+      for (const child of node.children) {
+        const childStats = structureStats(child);
+        here.aggregates += childStats.aggregates;
+        here.questions += childStats.questions;
+      }
+      if (node.collapsed) {
+        const hidden = hiddenChildStats(node.id);
+        here.aggregates += hidden.aggregates;
+        here.questions += hidden.questions;
+      }
+      return here;
+    }
+
+    function hiddenChildStats(id, seen = new Set()) {
+      if (seen.has(id)) return { aggregates: 0, questions: 0 };
+      seen.add(id);
+      const spec = state.config.agregados[id];
+      const totals = { aggregates: 0, questions: 0 };
+      for (const component of normalizeComponents(spec || {})) {
+        if (component.id.startsWith('q')) {
+          totals.questions += 1;
+        } else {
+          totals.aggregates += 1;
+          const nested = hiddenChildStats(component.id, seen);
+          totals.aggregates += nested.aggregates;
+          totals.questions += nested.questions;
+        }
+      }
+      return totals;
+    }
+
+    function reachableAggregatesFromRoot(root) {
+      const reachable = new Set();
+      const visit = (id) => {
+        if (reachable.has(id) || !state.config.agregados[id]) return;
+        reachable.add(id);
+        for (const component of normalizeComponents(state.config.agregados[id])) {
+          if (!component.id.startsWith('q')) visit(component.id);
+        }
+      };
+      visit(root);
+      return reachable;
+    }
+
+    function detachedAggregateRootIds(root) {
+      const aggregates = state.config.agregados || {};
+      const reachable = reachableAggregatesFromRoot(root);
+      const detached = new Set(Object.keys(aggregates).filter((id) => !reachable.has(id)));
+      const referencedByDetached = new Set();
+      for (const id of detached) {
+        for (const component of normalizeComponents(aggregates[id])) {
+          if (detached.has(component.id)) referencedByDetached.add(component.id);
+        }
+      }
+      return [...detached].filter((id) => !referencedByDetached.has(id)).sort((a, b) => a.localeCompare(b));
+    }
+
+    function assignDiagramForestLayout(trees, visibleNodes, links) {
+      let offsetY = 0;
+      for (const tree of trees) {
+        const before = visibleNodes.length;
+        assignDiagramLayout(tree, visibleNodes, links, offsetY);
+        const added = visibleNodes.slice(before);
+        const maxY = added.length ? Math.max(...added.map((node) => node.y)) : offsetY;
+        offsetY = maxY + 130;
+      }
+      visibleNodes.sort((a, b) => a.depth - b.depth || a.y - b.y);
+    }
+
+    function assignDiagramLayout(root, visibleNodes, links, offsetY = 0) {
+      const gapX = 245;
+      const gapY = 72;
+      let leafIndex = 0;
+      const walk = (node) => {
+        node.x = 32 + node.depth * gapX;
+        if (!node.children.length) {
+          node.y = offsetY + 34 + leafIndex * gapY;
+          leafIndex += 1;
+        } else {
+          node.children.forEach((child) => {
+            walk(child);
+            links.push({ from: node, to: child });
+          });
+          node.y = node.children.reduce((sum, child) => sum + child.y, 0) / node.children.length;
+        }
+        visibleNodes.push(node);
+      };
+      walk(root);
+      visibleNodes.sort((a, b) => a.depth - b.depth || a.y - b.y);
+    }
+
+    function renderDiagramLink(link, nodeWidth, nodeHeight, selectedPath) {
+      const x1 = link.from.x + nodeWidth;
+      const y1 = link.from.y + nodeHeight / 2;
+      const x2 = link.to.x;
+      const y2 = link.to.y + nodeHeight / 2;
+      const mid = x1 + Math.max(40, (x2 - x1) / 2);
+      const active = selectedPath.has(link.from.id) && selectedPath.has(link.to.id);
+      return `<path class="diagram-link ${active ? 'active' : ''}" d="M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}"></path>`;
+    }
+
+    function renderDiagramNode(node, nodeWidth, nodeHeight, selectedPath) {
+      const selected = node.id === state.selectedNodeId;
+      const kind = node.isQuestion ? 'question' : 'aggregate';
+      const invalid = !node.isQuestion && node.validation && !node.validation.ok;
+      const subtitle = node.isQuestion ? 'questão' : `${node.childCount} componente${node.childCount === 1 ? '' : 's'}`;
+      const sumLabel = invalid ? `soma ${formatNumber(node.validation.sum)}` : '';
+      const weight = node.peso === null ? sumLabel : `peso ${formatPercent(node.peso)}${sumLabel ? ` · ${sumLabel}` : ''}`;
+      const value = node.value === null ? '-' : formatNumber(toNumber(node.value, NaN));
+      const collapsedLabel = node.collapsed ? '+' : '-';
+      const toggle = !node.isQuestion && node.childCount
+        ? `<circle class="diagram-toggle" cx="${nodeWidth - 17}" cy="17" r="10"></circle>
+           <text x="${nodeWidth - 17}" y="21" text-anchor="middle" class="diagram-subtitle diagram-toggle-label">${collapsedLabel}</text>
+           <circle class="diagram-toggle-hit" cx="${nodeWidth - 17}" cy="17" r="16" fill="transparent"></circle>`
+        : '';
+      return `<g class="diagram-node ${kind} ${invalid ? 'invalid' : ''} ${selected ? 'selected' : ''} ${selectedPath.has(node.id) ? 'path' : ''}" data-id="${escapeHtml(node.id)}" transform="translate(${node.x}, ${node.y})">
+        <rect width="${nodeWidth}" height="${nodeHeight}"></rect>
+        <text x="12" y="20" class="diagram-title">${escapeSvgText(shortenLabel(node.id, 22))}</text>
+        <text x="12" y="39" class="diagram-subtitle">${escapeSvgText(subtitle)}${weight ? ` · ${escapeSvgText(weight)}` : ''}</text>
+        <text x="${nodeWidth - 14}" y="41" text-anchor="end" class="diagram-value">${escapeSvgText(value)}</text>
+        ${toggle}
+      </g>`;
+    }
+
+    function renderNodeDetail(node) {
+      const type = node.isQuestion ? 'Questão' : 'Agregado';
+      const value = node.value === null ? '-' : formatNumber(toNumber(node.value, NaN));
+      const weight = node.peso === null ? '-' : formatPercent(node.peso);
+      const contribution = node.contribution === null ? '-' : formatNumber(node.contribution);
+      const validation = node.validation && !node.validation.ok ? node.validation.message : 'Pesos somam 1';
+      $('nodeDetail').innerHTML = [
+        detailItem('Nó', node.id),
+        detailItem('Tipo', type),
+        detailItem('Valor', value),
+        detailItem('Peso no pai', weight),
+        detailItem('Contribuição', contribution),
+        detailItem('Componentes', node.isQuestion ? '-' : String(node.childCount)),
+        detailItem('Profundidade', String(node.depth)),
+        detailItem('Estado', node.collapsed ? 'Recolhido' : 'Visível'),
+        detailItem('Validação', node.isQuestion ? '-' : validation)
+      ].join('');
+    }
+
+    function detailItem(label, value) {
+      return `<div class="detail-item"><span>${escapeHtml(label)}</span><b title="${escapeHtml(value)}">${escapeHtml(value)}</b></div>`;
+    }
+
+    function toggleDiagramNode(id) {
+      if (state.collapsedNodes.has(id)) {
+        state.collapsedNodes.delete(id);
+      } else {
+        state.collapsedNodes.add(id);
+      }
+      state.selectedNodeId = id;
+    }
+
+    function collapseDiagramToFirstLevel() {
+      state.collapsedNodes.clear();
+      const root = state.config && state.config.metadata.raiz;
+      if (!root) return;
+      for (const id of Object.keys(state.config.agregados || {})) {
+        if (id !== root) state.collapsedNodes.add(id);
+      }
+      state.selectedNodeId = root;
+    }
+
+    function centerDiagram() {
+      const selected = $('diagramStage').querySelector('.diagram-node.selected');
+      if (selected) {
+        const transform = selected.getAttribute('transform') || '';
+        const match = transform.match(/translate\(([-\d.]+),\s*([-\d.]+)\)/);
+        if (match) {
+          focusDiagramNode({ x: Number(match[1]), y: Number(match[2]) });
+          return;
+        }
+      }
+      const stage = $('diagramStage');
+      stage.scrollLeft = Math.max(0, (stage.scrollWidth - stage.clientWidth) / 2);
+      stage.scrollTop = Math.max(0, (stage.scrollHeight - stage.clientHeight) / 2);
+    }
+
+    function focusDiagramNode(node) {
+      const stage = $('diagramStage');
+      if (!stage || !node) return;
+      const nodeWidth = 190;
+      const nodeHeight = 54;
+      stage.scrollLeft = Math.max(0, node.x - Math.max(24, (stage.clientWidth - nodeWidth) * 0.25));
+      stage.scrollTop = Math.max(0, node.y - Math.max(24, (stage.clientHeight - nodeHeight) * 0.5));
+    }
+
+    function findDiagramPathInForest(trees, targetId) {
+      for (const tree of trees) {
+        const path = findDiagramPath(tree, targetId);
+        if (path) return path;
+      }
+      return null;
+    }
+
+    function findDiagramPath(node, targetId) {
+      if (node.id === targetId) return [node.id];
+      if (node.collapsed && node.childCount) {
+        const hidden = findHiddenPath(node.id, targetId);
+        if (hidden) return [node.id, ...hidden.slice(1)];
+      }
+      for (const child of node.children) {
+        const path = findDiagramPath(child, targetId);
+        if (path) return [node.id, ...path];
+      }
+      return null;
+    }
+
+    function findHiddenPath(currentId, targetId, seen = new Set()) {
+      if (currentId === targetId) return [currentId];
+      if (seen.has(currentId)) return null;
+      seen.add(currentId);
+      const spec = state.config.agregados[currentId];
+      for (const component of normalizeComponents(spec || {})) {
+        if (component.id === targetId) return [currentId, component.id];
+        if (!component.id.startsWith('q')) {
+          const nested = findHiddenPath(component.id, targetId, seen);
+          if (nested) return [currentId, ...nested];
+        }
+      }
+      return null;
+    }
+
     function renderTree(values = null, trace = null) {
       if (!state.config) {
         $('tree').innerHTML = '';
+        renderDiagram();
         return;
       }
       const root = state.config.metadata.raiz;
       $('tree').innerHTML = renderNode(root, values, trace, true);
+      renderDiagram(values, trace);
     }
 
     function renderNode(id, values, trace, isRoot = false) {
@@ -862,17 +1665,20 @@ agregados:
       const value = values && Object.prototype.hasOwnProperty.call(values, id) ? values[id] : null;
       const spec = state.config.agregados[id];
       const parts = trace && trace[id] ? trace[id] : normalizeComponents(spec || {});
+      const validation = !isQuestion ? state.aggregateValidation.get(id) : null;
+      const invalid = validation && !validation.ok;
       const formula = !isQuestion && parts.length
         ? parts.map((part) => `${part.peso.toFixed(4)} x ${part.id}${part.value !== undefined ? ` (${formatNumber(part.value)})` : ''}`).join(' + ')
         : '';
       const children = !isQuestion && spec
         ? parts.map((part) => renderNode(part.id, values, trace, false)).join('')
         : '';
-      return `<div class="node ${isRoot ? 'root' : ''}">
+      return `<div class="node ${isRoot ? 'root' : ''} ${invalid ? 'invalid' : ''}">
         <div class="node-line">
           <div><span class="node-id">${escapeHtml(id)}</span> <span class="node-kind">${isQuestion ? 'questão' : 'agregado'}</span></div>
           <div class="node-value">${value === null ? '-' : formatNumber(value)}</div>
         </div>
+        ${invalid ? `<div class="validation-note">${escapeHtml(validation.message)}</div>` : ''}
         ${formula ? `<div class="formula">${escapeHtml(formula)}</div>` : ''}
         ${children}
       </div>`;
@@ -940,8 +1746,17 @@ agregados:
       return Number.isFinite(value) ? value.toFixed(4) : '-';
     }
 
+    function formatPercent(value) {
+      return Number.isFinite(value) ? `${(value * 100).toFixed(1)}%` : '-';
+    }
+
     function formatCell(value) {
       return typeof value === 'number' ? formatNumber(value) : value ?? '';
+    }
+
+    function shortenLabel(value, maxLength) {
+      const text = String(value);
+      return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
     }
 
     function escapeHtml(value) {
@@ -953,14 +1768,768 @@ agregados:
         .replace(/'/g, '&#039;');
     }
 
+    function escapeSvgText(value) {
+      return escapeHtml(value);
+    }
+
+    function currentDiagramFilename(extension) {
+      const root = state.config && state.config.metadata ? state.config.metadata.raiz : 'indice';
+      const entity = state.selectedEntity ? `-${state.selectedEntity}` : '';
+      return `arvore-${slugify(root)}${entity ? `-${slugify(entity)}` : ''}.${extension}`;
+    }
+
+    function getDiagramSvgElement() {
+      return $('diagramStage').querySelector('svg.diagram-svg');
+    }
+
+    function getDiagramSvgString() {
+      const svg = getDiagramSvgElement();
+      if (!svg) return '';
+      const clone = svg.cloneNode(true);
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clone.setAttribute('version', '1.1');
+      const width = Number(clone.getAttribute('width')) || 1200;
+      const height = Number(clone.getAttribute('height')) || 800;
+      const background = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      background.setAttribute('width', String(width));
+      background.setAttribute('height', String(height));
+      background.setAttribute('fill', '#ffffff');
+      clone.insertBefore(background, clone.firstChild);
+      const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+      style.textContent = `
+        .diagram-link { fill: none; stroke: #c7d3de; stroke-width: 2; }
+        .diagram-link.active { stroke: #087c8f; stroke-width: 3; }
+        .diagram-node rect { fill: #fff; stroke: #cbd6e2; stroke-width: 1.2; rx: 8; }
+        .diagram-node.aggregate rect { fill: #f8fbfd; }
+        .diagram-node.question rect { fill: #fffdf7; stroke: #e8d49b; }
+        .diagram-node.invalid rect { fill: #fff8eb; stroke: #d39128; }
+        .diagram-node.selected rect { stroke: #087c8f; stroke-width: 2.5; }
+        .diagram-node.path rect { stroke: #72a5b0; }
+        .diagram-title { font: 700 12px Inter, Arial, sans-serif; fill: #152033; }
+        .diagram-subtitle { font: 10.5px Inter, Arial, sans-serif; fill: #5f6b7a; }
+        .diagram-value { font: 700 12px Inter, Arial, sans-serif; fill: #087c8f; }
+        .diagram-toggle { fill: #eaf4f6; stroke: #087c8f; stroke-width: 1; }
+        .diagram-toggle-hit { display: none; }
+      `;
+      clone.insertBefore(style, clone.firstChild);
+      return `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLSerializer().serializeToString(clone)}`;
+    }
+
+    function downloadDiagramSvg() {
+      const svgText = getDiagramSvgString();
+      if (!svgText) return;
+      downloadText(currentDiagramFilename('svg'), svgText, 'image/svg+xml;charset=utf-8');
+    }
+
+    function downloadDiagramPng() {
+      const svgText = getDiagramSvgString();
+      const svg = getDiagramSvgElement();
+      if (!svgText || !svg) return;
+      const width = Number(svg.getAttribute('width')) || 1200;
+      const height = Number(svg.getAttribute('height')) || 800;
+      const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d');
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, width, height);
+        context.drawImage(image, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((pngBlob) => {
+          if (!pngBlob) return;
+          downloadBlob(currentDiagramFilename('png'), pngBlob);
+        }, 'image/png');
+      };
+      image.onerror = () => URL.revokeObjectURL(url);
+      image.src = url;
+    }
+
     function downloadText(filename, content, type) {
       const blob = new Blob([content], { type });
+      downloadBlob(filename, blob);
+    }
+
+    function downloadBlob(filename, blob) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = filename;
       link.click();
       URL.revokeObjectURL(url);
+    }
+
+    function slugify(value) {
+      const ascii = String(value)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9._-]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .toLowerCase();
+      return ascii || 'indice';
+    }
+
+    function setActiveTab(tabId) {
+      state.activeTab = tabId;
+      document.querySelectorAll('.tab-btn').forEach((button) => button.classList.toggle('active', button.dataset.tab === tabId));
+      document.querySelectorAll('.tab-panel').forEach((panel) => panel.classList.toggle('active', panel.id === tabId));
+      if (tabId === 'analyticsTab') renderAnalytics();
+    }
+
+    function refreshAnalytics() {
+      if (!state.results.length) {
+        state.analytics = null;
+        renderAnalytics();
+        return;
+      }
+      const dataset = buildAnalyticsDataset();
+      if (!dataset.variables.length || !dataset.rows.length) {
+        state.analytics = { dataset, error: 'Nao ha variaveis numericas suficientes para analise.' };
+        renderAnalytics();
+        return;
+      }
+      const stats = computeDescriptiveStats(dataset);
+      const pearson = computeCorrelationMatrix(dataset, 'pearson');
+      const spearman = computeCorrelationMatrix(dataset, 'spearman');
+      const mutualInformation = computeMutualInformationMatrix(dataset);
+      const pca = computePca(dataset.matrix, dataset.variables);
+      const clusters = computeKMeans(dataset.matrix, state.clusterCount);
+      const embedding = computeEmbedding(dataset.matrix, pca);
+      const outliers = computeOutliers(dataset, clusters);
+      const benchmarks = computeBenchmarks(dataset, clusters, stats);
+      const insights = generateInsights(dataset, stats, pearson, mutualInformation, clusters, outliers, benchmarks);
+      state.analytics = { dataset, stats, pearson, spearman, mutualInformation, pca, clusters, embedding, outliers, benchmarks, insights };
+      if (!state.selectedAnalyticsEntity || !dataset.ids.includes(state.selectedAnalyticsEntity)) state.selectedAnalyticsEntity = dataset.ids[0];
+      fillAnalyticsEntitySelect(dataset);
+      renderAnalytics();
+    }
+
+    function buildAnalyticsDataset() {
+      const root = state.config.metadata.raiz;
+      const aggregateIds = Object.keys(state.config.agregados || {});
+      const preferred = [root, ...aggregateIds.filter((id) => id !== root)];
+      const allIds = [...new Set(state.results.flatMap((result) => Object.keys(result.valores || {})))];
+      const candidates = state.analyticsVariableScope === 'all' ? allIds : preferred;
+      const variables = candidates.filter((id) => {
+        const values = state.results.map((result) => result.valores[id]);
+        const numeric = values.filter((value) => Number.isFinite(value) && value >= 0 && value <= 1);
+        return numeric.length >= Math.max(2, Math.ceil(values.length * 0.75));
+      });
+      const means = {};
+      for (const variable of variables) {
+        const values = state.results.map((result) => result.valores[variable]).filter(Number.isFinite);
+        means[variable] = mean(values);
+      }
+      const rows = state.results.map((result) => ({
+        id: result.id,
+        valor: result.valor,
+        nivel_maturidade: result.nivel_maturidade,
+        values: variables.map((variable) => {
+          const value = result.valores[variable];
+          return Number.isFinite(value) && value >= 0 && value <= 1 ? value : means[variable];
+        })
+      }));
+      return {
+        root,
+        variables,
+        ids: rows.map((row) => row.id),
+        rows,
+        matrix: rows.map((row) => row.values),
+        maturity: state.results.map((result) => result.nivel_maturidade)
+      };
+    }
+
+    function computeDescriptiveStats(dataset) {
+      return dataset.variables.map((variable, index) => {
+        const values = dataset.matrix.map((row) => row[index]).filter(Number.isFinite).sort((a, b) => a - b);
+        const avg = mean(values);
+        const sd = stddev(values);
+        return {
+          variable,
+          n: values.length,
+          mean: avg,
+          median: quantile(values, 0.5),
+          q1: quantile(values, 0.25),
+          q3: quantile(values, 0.75),
+          min: values[0],
+          max: values[values.length - 1],
+          variance: variance(values),
+          stddev: sd,
+          cv: avg ? sd / avg : 0
+        };
+      });
+    }
+
+    function computeCorrelationMatrix(dataset, method) {
+      const matrix = [];
+      for (let i = 0; i < dataset.variables.length; i++) {
+        const row = [];
+        for (let j = 0; j < dataset.variables.length; j++) {
+          const a = dataset.matrix.map((item) => item[i]);
+          const b = dataset.matrix.map((item) => item[j]);
+          row.push(method === 'spearman' ? pearson(rankValues(a), rankValues(b)) : pearson(a, b));
+        }
+        matrix.push(row);
+      }
+      return { variables: dataset.variables, matrix };
+    }
+
+    function computeMutualInformationMatrix(dataset) {
+      const matrix = [];
+      for (let i = 0; i < dataset.variables.length; i++) {
+        const row = [];
+        for (let j = 0; j < dataset.variables.length; j++) {
+          row.push(mutualInformation(dataset.matrix.map((item) => item[i]), dataset.matrix.map((item) => item[j]), 5));
+        }
+        matrix.push(row);
+      }
+      return { variables: dataset.variables, matrix };
+    }
+
+    function computePca(matrix, variables) {
+      if (!matrix.length || !variables.length) return { scores: [], loadings: [], variance: [], cumulative: [] };
+      const centered = centerColumns(matrix);
+      const cov = covarianceMatrix(centered);
+      const components = [];
+      const varianceValues = [];
+      let working = cov.map((row) => row.slice());
+      const componentCount = Math.min(3, variables.length);
+      const totalVariance = cov.reduce((sum, row, index) => sum + row[index], 0) || 1;
+      for (let component = 0; component < componentCount; component++) {
+        const eigen = powerIteration(working);
+        components.push(eigen.vector);
+        varianceValues.push(Math.max(0, eigen.value));
+        working = deflateMatrix(working, eigen.vector, eigen.value);
+      }
+      const total = totalVariance;
+      const varianceExplained = varianceValues.map((value) => value / total);
+      const cumulative = varianceExplained.map((_, index) => varianceExplained.slice(0, index + 1).reduce((sum, value) => sum + value, 0));
+      const scores = centered.map((row) => components.map((component) => dot(row, component)));
+      const loadings = variables.map((variable, index) => ({
+        variable,
+        pc1: components[0] ? components[0][index] : 0,
+        pc2: components[1] ? components[1][index] : 0,
+        importance: Math.abs(components[0] ? components[0][index] : 0) + Math.abs(components[1] ? components[1][index] : 0)
+      })).sort((a, b) => b.importance - a.importance);
+      return { scores, loadings, variance: varianceExplained, cumulative };
+    }
+
+    function computeKMeans(matrix, requestedK) {
+      const n = matrix.length;
+      const k = Math.max(1, Math.min(requestedK, n));
+      const centroids = [];
+      for (let i = 0; i < k; i++) centroids.push(matrix[Math.floor((i * n) / k)].slice());
+      let assignments = new Array(n).fill(0);
+      for (let iter = 0; iter < 60; iter++) {
+        let changed = false;
+        assignments = matrix.map((row, rowIndex) => {
+          let best = 0;
+          let bestDistance = Infinity;
+          centroids.forEach((centroid, index) => {
+            const distance = euclidean(row, centroid);
+            if (distance < bestDistance) {
+              best = index;
+              bestDistance = distance;
+            }
+          });
+          if (best !== assignments[rowIndex]) changed = true;
+          return best;
+        });
+        const next = centroids.map((centroid, index) => {
+          const members = matrix.filter((_, rowIndex) => assignments[rowIndex] === index);
+          return members.length ? columnMeans(members) : centroid;
+        });
+        centroids.splice(0, centroids.length, ...next);
+        if (!changed) break;
+      }
+      const distances = matrix.map((row, index) => euclidean(row, centroids[assignments[index]]));
+      return { k, assignments, centroids, distances };
+    }
+
+    function computeEmbedding(matrix, pca) {
+      if (state.embeddingMethod === 'tsne' && window.tsnejs && matrix.length > 2) {
+        try {
+          const model = new window.tsnejs.tSNE({ dim: 2, perplexity: Math.max(2, Math.min(20, Math.floor((matrix.length - 1) / 3))), epsilon: 10 });
+          model.initDataRaw(matrix);
+          for (let i = 0; i < 250; i++) model.step();
+          return { method: 't-SNE', points: model.getSolution() };
+        } catch (error) {
+          return { method: 'PCA 2D', points: pcaScores2d(pca) };
+        }
+      }
+      return { method: 'PCA 2D', points: pcaScores2d(pca) };
+    }
+
+    function computeOutliers(dataset, clusters) {
+      const rootValues = dataset.rows.map((row) => row.valor);
+      const q1 = quantile(rootValues.slice().sort((a, b) => a - b), 0.25);
+      const q3 = quantile(rootValues.slice().sort((a, b) => a - b), 0.75);
+      const iqr = q3 - q1;
+      const distanceStats = sortedStats(clusters.distances);
+      const threshold = distanceStats.q3 + 1.5 * (distanceStats.q3 - distanceStats.q1);
+      return dataset.rows.map((row, index) => ({
+        id: row.id,
+        iqr: row.valor < q1 - 1.5 * iqr || row.valor > q3 + 1.5 * iqr,
+        centroid: clusters.distances[index] > threshold,
+        distance: clusters.distances[index],
+        cluster: clusters.assignments[index]
+      })).filter((item) => item.iqr || item.centroid);
+    }
+
+    function computeBenchmarks(dataset, clusters, stats) {
+      const rootRank = dataset.rows.map((row, index) => ({ id: row.id, value: row.valor, cluster: clusters.assignments[index], maturity: row.nivel_maturidade }))
+        .sort((a, b) => b.value - a.value);
+      const variableRank = stats.slice().sort((a, b) => a.mean - b.mean);
+      const clusterSummary = [];
+      for (let cluster = 0; cluster < clusters.k; cluster++) {
+        const members = dataset.rows.filter((_, index) => clusters.assignments[index] === cluster);
+        clusterSummary.push({ cluster, count: members.length, mean: mean(members.map((row) => row.valor)) });
+      }
+      const topQuartileCut = quantile(dataset.rows.map((row) => row.valor).sort((a, b) => a - b), 0.75);
+      const topQuartile = dataset.rows.filter((row) => row.valor >= topQuartileCut);
+      return { rootRank, variableRank, clusterSummary, topQuartile };
+    }
+
+    function generateInsights(dataset, stats, pearsonMatrix, miMatrix, clusters, outliers, benchmarks) {
+      const rootIndex = dataset.variables.indexOf(dataset.root);
+      const sortedByMean = stats.slice().sort((a, b) => a.mean - b.mean);
+      const sortedByCv = stats.slice().sort((a, b) => b.cv - a.cv);
+      const sortedByStd = stats.slice().sort((a, b) => a.stddev - b.stddev);
+      const rootCorrelations = rootIndex >= 0 ? dataset.variables.map((variable, index) => ({
+        variable,
+        value: pearsonMatrix.matrix[rootIndex][index]
+      })).filter((item) => item.variable !== dataset.root).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)) : [];
+      const criticalCluster = benchmarks.clusterSummary.slice().sort((a, b) => a.mean - b.mean)[0];
+      return [
+        `Variavel mais critica: ${sortedByMean[0]?.variable || '-'} (media ${formatNumber(sortedByMean[0]?.mean)}).`,
+        `Variavel mais forte: ${sortedByMean[sortedByMean.length - 1]?.variable || '-'} (media ${formatNumber(sortedByMean[sortedByMean.length - 1]?.mean)}).`,
+        `Dimensao mais homogenea: ${sortedByStd[0]?.variable || '-'} (desvio ${formatNumber(sortedByStd[0]?.stddev)}).`,
+        `Dimensao mais dispersa: ${sortedByCv[0]?.variable || '-'} (CV ${formatNumber(sortedByCv[0]?.cv)}).`,
+        `Maior correlacao com ${dataset.root}: ${rootCorrelations[0]?.variable || '-'} (r ${formatNumber(rootCorrelations[0]?.value)}).`,
+        `Cluster mais critico: ${criticalCluster ? `cluster ${criticalCluster.cluster + 1}, media ${formatNumber(criticalCluster.mean)}` : '-'}.`,
+        `Organizacoes atipicas detectadas: ${outliers.length}.`
+      ];
+    }
+
+    function renderAnalytics() {
+      const hasResults = state.results.length && state.analytics && !state.analytics.error;
+      $('analyticsEmpty').classList.toggle('hidden', Boolean(hasResults));
+      $('analyticsContent').classList.toggle('hidden', !hasResults);
+      if (!hasResults) {
+        if (state.analytics && state.analytics.error) $('analyticsEmpty').textContent = state.analytics.error;
+        return;
+      }
+      if (!window.Plotly) {
+        $('analyticsEmpty').textContent = 'As bibliotecas de graficos ainda nao foram carregadas. Verifique a conexao com os CDNs e recarregue a pagina.';
+        $('analyticsEmpty').classList.remove('hidden');
+        $('analyticsContent').classList.add('hidden');
+        return;
+      }
+      const analytics = state.analytics;
+      renderAnalyticsCards(analytics);
+      renderInsights(analytics);
+      renderDescriptiveTable(analytics);
+      renderRankingTable(analytics);
+      renderCorrelationViews(analytics);
+      renderClusterViews(analytics);
+      renderBenchmarkViews(analytics);
+      renderIndividualViews(analytics);
+      renderDistributionViews(analytics);
+      renderPcaExplainability(analytics);
+    }
+
+    function renderAnalyticsCards(analytics) {
+      const rootStats = analytics.stats.find((item) => item.variable === analytics.dataset.root) || analytics.stats[0];
+      $('anOrgCount').textContent = String(analytics.dataset.rows.length);
+      $('anMeanRoot').textContent = formatNumber(rootStats.mean);
+      $('anMedianRoot').textContent = formatNumber(rootStats.median);
+      $('anStdRoot').textContent = formatNumber(rootStats.stddev);
+      const counts = countBy(analytics.dataset.maturity);
+      Plotly.react('maturityChart', [{
+        type: 'pie',
+        hole: 0.48,
+        labels: Object.keys(counts),
+        values: Object.values(counts),
+        marker: { colors: ['#b42318', '#a15c07', '#087c8f', '#147a3d', '#5f6b7a'] }
+      }], plotLayout('Distribuição dos níveis'), plotConfig());
+    }
+
+    function renderInsights(analytics) {
+      $('insightsList').innerHTML = analytics.insights.map((text) => `<div class="insight">${escapeHtml(text)}</div>`).join('');
+    }
+
+    function renderDescriptiveTable(analytics) {
+      const cols = ['variable', 'mean', 'median', 'q1', 'q3', 'min', 'max', 'variance', 'stddev', 'cv'];
+      $('descriptiveTable').innerHTML = renderTable(cols, analytics.stats, (row, col) => col === 'variable' ? row[col] : formatNumber(row[col]));
+    }
+
+    function renderRankingTable(analytics) {
+      const rows = filteredRootRank(analytics).slice(0, 30).map((row, index) => ({ rank: index + 1, ...row }));
+      $('rankingTable').innerHTML = renderTable(['rank', 'id', 'value', 'cluster', 'maturity'], rows, (row, col) => col === 'value' ? formatNumber(row[col]) : col === 'cluster' ? row[col] + 1 : row[col]);
+      $('rankingTable').querySelectorAll('tbody tr').forEach((tr, index) => {
+        tr.addEventListener('click', () => {
+          state.selectedAnalyticsEntity = rows[index].id;
+          fillAnalyticsEntitySelect(analytics.dataset);
+          renderAnalytics();
+        });
+      });
+    }
+
+    function renderCorrelationViews(analytics) {
+      const variables = analytics.dataset.variables;
+      Plotly.react('pearsonHeatmap', [{
+        z: analytics.pearson.matrix,
+        x: variables,
+        y: variables,
+        type: 'heatmap',
+        zmin: -1,
+        zmax: 1,
+        colorscale: [[0, '#b42318'], [0.5, '#ffffff'], [1, '#087c8f']],
+        hovertemplate: '%{y} x %{x}<br>r=%{z:.3f}<extra></extra>'
+      }], plotLayout('Matriz de Pearson'), plotConfig());
+      const pairs = correlationPairs(analytics).slice(0, 80);
+      $('correlationSummary').textContent = `${pairs.filter((p) => Math.abs(p.pearson) >= 0.7).length} fortes`;
+      $('correlationTable').innerHTML = renderTable(['a', 'b', 'pearson', 'spearman', 'mi', 'classificacao'], pairs, (row, col) => ['pearson', 'spearman', 'mi'].includes(col) ? formatNumber(row[col]) : row[col]);
+      renderCorrelationNetwork(analytics, pairs.filter((pair) => Math.abs(pair.pearson) >= 0.6).slice(0, 25));
+    }
+
+    function renderCorrelationNetwork(analytics, pairs) {
+      const variables = [...new Set(pairs.flatMap((pair) => [pair.a, pair.b]))];
+      const angle = (2 * Math.PI) / Math.max(variables.length, 1);
+      const coords = variables.map((variable, index) => ({ variable, x: Math.cos(index * angle), y: Math.sin(index * angle) }));
+      const byVar = new Map(coords.map((item) => [item.variable, item]));
+      const edgeX = [];
+      const edgeY = [];
+      for (const pair of pairs) {
+        const a = byVar.get(pair.a);
+        const b = byVar.get(pair.b);
+        if (!a || !b) continue;
+        edgeX.push(a.x, b.x, null);
+        edgeY.push(a.y, b.y, null);
+      }
+      Plotly.react('correlationNetwork', [
+        { x: edgeX, y: edgeY, mode: 'lines', type: 'scatter', line: { color: '#c7d3de', width: 1 }, hoverinfo: 'skip' },
+        { x: coords.map((c) => c.x), y: coords.map((c) => c.y), text: coords.map((c) => c.variable), mode: 'markers+text', type: 'scatter', textposition: 'top center', marker: { size: 12, color: '#087c8f' } }
+      ], plotLayout('Dependências |r| >= 0,60'), plotConfig());
+    }
+
+    function renderClusterViews(analytics) {
+      const colors = analytics.clusters.assignments.map((cluster) => cluster + 1);
+      const outlierIds = new Set(analytics.outliers.map((item) => item.id));
+      const marker = { size: analytics.dataset.ids.map((id) => outlierIds.has(id) ? 14 : 9), color: colors, colorscale: 'Viridis', showscale: true, line: { color: '#fff', width: 1 } };
+      const pcaPoints = pcaScores2d(analytics.pca);
+      Plotly.react('pcaScatter', [scatterTrace(analytics.dataset, pcaPoints, marker, 'PCA')], scatterLayout('Clusters por PCA'), plotConfig());
+      Plotly.react('embeddingScatter', [scatterTrace(analytics.dataset, analytics.embedding.points, marker, analytics.embedding.method)], scatterLayout(`Clusters por ${analytics.embedding.method}`), plotConfig());
+      ['pcaScatter', 'embeddingScatter'].forEach((id) => {
+        const element = $(id);
+        element.on?.('plotly_click', (event) => {
+          const point = event.points && event.points[0];
+          if (!point) return;
+          state.selectedAnalyticsEntity = analytics.dataset.ids[point.pointIndex];
+          fillAnalyticsEntitySelect(analytics.dataset);
+          renderAnalytics();
+        });
+      });
+    }
+
+    function renderBenchmarkViews(analytics) {
+      const weaknessRows = analytics.benchmarks.variableRank.slice(0, 12);
+      Plotly.react('weaknessChart', [{
+        type: 'bar',
+        orientation: 'h',
+        x: weaknessRows.map((row) => row.mean),
+        y: weaknessRows.map((row) => row.variable),
+        marker: { color: '#a15c07' }
+      }], plotLayout('Dimensões mais críticas'), plotConfig());
+      const top = analytics.benchmarks.rootRank.slice(0, 5).map((row) => ({ grupo: 'Top', ...row }));
+      const bottom = analytics.benchmarks.rootRank.slice(-5).reverse().map((row) => ({ grupo: 'Bottom', ...row }));
+      const clusters = analytics.benchmarks.clusterSummary.map((row) => ({ grupo: `Cluster ${row.cluster + 1}`, id: `${row.count} orgs`, value: row.mean, cluster: row.cluster + 1, maturity: '' }));
+      $('benchmarkTable').innerHTML = renderTable(['grupo', 'id', 'value', 'cluster', 'maturity'], [...top, ...bottom, ...clusters], (row, col) => col === 'value' ? formatNumber(row[col]) : row[col]);
+    }
+
+    function renderIndividualViews(analytics) {
+      const rowIndex = Math.max(0, analytics.dataset.ids.indexOf(state.selectedAnalyticsEntity));
+      const row = analytics.dataset.rows[rowIndex];
+      if (!row) return;
+      const cluster = analytics.clusters.assignments[rowIndex];
+      $('selectedOrgBadge').textContent = `${row.id} · cluster ${cluster + 1}`;
+      const variables = analytics.dataset.variables.slice(0, 12);
+      const values = variables.map((variable) => row.values[analytics.dataset.variables.indexOf(variable)]);
+      const means = variables.map((variable) => analytics.stats.find((stat) => stat.variable === variable)?.mean || 0);
+      const clusterRows = analytics.dataset.rows.filter((_, index) => analytics.clusters.assignments[index] === cluster);
+      const clusterMeans = variables.map((variable) => mean(clusterRows.map((item) => item.values[analytics.dataset.variables.indexOf(variable)])));
+      const topQuartileMeans = variables.map((variable) => mean(analytics.benchmarks.topQuartile.map((item) => item.values[analytics.dataset.variables.indexOf(variable)])));
+      Plotly.react('individualRadar', [
+        radarTrace(variables, values, row.id, '#087c8f'),
+        radarTrace(variables, means, 'Média', '#6d8f21'),
+        radarTrace(variables, clusterMeans, 'Cluster', '#a15c07'),
+        radarTrace(variables, topQuartileMeans, 'Top quartil', '#147a3d')
+      ], { polar: { radialaxis: { visible: true, range: [0, 1] } }, margin: { t: 30, b: 30, l: 40, r: 40 }, legend: { orientation: 'h' } }, plotConfig());
+      const rank = analytics.benchmarks.rootRank.findIndex((item) => item.id === row.id) + 1;
+      const profile = analytics.dataset.variables.map((variable, index) => ({
+        variable,
+        valor: row.values[index],
+        media: analytics.stats[index].mean,
+        gap: row.values[index] - analytics.stats[index].mean
+      })).sort((a, b) => a.gap - b.gap);
+      $('individualProfile').innerHTML = `<div class="notice small">Ranking ${rank}/${analytics.dataset.rows.length}; valor ${formatNumber(row.valor)}; maturidade ${escapeHtml(row.nivel_maturidade)}; cluster ${cluster + 1}.</div>` +
+        renderTable(['variable', 'valor', 'media', 'gap'], profile, (item, col) => col === 'variable' ? item[col] : formatNumber(item[col]));
+    }
+
+    function renderDistributionViews(analytics) {
+      const rootValues = analytics.dataset.rows.map((row) => row.valor);
+      Plotly.react('distributionChart', [
+        { type: 'histogram', x: rootValues, name: analytics.dataset.root, marker: { color: '#087c8f' }, opacity: 0.75 },
+        { type: 'box', x: rootValues, name: 'Boxplot', marker: { color: '#a15c07' }, boxpoints: 'outliers' },
+        { type: 'violin', x: rootValues, name: 'Violin', marker: { color: '#6d8f21' }, meanline: { visible: true } }
+      ], plotLayout(`Distribuição de ${analytics.dataset.root}`), plotConfig());
+    }
+
+    function renderPcaExplainability(analytics) {
+      const loadings = analytics.pca.loadings.slice(0, 15);
+      Plotly.react('pcaExplainChart', [
+        { type: 'bar', x: analytics.pca.variance.map((value, index) => `PC${index + 1}`), y: analytics.pca.variance, name: 'Variância explicada', marker: { color: '#087c8f' } },
+        { type: 'scatter', x: analytics.pca.cumulative.map((_, index) => `PC${index + 1}`), y: analytics.pca.cumulative, name: 'Acumulada', mode: 'lines+markers', yaxis: 'y2', line: { color: '#a15c07' } },
+        { type: 'bar', x: loadings.map((item) => item.variable), y: loadings.map((item) => item.importance), name: 'Importância', marker: { color: '#6d8f21' } }
+      ], { ...plotLayout('PCA: variância e loadings'), yaxis2: { overlaying: 'y', side: 'right', range: [0, 1], tickformat: '.0%' }, barmode: 'group' }, plotConfig());
+    }
+
+    function fillAnalyticsEntitySelect(dataset) {
+      const source = dataset.ids.filter((id) => !state.analyticsSearch || id.toLowerCase().includes(state.analyticsSearch));
+      $('analyticsEntitySelect').innerHTML = source.map((id) => `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`).join('');
+      if (source.length && !source.includes(state.selectedAnalyticsEntity)) state.selectedAnalyticsEntity = source[0];
+      $('analyticsEntitySelect').value = state.selectedAnalyticsEntity || '';
+    }
+
+    function filteredRootRank(analytics) {
+      return analytics.benchmarks.rootRank.filter((item) => !state.analyticsSearch || item.id.toLowerCase().includes(state.analyticsSearch));
+    }
+
+    function correlationPairs(analytics) {
+      const pairs = [];
+      const vars = analytics.dataset.variables;
+      for (let i = 0; i < vars.length; i++) {
+        for (let j = i + 1; j < vars.length; j++) {
+          const value = analytics.pearson.matrix[i][j];
+          pairs.push({
+            a: vars[i],
+            b: vars[j],
+            pearson: value,
+            spearman: analytics.spearman.matrix[i][j],
+            mi: analytics.mutualInformation.matrix[i][j],
+            classificacao: Math.abs(value) >= 0.7 ? 'forte' : Math.abs(value) >= 0.4 ? 'moderada' : 'fraca'
+          });
+        }
+      }
+      return pairs.sort((a, b) => Math.abs(b.pearson) - Math.abs(a.pearson));
+    }
+
+    function renderTable(columns, rows, formatter) {
+      const body = rows.map((row) => `<tr>${columns.map((col) => `<td>${escapeHtml(formatter(row, col) ?? '')}</td>`).join('')}</tr>`).join('');
+      return `<table><thead><tr>${columns.map((col) => `<th>${escapeHtml(col)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    function plotLayout(title) {
+      return {
+        title: { text: title, font: { size: 14, color: '#152033' } },
+        margin: { t: 46, b: 54, l: 60, r: 24 },
+        paper_bgcolor: '#ffffff',
+        plot_bgcolor: '#ffffff',
+        font: { family: 'Inter, Segoe UI, sans-serif', color: '#152033' }
+      };
+    }
+
+    function plotConfig() {
+      return { responsive: true, displaylogo: false, toImageButtonOptions: { format: 'png', filename: 'analise-igovti' } };
+    }
+
+    function scatterLayout(title) {
+      return { ...plotLayout(title), xaxis: { title: 'Dimensão 1', zeroline: false }, yaxis: { title: 'Dimensão 2', zeroline: false } };
+    }
+
+    function scatterTrace(dataset, points, marker, name) {
+      return {
+        type: 'scatter',
+        mode: 'markers',
+        name,
+        x: points.map((point) => point[0] || 0),
+        y: points.map((point) => point[1] || 0),
+        text: dataset.ids,
+        customdata: dataset.rows.map((row) => [row.valor, row.nivel_maturidade]),
+        marker,
+        hovertemplate: '<b>%{text}</b><br>Valor=%{customdata[0]:.3f}<br>%{customdata[1]}<extra></extra>'
+      };
+    }
+
+    function radarTrace(variables, values, name, color) {
+      return {
+        type: 'scatterpolar',
+        r: [...values, values[0]],
+        theta: [...variables, variables[0]],
+        fill: 'toself',
+        name,
+        line: { color }
+      };
+    }
+
+    function analyticsToCsv(analytics) {
+      const lines = [['tipo', 'a', 'b', 'valor'].join(',')];
+      for (const stat of analytics.stats) {
+        lines.push(['estatistica', stat.variable, 'media', formatNumber(stat.mean)].join(','));
+        lines.push(['estatistica', stat.variable, 'desvio', formatNumber(stat.stddev)].join(','));
+      }
+      for (const pair of correlationPairs(analytics)) {
+        lines.push(['correlacao_pearson', pair.a, pair.b, formatNumber(pair.pearson)].join(','));
+      }
+      analytics.dataset.rows.forEach((row, index) => {
+        lines.push(['cluster', row.id, analytics.clusters.assignments[index] + 1, formatNumber(row.valor)].join(','));
+      });
+      return lines.join('\n');
+    }
+
+    function analyticsJsonReplacer(key, value) {
+      if (key === 'matrix' && Array.isArray(value) && value.length > 80) return `[${value.length} linhas]`;
+      return value;
+    }
+
+    function mean(values) {
+      const clean = values.filter(Number.isFinite);
+      return clean.length ? clean.reduce((sum, value) => sum + value, 0) / clean.length : 0;
+    }
+
+    function variance(values) {
+      const clean = values.filter(Number.isFinite);
+      if (clean.length < 2) return 0;
+      const avg = mean(clean);
+      return clean.reduce((sum, value) => sum + Math.pow(value - avg, 2), 0) / (clean.length - 1);
+    }
+
+    function stddev(values) {
+      return Math.sqrt(variance(values));
+    }
+
+    function quantile(sortedValues, q) {
+      const values = sortedValues.filter(Number.isFinite).sort((a, b) => a - b);
+      if (!values.length) return 0;
+      const pos = (values.length - 1) * q;
+      const base = Math.floor(pos);
+      const rest = pos - base;
+      return values[base + 1] !== undefined ? values[base] + rest * (values[base + 1] - values[base]) : values[base];
+    }
+
+    function sortedStats(values) {
+      const sorted = values.slice().sort((a, b) => a - b);
+      return { q1: quantile(sorted, 0.25), q3: quantile(sorted, 0.75) };
+    }
+
+    function pearson(a, b) {
+      const avgA = mean(a);
+      const avgB = mean(b);
+      let numerator = 0;
+      let denA = 0;
+      let denB = 0;
+      for (let i = 0; i < a.length; i++) {
+        const da = a[i] - avgA;
+        const db = b[i] - avgB;
+        numerator += da * db;
+        denA += da * da;
+        denB += db * db;
+      }
+      const den = Math.sqrt(denA * denB);
+      return den ? numerator / den : 0;
+    }
+
+    function rankValues(values) {
+      const sorted = values.map((value, index) => ({ value, index })).sort((a, b) => a.value - b.value);
+      const ranks = new Array(values.length);
+      sorted.forEach((item, index) => { ranks[item.index] = index + 1; });
+      return ranks;
+    }
+
+    function mutualInformation(a, b, bins) {
+      const pairs = a.map((value, index) => [bucket(value, bins), bucket(b[index], bins)]);
+      const n = pairs.length || 1;
+      const countA = countBy(pairs.map((pair) => pair[0]));
+      const countB = countBy(pairs.map((pair) => pair[1]));
+      const countAB = countBy(pairs.map((pair) => `${pair[0]}|${pair[1]}`));
+      let mi = 0;
+      for (const [key, count] of Object.entries(countAB)) {
+        const [ka, kb] = key.split('|');
+        const pxy = count / n;
+        const px = (countA[ka] || 0) / n;
+        const py = (countB[kb] || 0) / n;
+        if (pxy && px && py) mi += pxy * Math.log2(pxy / (px * py));
+      }
+      return mi;
+    }
+
+    function bucket(value, bins) {
+      return Math.max(0, Math.min(bins - 1, Math.floor(clamp(value, 0, 0.999999) * bins)));
+    }
+
+    function countBy(values) {
+      return values.reduce((acc, value) => {
+        const key = String(value || 'Sem classificação');
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+    }
+
+    function centerColumns(matrix) {
+      const means = columnMeans(matrix);
+      return matrix.map((row) => row.map((value, index) => value - means[index]));
+    }
+
+    function columnMeans(matrix) {
+      if (!matrix.length) return [];
+      return matrix[0].map((_, index) => mean(matrix.map((row) => row[index])));
+    }
+
+    function covarianceMatrix(centered) {
+      const cols = centered[0].length;
+      const cov = Array.from({ length: cols }, () => Array(cols).fill(0));
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < cols; j++) {
+          cov[i][j] = centered.reduce((sum, row) => sum + row[i] * row[j], 0) / Math.max(1, centered.length - 1);
+        }
+      }
+      return cov;
+    }
+
+    function powerIteration(matrix) {
+      const n = matrix.length;
+      let vector = Array.from({ length: n }, (_, index) => index === 0 ? 1 : 1 / n);
+      for (let iter = 0; iter < 80; iter++) {
+        const next = matrixVector(matrix, vector);
+        const norm = Math.sqrt(dot(next, next)) || 1;
+        vector = next.map((value) => value / norm);
+      }
+      const value = dot(vector, matrixVector(matrix, vector));
+      return { value, vector };
+    }
+
+    function deflateMatrix(matrix, vector, value) {
+      return matrix.map((row, i) => row.map((cell, j) => cell - value * vector[i] * vector[j]));
+    }
+
+    function matrixVector(matrix, vector) {
+      return matrix.map((row) => dot(row, vector));
+    }
+
+    function dot(a, b) {
+      return a.reduce((sum, value, index) => sum + value * b[index], 0);
+    }
+
+    function euclidean(a, b) {
+      return Math.sqrt(a.reduce((sum, value, index) => sum + Math.pow(value - b[index], 2), 0));
+    }
+
+    function pcaScores2d(pca) {
+      return (pca.scores || []).map((row) => [row[0] || 0, row[1] || 0]);
     }
 
     function toCsv(results) {
