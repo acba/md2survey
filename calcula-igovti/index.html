@@ -9,6 +9,7 @@
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/simple-statistics@7.8.8/dist/simple-statistics.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tsne-js@1.0.3/build/tsne.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/umap-js@1.3.3/lib/umap-js.min.js"></script>
   <style>
     :root {
       --ink: #152033;
@@ -403,7 +404,7 @@
 
     .analytics-controls {
       display: grid;
-      grid-template-columns: repeat(5, minmax(160px, 1fr));
+      grid-template-columns: repeat(6, minmax(150px, 1fr));
       gap: 10px;
       align-items: end;
     }
@@ -422,11 +423,20 @@
     }
 
     .field input, .field select {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
       min-height: 34px;
       border: 1px solid var(--line);
       border-radius: 6px;
       padding: 7px 9px;
       background: #fff;
+    }
+
+    .field select[multiple] {
+      min-height: 96px;
+      padding: 5px;
     }
 
     .analytics-grid {
@@ -437,6 +447,7 @@
 
     .analytics-card {
       min-width: 0;
+      overflow: hidden;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #fff;
@@ -460,14 +471,35 @@
       border-bottom: 1px solid var(--line);
     }
 
-    .analytics-card .card-body { padding: 12px; }
+    .analytics-card .card-body {
+      min-width: 0;
+      overflow: hidden;
+      padding: 12px;
+    }
+
+    .card-help {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
 
     .chart {
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
       min-height: 340px;
+      overflow: hidden;
     }
 
     .chart.small-chart { min-height: 260px; }
+
+    .chart .js-plotly-plot,
+    .chart .plot-container,
+    .chart .svg-container,
+    .chart .main-svg {
+      max-width: 100% !important;
+    }
 
     .insight-list {
       display: grid;
@@ -479,6 +511,25 @@
       border-left: 4px solid var(--accent);
       border-radius: 6px;
       background: #f4fafb;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .mini-metric {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 8px;
+      background: #fbfcfe;
+    }
+
+    .mini-metric b {
+      display: block;
+      font-size: 16px;
     }
 
     .pill {
@@ -625,6 +676,7 @@
             <h2>Análises Estatísticas</h2>
             <div class="actions">
               <button id="downloadAnalyticsCsvBtn" type="button">Exportar análise CSV</button>
+              <button id="downloadAnalyticsXlsxBtn" type="button">Exportar análise XLSX</button>
               <button id="downloadAnalyticsJsonBtn" type="button">Exportar análise JSON</button>
             </div>
           </div>
@@ -637,19 +689,64 @@
               </select>
             </div>
             <div class="field">
+              <label for="analyticsVariableSelect">Seleção de variáveis</label>
+              <select id="analyticsVariableSelect" multiple></select>
+            </div>
+            <div class="field">
               <label for="analyticsClusterCount">Clusters</label>
               <input id="analyticsClusterCount" type="number" min="2" max="10" value="4">
+            </div>
+            <div class="field">
+              <label for="analyticsClusterMethod">Método de cluster</label>
+              <select id="analyticsClusterMethod">
+                <option value="kmeans">K-Means</option>
+                <option value="dbscan">DBSCAN</option>
+                <option value="hierarchical">Hierárquico</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="analyticsDbscanEps">DBSCAN eps</label>
+              <input id="analyticsDbscanEps" type="number" min="0.01" max="2" step="0.01" value="0.35">
+            </div>
+            <div class="field">
+              <label for="analyticsDbscanMinPts">DBSCAN minPts</label>
+              <input id="analyticsDbscanMinPts" type="number" min="2" max="20" value="4">
             </div>
             <div class="field">
               <label for="analyticsEmbeddingMethod">Projeção</label>
               <select id="analyticsEmbeddingMethod">
                 <option value="tsne">t-SNE</option>
+                <option value="umap">UMAP</option>
                 <option value="pca">PCA 2D</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="analyticsCorrelationMode">Dependência</label>
+              <select id="analyticsCorrelationMode">
+                <option value="pearson">Pearson</option>
+                <option value="spearman">Spearman</option>
+                <option value="mi">Mutual Information</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="analyticsMaturityFilter">Maturidade</label>
+              <select id="analyticsMaturityFilter">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="analyticsClusterFilter">Cluster</label>
+              <select id="analyticsClusterFilter">
+                <option value="">Todos</option>
               </select>
             </div>
             <div class="field">
               <label for="analyticsEntitySelect">Organização</label>
               <select id="analyticsEntitySelect"></select>
+            </div>
+            <div class="field">
+              <label for="analyticsCompareSelect">Comparar com</label>
+              <select id="analyticsCompareSelect"></select>
             </div>
             <div class="field">
               <label for="analyticsSearch">Busca</label>
@@ -670,19 +767,25 @@
 
           <div class="analytics-card span-6"><div class="card-head"><h3>Correlação Pearson</h3><span id="correlationSummary" class="pill"></span></div><div class="card-body"><div id="pearsonHeatmap" class="chart"></div></div></div>
           <div class="analytics-card span-6"><div class="card-head"><h3>Rede de dependências</h3></div><div class="card-body"><div id="correlationNetwork" class="chart"></div></div></div>
+          <div class="analytics-card span-6"><div class="card-head"><h3>Dependência não linear</h3><span id="miSummary" class="pill"></span></div><div class="card-body"><div id="miHeatmap" class="chart"></div></div></div>
+          <div class="analytics-card span-6"><div class="card-head"><h3>Variáveis estruturantes</h3></div><div class="card-body"><div id="structuralVariablesTable" class="table-wrap"></div></div></div>
           <div class="analytics-card span-12"><div class="card-head"><h3>Ranking de correlações e dependências</h3></div><div class="card-body"><div id="correlationTable" class="table-wrap"></div></div></div>
 
           <div class="analytics-card span-6"><div class="card-head"><h3>Clusters PCA</h3></div><div class="card-body"><div id="pcaScatter" class="chart"></div></div></div>
           <div class="analytics-card span-6"><div class="card-head"><h3>Clusters t-SNE / projeção 2D</h3></div><div class="card-body"><div id="embeddingScatter" class="chart"></div></div></div>
+          <div class="analytics-card span-6"><div class="card-head"><h3>Qualidade dos clusters</h3></div><div class="card-body"><div id="clusterQualityPanel"></div></div></div>
+          <div class="analytics-card span-6"><div class="card-head"><h3>Dendrograma hierárquico</h3></div><div class="card-body"><div id="dendrogramChart" class="chart"></div></div></div>
 
           <div class="analytics-card span-6"><div class="card-head"><h3>Benchmarking</h3></div><div class="card-body"><div id="benchmarkTable" class="table-wrap"></div></div></div>
           <div class="analytics-card span-6"><div class="card-head"><h3>Fragilidades sistêmicas</h3></div><div class="card-body"><div id="weaknessChart" class="chart"></div></div></div>
+          <div class="analytics-card span-12"><div class="card-head"><h3>Outliers e desequilíbrios</h3></div><div class="card-body"><div id="outlierTable" class="table-wrap"></div></div></div>
 
           <div class="analytics-card span-7"><div class="card-head"><h3>Exploração individual</h3><span id="selectedOrgBadge" class="pill"></span></div><div class="card-body"><div id="individualRadar" class="chart"></div></div></div>
           <div class="analytics-card span-5"><div class="card-head"><h3>Perfil e gaps</h3></div><div class="card-body"><div id="individualProfile" class="table-wrap"></div></div></div>
 
           <div class="analytics-card span-6"><div class="card-head"><h3>Distribuições</h3></div><div class="card-body"><div id="distributionChart" class="chart"></div></div></div>
           <div class="analytics-card span-6"><div class="card-head"><h3>PCA e explicabilidade</h3></div><div class="card-body"><div id="pcaExplainChart" class="chart"></div></div></div>
+          <div class="analytics-card span-12"><div class="card-head"><h3>Análise temporal</h3></div><div class="card-body"><div id="temporalPanel"></div></div></div>
           <div class="analytics-card span-12"><div class="card-head"><h3>Estatística descritiva</h3></div><div class="card-body"><div id="descriptiveTable" class="table-wrap"></div></div></div>
         </div>
       </div>
@@ -940,13 +1043,49 @@ agregados:
       activeTab: 'calculatorTab',
       analytics: null,
       analyticsVariableScope: 'aggregates',
+      selectedAnalyticsVariables: [],
       clusterCount: 4,
+      clusterMethod: 'kmeans',
+      dbscanEps: 0.35,
+      dbscanMinPts: 4,
       embeddingMethod: 'tsne',
+      correlationMode: 'pearson',
+      maturityFilter: '',
+      clusterFilter: '',
       selectedAnalyticsEntity: null,
+      selectedCompareEntity: null,
       analyticsSearch: ''
     };
 
     const $ = (id) => document.getElementById(id);
+
+    const ANALYTICS_CARD_HELP = {
+      'Organizações': 'Quantidade de organizações consideradas na base analítica atual, após filtros de maturidade, cluster e variáveis. Use este número para saber o tamanho da amostra que sustenta as demais estatísticas.',
+      'Média iGovTI': 'Média do índice raiz entre as organizações analisadas. Valores mais altos indicam maior maturidade média; compare com mediana e dispersão para evitar conclusões enviesadas por poucos casos extremos.',
+      'Mediana': 'Valor central do índice raiz. Metade das organizações está acima e metade abaixo. Quando a mediana fica bem abaixo da média, há provável concentração em notas baixas com poucos desempenhos altos puxando a média.',
+      'Desvio padrão': 'Mede a dispersão do índice raiz. Quanto maior, mais heterogêneo é o conjunto de organizações; valores baixos indicam desempenho mais uniforme.',
+      'Níveis de maturidade': 'Distribuição das organizações por faixa de maturidade configurada no YAML. Ajuda a perceber se o ecossistema está concentrado em estágios iniciais ou avançados.',
+      'Ranking geral': 'Ordena as organizações pelo índice raiz, do maior para o menor. Clique em uma linha para atualizar a exploração individual e comparar a organização com médias e benchmarks.',
+      'Insights automáticos': 'Resumo textual calculado a partir das estatísticas. Use como ponto de partida: ele destaca dimensões críticas, correlações, clusters frágeis e organizações atípicas que merecem investigação.',
+      'Correlação Pearson': 'Heatmap de correlação linear entre variáveis. Valores próximos de 1 indicam que crescem juntas; próximos de -1 indicam relação inversa; próximos de 0 indicam pouca relação linear.',
+      'Rede de dependências': 'Grafo das relações mais fortes segundo o modo selecionado em Dependência. Nós conectados indicam dimensões que se comportam de forma parecida ou dependente.',
+      'Dependência não linear': 'Heatmap de Mutual Information. Detecta dependências que podem não aparecer na correlação linear; valores maiores sugerem associação informativa entre variáveis.',
+      'Variáveis estruturantes': 'Ranking composto que combina correlação com o índice raiz, correlação média com outras dimensões, Mutual Information e importância na PCA. As primeiras tendem a explicar mais a estrutura geral dos dados.',
+      'Ranking de correlações e dependências': 'Tabela dos pares de variáveis mais associados. Pearson mostra relação linear, Spearman relação monotônica e MI dependência geral por discretização.',
+      'Clusters PCA': 'Projeção em duas dimensões usando PCA, colorida por cluster. Pontos próximos representam organizações com perfis semelhantes nas variáveis selecionadas.',
+      'Clusters t-SNE / projeção 2D': 'Projeção alternativa para explorar agrupamentos visuais. t-SNE e UMAP priorizam vizinhanças locais; PCA 2D é mais estável e explicável.',
+      'Qualidade dos clusters': 'Resumo do método de clusterização. Silhouette perto de 1 indica clusters bem separados; perto de 0 indica fronteiras pouco claras; negativo sugere agrupamento ruim.',
+      'Dendrograma hierárquico': 'Mostra as últimas fusões do agrupamento hierárquico. Barras mais altas indicam junções entre grupos mais distantes; útil para avaliar quantos grupos naturais existem.',
+      'Benchmarking': 'Compara melhores, piores, organizações equilibradas, desbalanceadas e médias por cluster. Use para identificar referências, casos críticos e perfis de maturidade.',
+      'Fragilidades sistêmicas': 'Dimensões com menor média entre as organizações. Barras mais baixas indicam gargalos coletivos e temas prioritários para atuação transversal.',
+      'Outliers e desequilíbrios': 'Lista organizações atípicas por nota, distância ao cluster, desbalanceamento interno ou muitas fragilidades, além de valores extremos por variável. Esses casos pedem revisão qualitativa.',
+      'Exploração individual': 'Radar da organização selecionada contra média geral, média do cluster, top quartil e organização de comparação. Valores perto do centro indicam fragilidade relativa.',
+      'Perfil e gaps': 'Tabela da organização selecionada por variável. Gap negativo significa desempenho abaixo da média geral; gap positivo indica ponto forte relativo.',
+      'Distribuições': 'Histograma, boxplot, violin e densidade do índice raiz. Use para observar concentração, assimetria, dispersão e presença de extremos.',
+      'PCA e explicabilidade': 'Mostra variância explicada e variáveis com maior peso nas componentes principais. Ajuda a entender quais dimensões mais estruturam as diferenças entre organizações.',
+      'Análise temporal': 'Quando há coluna de ciclo ou ano, mostra evolução média ao longo do tempo. Sem múltiplos ciclos, o painel informa que a análise temporal não está disponível.',
+      'Estatística descritiva': 'Tabela completa por variável: média, mediana, quartis, mínimo, máximo, variância, desvio padrão e coeficiente de variação. Use para comparar nível e dispersão das dimensões.'
+    };
 
     $('yamlEditor').value = DEFAULT_YAML;
     $('applyYamlBtn').addEventListener('click', applyYaml);
@@ -980,6 +1119,11 @@ agregados:
     });
     $('analyticsVariableScope').addEventListener('change', () => {
       state.analyticsVariableScope = $('analyticsVariableScope').value;
+      state.selectedAnalyticsVariables = [];
+      refreshAnalytics();
+    });
+    $('analyticsVariableSelect').addEventListener('change', () => {
+      state.selectedAnalyticsVariables = Array.from($('analyticsVariableSelect').selectedOptions).map((option) => option.value);
       refreshAnalytics();
     });
     $('analyticsClusterCount').addEventListener('change', () => {
@@ -987,12 +1131,42 @@ agregados:
       $('analyticsClusterCount').value = String(state.clusterCount);
       refreshAnalytics();
     });
+    $('analyticsClusterMethod').addEventListener('change', () => {
+      state.clusterMethod = $('analyticsClusterMethod').value;
+      refreshAnalytics();
+    });
+    $('analyticsDbscanEps').addEventListener('change', () => {
+      state.dbscanEps = clamp(toNumber($('analyticsDbscanEps').value, 0.35), 0.01, 2);
+      $('analyticsDbscanEps').value = String(state.dbscanEps);
+      refreshAnalytics();
+    });
+    $('analyticsDbscanMinPts').addEventListener('change', () => {
+      state.dbscanMinPts = clamp(Math.round(toNumber($('analyticsDbscanMinPts').value, 4)), 2, 20);
+      $('analyticsDbscanMinPts').value = String(state.dbscanMinPts);
+      refreshAnalytics();
+    });
     $('analyticsEmbeddingMethod').addEventListener('change', () => {
       state.embeddingMethod = $('analyticsEmbeddingMethod').value;
       refreshAnalytics();
     });
+    $('analyticsCorrelationMode').addEventListener('change', () => {
+      state.correlationMode = $('analyticsCorrelationMode').value;
+      renderAnalytics();
+    });
+    $('analyticsMaturityFilter').addEventListener('change', () => {
+      state.maturityFilter = $('analyticsMaturityFilter').value;
+      refreshAnalytics();
+    });
+    $('analyticsClusterFilter').addEventListener('change', () => {
+      state.clusterFilter = $('analyticsClusterFilter').value;
+      renderAnalytics();
+    });
     $('analyticsEntitySelect').addEventListener('change', () => {
       state.selectedAnalyticsEntity = $('analyticsEntitySelect').value;
+      renderAnalytics();
+    });
+    $('analyticsCompareSelect').addEventListener('change', () => {
+      state.selectedCompareEntity = $('analyticsCompareSelect').value;
       renderAnalytics();
     });
     $('analyticsSearch').addEventListener('input', () => {
@@ -1002,11 +1176,15 @@ agregados:
     $('downloadAnalyticsCsvBtn').addEventListener('click', () => {
       if (state.analytics) downloadText('analise-estatistica-igovti.csv', analyticsToCsv(state.analytics), 'text/csv');
     });
+    $('downloadAnalyticsXlsxBtn').addEventListener('click', () => {
+      if (state.analytics) downloadAnalyticsXlsx(state.analytics);
+    });
     $('downloadAnalyticsJsonBtn').addEventListener('click', () => {
       if (state.analytics) downloadText('analise-estatistica-igovti.json', JSON.stringify(state.analytics, analyticsJsonReplacer, 2), 'application/json');
     });
 
     applyYaml();
+    injectAnalyticsHelp();
 
     function readYamlFile(event) {
       const file = event.target.files[0];
@@ -1017,6 +1195,18 @@ agregados:
         applyYaml();
       };
       reader.readAsText(file);
+    }
+
+    function injectAnalyticsHelp() {
+      document.querySelectorAll('#analyticsTab .analytics-card').forEach((card) => {
+        const title = card.querySelector('.card-head h3')?.textContent?.trim();
+        const body = card.querySelector('.card-body');
+        if (!title || !body || !ANALYTICS_CARD_HELP[title] || body.querySelector('.card-help')) return;
+        const help = document.createElement('p');
+        help.className = 'card-help';
+        help.textContent = ANALYTICS_CARD_HELP[title];
+        body.prepend(help);
+      });
     }
 
     function readXlsxFile(event) {
@@ -1106,7 +1296,7 @@ agregados:
     }
 
     function detectIdColumn(columns) {
-      const candidates = ['attribute_1', 'orgao', 'órgão', 'entidade', 'auditado', 'name', 'id'];
+      const candidates = ['firstname', 'attribute_1', 'orgao', 'órgão', 'entidade', 'auditado', 'name', 'id'];
       const lower = new Map(columns.map((col) => [String(col).toLowerCase(), col]));
       for (const candidate of candidates) {
         if (lower.has(candidate)) return lower.get(candidate);
@@ -1221,7 +1411,8 @@ agregados:
           valor: values[root],
           nivel_maturidade: classifyMaturity(values[root], state.config),
           valores: values,
-          memoria: trace
+          memoria: trace,
+          raw: row.__raw
         };
       });
       $('downloadJsonBtn').disabled = false;
@@ -1897,13 +2088,18 @@ agregados:
       const spearman = computeCorrelationMatrix(dataset, 'spearman');
       const mutualInformation = computeMutualInformationMatrix(dataset);
       const pca = computePca(dataset.matrix, dataset.variables);
-      const clusters = computeKMeans(dataset.matrix, state.clusterCount);
+      const clusters = computeClusters(dataset.matrix);
       const embedding = computeEmbedding(dataset.matrix, pca);
       const outliers = computeOutliers(dataset, clusters);
+      const variableOutliers = computeVariableOutliers(dataset, stats);
       const benchmarks = computeBenchmarks(dataset, clusters, stats);
-      const insights = generateInsights(dataset, stats, pearson, mutualInformation, clusters, outliers, benchmarks);
-      state.analytics = { dataset, stats, pearson, spearman, mutualInformation, pca, clusters, embedding, outliers, benchmarks, insights };
+      const clusterQuality = computeClusterQuality(dataset.matrix, clusters);
+      const temporal = computeTemporalAnalysis(dataset);
+      const structuralVariables = computeStructuralVariables(dataset, stats, pearson, mutualInformation, pca);
+      const insights = generateInsights(dataset, stats, pearson, mutualInformation, clusters, outliers, benchmarks, structuralVariables, clusterQuality);
+      state.analytics = { dataset, stats, pearson, spearman, mutualInformation, pca, clusters, embedding, outliers, variableOutliers, benchmarks, clusterQuality, temporal, structuralVariables, insights };
       if (!state.selectedAnalyticsEntity || !dataset.ids.includes(state.selectedAnalyticsEntity)) state.selectedAnalyticsEntity = dataset.ids[0];
+      if (!state.selectedCompareEntity || !dataset.ids.includes(state.selectedCompareEntity)) state.selectedCompareEntity = dataset.ids[1] || dataset.ids[0];
       fillAnalyticsEntitySelect(dataset);
       renderAnalytics();
     }
@@ -1914,20 +2110,25 @@ agregados:
       const preferred = [root, ...aggregateIds.filter((id) => id !== root)];
       const allIds = [...new Set(state.results.flatMap((result) => Object.keys(result.valores || {})))];
       const candidates = state.analyticsVariableScope === 'all' ? allIds : preferred;
-      const variables = candidates.filter((id) => {
+      const validVariables = candidates.filter((id) => {
         const values = state.results.map((result) => result.valores[id]);
         const numeric = values.filter((value) => Number.isFinite(value) && value >= 0 && value <= 1);
         return numeric.length >= Math.max(2, Math.ceil(values.length * 0.75));
       });
+      fillVariableSelect(validVariables);
+      const requested = state.selectedAnalyticsVariables.filter((id) => validVariables.includes(id));
+      const variables = requested.length ? requested : validVariables;
       const means = {};
       for (const variable of variables) {
         const values = state.results.map((result) => result.valores[variable]).filter(Number.isFinite);
         means[variable] = mean(values);
       }
-      const rows = state.results.map((result) => ({
+      const sourceResults = state.results.filter((result) => !state.maturityFilter || result.nivel_maturidade === state.maturityFilter);
+      const rows = sourceResults.map((result) => ({
         id: result.id,
         valor: result.valor,
         nivel_maturidade: result.nivel_maturidade,
+        raw: result,
         values: variables.map((variable) => {
           const value = result.valores[variable];
           return Number.isFinite(value) && value >= 0 && value <= 1 ? value : means[variable];
@@ -1939,8 +2140,15 @@ agregados:
         ids: rows.map((row) => row.id),
         rows,
         matrix: rows.map((row) => row.values),
-        maturity: state.results.map((result) => result.nivel_maturidade)
+        maturity: rows.map((row) => row.nivel_maturidade),
+        allMaturity: [...new Set(state.results.map((result) => result.nivel_maturidade))].filter(Boolean)
       };
+    }
+
+    function fillVariableSelect(validVariables) {
+      const select = $('analyticsVariableSelect');
+      const current = new Set(state.selectedAnalyticsVariables);
+      select.innerHTML = validVariables.map((id) => `<option value="${escapeHtml(id)}" ${current.has(id) ? 'selected' : ''}>${escapeHtml(id)}</option>`).join('');
     }
 
     function computeDescriptiveStats(dataset) {
@@ -2018,6 +2226,12 @@ agregados:
       return { scores, loadings, variance: varianceExplained, cumulative };
     }
 
+    function computeClusters(matrix) {
+      if (state.clusterMethod === 'dbscan') return computeDbscan(matrix, state.dbscanEps, state.dbscanMinPts);
+      if (state.clusterMethod === 'hierarchical') return computeHierarchicalClustering(matrix, state.clusterCount);
+      return computeKMeans(matrix, state.clusterCount);
+    }
+
     function computeKMeans(matrix, requestedK) {
       const n = matrix.length;
       const k = Math.max(1, Math.min(requestedK, n));
@@ -2047,10 +2261,101 @@ agregados:
         if (!changed) break;
       }
       const distances = matrix.map((row, index) => euclidean(row, centroids[assignments[index]]));
-      return { k, assignments, centroids, distances };
+      return { method: 'K-Means', k, assignments, centroids, distances, noiseCount: 0, dendrogram: [] };
+    }
+
+    function computeDbscan(matrix, eps, minPts) {
+      const n = matrix.length;
+      const assignments = new Array(n).fill(undefined);
+      let cluster = 0;
+      const neighbors = (index) => matrix.map((row, rowIndex) => euclidean(matrix[index], row) <= eps ? rowIndex : -1).filter((idx) => idx >= 0);
+      for (let i = 0; i < n; i++) {
+        if (assignments[i] !== undefined) continue;
+        const seeds = neighbors(i);
+        if (seeds.length < minPts) {
+          assignments[i] = -1;
+          continue;
+        }
+        assignments[i] = cluster;
+        const queue = seeds.filter((idx) => idx !== i);
+        while (queue.length) {
+          const current = queue.shift();
+          if (assignments[current] === -1) assignments[current] = cluster;
+          if (assignments[current] !== undefined) continue;
+          assignments[current] = cluster;
+          const currentNeighbors = neighbors(current);
+          if (currentNeighbors.length >= minPts) {
+            for (const candidate of currentNeighbors) {
+              if (!queue.includes(candidate)) queue.push(candidate);
+            }
+          }
+        }
+        cluster += 1;
+      }
+      const k = Math.max(1, cluster);
+      const centroids = Array.from({ length: k }, (_, label) => {
+        const members = matrix.filter((_, index) => assignments[index] === label);
+        return members.length ? columnMeans(members) : Array(matrix[0]?.length || 0).fill(0);
+      });
+      const distances = matrix.map((row, index) => assignments[index] < 0 ? Infinity : euclidean(row, centroids[assignments[index]]));
+      return { method: 'DBSCAN', k, assignments, centroids, distances, noiseCount: assignments.filter((item) => item === -1).length, dendrogram: [] };
+    }
+
+    function computeHierarchicalClustering(matrix, requestedK) {
+      const n = matrix.length;
+      let clusters = matrix.map((row, index) => ({ id: index, members: [index], centroid: row.slice() }));
+      const merges = [];
+      let nextId = n;
+      while (clusters.length > 1) {
+        let best = [0, 1, Infinity];
+        for (let i = 0; i < clusters.length; i++) {
+          for (let j = i + 1; j < clusters.length; j++) {
+            const distance = euclidean(clusters[i].centroid, clusters[j].centroid);
+            if (distance < best[2]) best = [i, j, distance];
+          }
+        }
+        const [aIndex, bIndex, distance] = best;
+        const a = clusters[aIndex];
+        const b = clusters[bIndex];
+        const members = [...a.members, ...b.members];
+        merges.push({ left: a.id, right: b.id, distance, size: members.length, id: nextId });
+        const merged = { id: nextId++, members, centroid: columnMeans(members.map((idx) => matrix[idx])) };
+        clusters = clusters.filter((_, index) => index !== aIndex && index !== bIndex);
+        clusters.push(merged);
+      }
+      const targetK = Math.max(1, Math.min(requestedK, n));
+      let cut = matrix.map((row, index) => ({ id: index, members: [index], centroid: row.slice() }));
+      let cutNextId = n;
+      while (cut.length > targetK) {
+        let best = [0, 1, Infinity];
+        for (let i = 0; i < cut.length; i++) {
+          for (let j = i + 1; j < cut.length; j++) {
+            const distance = euclidean(cut[i].centroid, cut[j].centroid);
+            if (distance < best[2]) best = [i, j, distance];
+          }
+        }
+        const [aIndex, bIndex] = best;
+        const members = [...cut[aIndex].members, ...cut[bIndex].members];
+        const merged = { id: cutNextId++, members, centroid: columnMeans(members.map((idx) => matrix[idx])) };
+        cut = cut.filter((_, index) => index !== aIndex && index !== bIndex);
+        cut.push(merged);
+      }
+      const assignments = new Array(n).fill(0);
+      cut.forEach((cluster, label) => cluster.members.forEach((idx) => { assignments[idx] = label; }));
+      const centroids = cut.map((cluster) => cluster.centroid);
+      const distances = matrix.map((row, index) => euclidean(row, centroids[assignments[index]]));
+      return { method: 'Hierárquico', k: cut.length, assignments, centroids, distances, noiseCount: 0, dendrogram: merges };
     }
 
     function computeEmbedding(matrix, pca) {
+      if (state.embeddingMethod === 'umap' && window.UMAP && matrix.length > 2) {
+        try {
+          const model = new window.UMAP.UMAP({ nComponents: 2, nNeighbors: Math.max(2, Math.min(15, matrix.length - 1)), minDist: 0.1, random: () => 0.42 });
+          return { method: 'UMAP', points: model.fit(matrix) };
+        } catch (error) {
+          return { method: 'PCA 2D', points: pcaScores2d(pca) };
+        }
+      }
       if (state.embeddingMethod === 'tsne' && window.tsnejs && matrix.length > 2) {
         try {
           const model = new window.tsnejs.tSNE({ dim: 2, perplexity: Math.max(2, Math.min(20, Math.floor((matrix.length - 1) / 3))), epsilon: 10 });
@@ -2074,27 +2379,101 @@ agregados:
       return dataset.rows.map((row, index) => ({
         id: row.id,
         iqr: row.valor < q1 - 1.5 * iqr || row.valor > q3 + 1.5 * iqr,
-        centroid: clusters.distances[index] > threshold,
+        centroid: Number.isFinite(clusters.distances[index]) && clusters.distances[index] > threshold,
         distance: clusters.distances[index],
-        cluster: clusters.assignments[index]
-      })).filter((item) => item.iqr || item.centroid);
+        cluster: clusters.assignments[index],
+        imbalance: stddev(row.values),
+        weakVariables: row.values.filter((value) => value < 0.15).length
+      })).filter((item) => item.iqr || item.centroid || item.imbalance > 0.35 || item.weakVariables >= Math.max(4, Math.ceil(dataset.variables.length * 0.4)));
+    }
+
+    function computeVariableOutliers(dataset, stats) {
+      return dataset.variables.flatMap((variable, index) => {
+        const values = dataset.matrix.map((row) => row[index]);
+        const sorted = values.slice().sort((a, b) => a - b);
+        const q1 = quantile(sorted, 0.25);
+        const q3 = quantile(sorted, 0.75);
+        const iqr = q3 - q1;
+        const low = q1 - 1.5 * iqr;
+        const high = q3 + 1.5 * iqr;
+        return dataset.rows.map((row, rowIndex) => ({ id: row.id, variable, value: values[rowIndex], low, high }))
+          .filter((item) => item.value < low || item.value > high);
+      });
     }
 
     function computeBenchmarks(dataset, clusters, stats) {
       const rootRank = dataset.rows.map((row, index) => ({ id: row.id, value: row.valor, cluster: clusters.assignments[index], maturity: row.nivel_maturidade }))
         .sort((a, b) => b.value - a.value);
       const variableRank = stats.slice().sort((a, b) => a.mean - b.mean);
+      const strongestVariables = stats.slice().sort((a, b) => b.mean - a.mean);
+      const balanced = dataset.rows.map((row) => ({ id: row.id, value: row.valor, dispersion: stddev(row.values), min: Math.min(...row.values), max: Math.max(...row.values) }))
+        .sort((a, b) => a.dispersion - b.dispersion);
       const clusterSummary = [];
-      for (let cluster = 0; cluster < clusters.k; cluster++) {
+      const labels = [...new Set(clusters.assignments)].sort((a, b) => a - b);
+      for (const cluster of labels) {
         const members = dataset.rows.filter((_, index) => clusters.assignments[index] === cluster);
-        clusterSummary.push({ cluster, count: members.length, mean: mean(members.map((row) => row.valor)) });
+        clusterSummary.push({ cluster, count: members.length, mean: mean(members.map((row) => row.valor)), min: Math.min(...members.map((row) => row.valor)), max: Math.max(...members.map((row) => row.valor)) });
       }
       const topQuartileCut = quantile(dataset.rows.map((row) => row.valor).sort((a, b) => a - b), 0.75);
       const topQuartile = dataset.rows.filter((row) => row.valor >= topQuartileCut);
-      return { rootRank, variableRank, clusterSummary, topQuartile };
+      return { rootRank, variableRank, strongestVariables, balanced, clusterSummary, topQuartile, topQuartileCut };
     }
 
-    function generateInsights(dataset, stats, pearsonMatrix, miMatrix, clusters, outliers, benchmarks) {
+    function computeClusterQuality(matrix, clusters) {
+      const labels = clusters.assignments;
+      const silhouettes = matrix.map((row, index) => silhouetteForPoint(matrix, labels, index));
+      const valid = silhouettes.filter(Number.isFinite);
+      return {
+        method: clusters.method,
+        silhouette: mean(valid),
+        minSilhouette: valid.length ? Math.min(...valid) : 0,
+        maxSilhouette: valid.length ? Math.max(...valid) : 0,
+        noiseCount: clusters.noiseCount || 0,
+        avgDistance: mean(clusters.distances.filter(Number.isFinite))
+      };
+    }
+
+    function silhouetteForPoint(matrix, labels, index) {
+      const own = labels[index];
+      if (own < 0) return 0;
+      const same = matrix.map((row, rowIndex) => rowIndex !== index && labels[rowIndex] === own ? euclidean(matrix[index], row) : null).filter(Number.isFinite);
+      const a = same.length ? mean(same) : 0;
+      const otherLabels = [...new Set(labels.filter((label) => label !== own && label >= 0))];
+      if (!otherLabels.length) return 0;
+      const b = Math.min(...otherLabels.map((label) => mean(matrix.map((row, rowIndex) => labels[rowIndex] === label ? euclidean(matrix[index], row) : null).filter(Number.isFinite))));
+      return (b - a) / Math.max(a, b, 1e-9);
+    }
+
+    function computeTemporalAnalysis(dataset) {
+      const cycleFields = ['ano', 'ciclo', 'year', 'survey_year', 'periodo', 'período'];
+      const rows = dataset.rows.map((row) => {
+        const raw = row.raw?.raw || row.raw || {};
+        const field = Object.keys(raw).find((key) => cycleFields.includes(String(key).toLowerCase()));
+        return field ? { id: row.id, cycle: raw[field], value: row.valor, maturity: row.nivel_maturidade } : null;
+      }).filter(Boolean);
+      const cycles = [...new Set(rows.map((row) => row.cycle))].filter((item) => item !== null && item !== undefined && item !== '');
+      if (cycles.length < 2) return { available: false, message: 'Análise temporal indisponível: a planilha não possui múltiplos ciclos identificáveis.' };
+      const byCycle = cycles.map((cycle) => {
+        const members = rows.filter((row) => row.cycle === cycle);
+        return { cycle, count: members.length, mean: mean(members.map((row) => row.value)), median: quantile(members.map((row) => row.value).sort((a, b) => a - b), 0.5) };
+      }).sort((a, b) => String(a.cycle).localeCompare(String(b.cycle)));
+      return { available: true, byCycle };
+    }
+
+    function computeStructuralVariables(dataset, stats, pearsonMatrix, miMatrix, pca) {
+      const rootIndex = dataset.variables.indexOf(dataset.root);
+      return dataset.variables.map((variable, index) => {
+        const correlations = pearsonMatrix.matrix[index].filter((_, corrIndex) => corrIndex !== index).map(Math.abs);
+        const miValues = miMatrix.matrix[index].filter((_, miIndex) => miIndex !== index);
+        const rootCorr = rootIndex >= 0 && index !== rootIndex ? Math.abs(pearsonMatrix.matrix[rootIndex][index]) : 1;
+        const pcaLoading = pca.loadings.find((item) => item.variable === variable)?.importance || 0;
+        const stat = stats.find((item) => item.variable === variable);
+        const score = (rootCorr * 0.35) + (mean(correlations) * 0.25) + (mean(miValues) * 0.20) + (pcaLoading * 0.20);
+        return { variable, score, rootCorr, meanCorr: mean(correlations), mi: mean(miValues), pca: pcaLoading, mean: stat?.mean || 0 };
+      }).sort((a, b) => b.score - a.score);
+    }
+
+    function generateInsights(dataset, stats, pearsonMatrix, miMatrix, clusters, outliers, benchmarks, structuralVariables, clusterQuality) {
       const rootIndex = dataset.variables.indexOf(dataset.root);
       const sortedByMean = stats.slice().sort((a, b) => a.mean - b.mean);
       const sortedByCv = stats.slice().sort((a, b) => b.cv - a.cv);
@@ -2104,13 +2483,17 @@ agregados:
         value: pearsonMatrix.matrix[rootIndex][index]
       })).filter((item) => item.variable !== dataset.root).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)) : [];
       const criticalCluster = benchmarks.clusterSummary.slice().sort((a, b) => a.mean - b.mean)[0];
+      const strongestMi = correlationPairs({ dataset, pearson: pearsonMatrix, spearman: pearsonMatrix, mutualInformation: miMatrix }).sort((a, b) => b.mi - a.mi)[0];
       return [
         `Variavel mais critica: ${sortedByMean[0]?.variable || '-'} (media ${formatNumber(sortedByMean[0]?.mean)}).`,
         `Variavel mais forte: ${sortedByMean[sortedByMean.length - 1]?.variable || '-'} (media ${formatNumber(sortedByMean[sortedByMean.length - 1]?.mean)}).`,
         `Dimensao mais homogenea: ${sortedByStd[0]?.variable || '-'} (desvio ${formatNumber(sortedByStd[0]?.stddev)}).`,
         `Dimensao mais dispersa: ${sortedByCv[0]?.variable || '-'} (CV ${formatNumber(sortedByCv[0]?.cv)}).`,
         `Maior correlacao com ${dataset.root}: ${rootCorrelations[0]?.variable || '-'} (r ${formatNumber(rootCorrelations[0]?.value)}).`,
+        `Dependencia nao linear mais forte: ${strongestMi ? `${strongestMi.a} x ${strongestMi.b} (MI ${formatNumber(strongestMi.mi)})` : '-'}.`,
+        `Variavel mais estruturante: ${structuralVariables[0]?.variable || '-'} (score ${formatNumber(structuralVariables[0]?.score)}).`,
         `Cluster mais critico: ${criticalCluster ? `cluster ${criticalCluster.cluster + 1}, media ${formatNumber(criticalCluster.mean)}` : '-'}.`,
+        `Qualidade media dos clusters (${clusters.method}): silhouette ${formatNumber(clusterQuality.silhouette)}.`,
         `Organizacoes atipicas detectadas: ${outliers.length}.`
       ];
     }
@@ -2137,9 +2520,12 @@ agregados:
       renderCorrelationViews(analytics);
       renderClusterViews(analytics);
       renderBenchmarkViews(analytics);
+      renderOutlierViews(analytics);
       renderIndividualViews(analytics);
       renderDistributionViews(analytics);
       renderPcaExplainability(analytics);
+      renderTemporalViews(analytics);
+      resizeAnalyticsCharts();
     }
 
     function renderAnalyticsCards(analytics) {
@@ -2194,10 +2580,22 @@ agregados:
       const pairs = correlationPairs(analytics).slice(0, 80);
       $('correlationSummary').textContent = `${pairs.filter((p) => Math.abs(p.pearson) >= 0.7).length} fortes`;
       $('correlationTable').innerHTML = renderTable(['a', 'b', 'pearson', 'spearman', 'mi', 'classificacao'], pairs, (row, col) => ['pearson', 'spearman', 'mi'].includes(col) ? formatNumber(row[col]) : row[col]);
-      renderCorrelationNetwork(analytics, pairs.filter((pair) => Math.abs(pair.pearson) >= 0.6).slice(0, 25));
+      Plotly.react('miHeatmap', [{
+        z: analytics.mutualInformation.matrix,
+        x: variables,
+        y: variables,
+        type: 'heatmap',
+        colorscale: 'YlGnBu',
+        hovertemplate: '%{y} x %{x}<br>MI=%{z:.3f}<extra></extra>'
+      }], plotLayout('Mutual Information'), plotConfig());
+      $('miSummary').textContent = `${pairs.filter((p) => p.mi >= 0.35).length} dependências`;
+      $('structuralVariablesTable').innerHTML = renderTable(['variable', 'score', 'rootCorr', 'meanCorr', 'mi', 'pca', 'mean'], analytics.structuralVariables.slice(0, 20), (row, col) => col === 'variable' ? row[col] : formatNumber(row[col]));
+      const mode = state.correlationMode;
+      const filtered = pairs.filter((pair) => mode === 'mi' ? pair.mi >= 0.25 : Math.abs(pair[mode]) >= 0.6).slice(0, 25);
+      renderCorrelationNetwork(analytics, filtered, mode);
     }
 
-    function renderCorrelationNetwork(analytics, pairs) {
+    function renderCorrelationNetwork(analytics, pairs, mode = 'pearson') {
       const variables = [...new Set(pairs.flatMap((pair) => [pair.a, pair.b]))];
       const angle = (2 * Math.PI) / Math.max(variables.length, 1);
       const coords = variables.map((variable, index) => ({ variable, x: Math.cos(index * angle), y: Math.sin(index * angle) }));
@@ -2214,16 +2612,19 @@ agregados:
       Plotly.react('correlationNetwork', [
         { x: edgeX, y: edgeY, mode: 'lines', type: 'scatter', line: { color: '#c7d3de', width: 1 }, hoverinfo: 'skip' },
         { x: coords.map((c) => c.x), y: coords.map((c) => c.y), text: coords.map((c) => c.variable), mode: 'markers+text', type: 'scatter', textposition: 'top center', marker: { size: 12, color: '#087c8f' } }
-      ], plotLayout('Dependências |r| >= 0,60'), plotConfig());
+      ], plotLayout(`Dependências por ${mode === 'mi' ? 'Mutual Information' : mode}`), plotConfig());
     }
 
     function renderClusterViews(analytics) {
-      const colors = analytics.clusters.assignments.map((cluster) => cluster + 1);
+      fillClusterFilter(analytics);
+      const colors = analytics.clusters.assignments.map((cluster) => cluster + 2);
       const outlierIds = new Set(analytics.outliers.map((item) => item.id));
       const marker = { size: analytics.dataset.ids.map((id) => outlierIds.has(id) ? 14 : 9), color: colors, colorscale: 'Viridis', showscale: true, line: { color: '#fff', width: 1 } };
       const pcaPoints = pcaScores2d(analytics.pca);
       Plotly.react('pcaScatter', [scatterTrace(analytics.dataset, pcaPoints, marker, 'PCA')], scatterLayout('Clusters por PCA'), plotConfig());
       Plotly.react('embeddingScatter', [scatterTrace(analytics.dataset, analytics.embedding.points, marker, analytics.embedding.method)], scatterLayout(`Clusters por ${analytics.embedding.method}`), plotConfig());
+      renderClusterQualityPanel(analytics);
+      renderDendrogram(analytics);
       ['pcaScatter', 'embeddingScatter'].forEach((id) => {
         const element = $(id);
         element.on?.('plotly_click', (event) => {
@@ -2245,10 +2646,33 @@ agregados:
         y: weaknessRows.map((row) => row.variable),
         marker: { color: '#a15c07' }
       }], plotLayout('Dimensões mais críticas'), plotConfig());
-      const top = analytics.benchmarks.rootRank.slice(0, 5).map((row) => ({ grupo: 'Top', ...row }));
-      const bottom = analytics.benchmarks.rootRank.slice(-5).reverse().map((row) => ({ grupo: 'Bottom', ...row }));
+      const top = analytics.benchmarks.rootRank.slice(0, 10).map((row) => ({ grupo: 'Top', ...row }));
+      const bottom = analytics.benchmarks.rootRank.slice(-10).reverse().map((row) => ({ grupo: 'Bottom', ...row }));
       const clusters = analytics.benchmarks.clusterSummary.map((row) => ({ grupo: `Cluster ${row.cluster + 1}`, id: `${row.count} orgs`, value: row.mean, cluster: row.cluster + 1, maturity: '' }));
-      $('benchmarkTable').innerHTML = renderTable(['grupo', 'id', 'value', 'cluster', 'maturity'], [...top, ...bottom, ...clusters], (row, col) => col === 'value' ? formatNumber(row[col]) : row[col]);
+      const balanced = analytics.benchmarks.balanced.slice(0, 5).map((row) => ({ grupo: 'Equilibrada', id: row.id, value: row.value, cluster: '-', maturity: `disp ${formatNumber(row.dispersion)}` }));
+      const unbalanced = analytics.benchmarks.balanced.slice(-5).reverse().map((row) => ({ grupo: 'Desbalanceada', id: row.id, value: row.value, cluster: '-', maturity: `disp ${formatNumber(row.dispersion)}` }));
+      $('benchmarkTable').innerHTML = renderTable(['grupo', 'id', 'value', 'cluster', 'maturity'], [...top, ...bottom, ...balanced, ...unbalanced, ...clusters], (row, col) => col === 'value' ? formatNumber(row[col]) : row[col]);
+    }
+
+    function renderOutlierViews(analytics) {
+      const orgRows = analytics.outliers.map((item) => ({
+        tipo: 'organização',
+        id: item.id,
+        detalhe: [
+          item.iqr ? 'IQR' : '',
+          item.centroid ? 'distância' : '',
+          item.imbalance > 0.35 ? 'desbalanceamento' : '',
+          item.weakVariables ? `${item.weakVariables} fragilidades` : ''
+        ].filter(Boolean).join('; '),
+        valor: item.distance
+      }));
+      const variableRows = analytics.variableOutliers.slice(0, 80).map((item) => ({
+        tipo: 'variável extrema',
+        id: item.id,
+        detalhe: item.variable,
+        valor: item.value
+      }));
+      $('outlierTable').innerHTML = renderTable(['tipo', 'id', 'detalhe', 'valor'], [...orgRows, ...variableRows], (row, col) => col === 'valor' ? formatNumber(row[col]) : row[col]);
     }
 
     function renderIndividualViews(analytics) {
@@ -2263,11 +2687,17 @@ agregados:
       const clusterRows = analytics.dataset.rows.filter((_, index) => analytics.clusters.assignments[index] === cluster);
       const clusterMeans = variables.map((variable) => mean(clusterRows.map((item) => item.values[analytics.dataset.variables.indexOf(variable)])));
       const topQuartileMeans = variables.map((variable) => mean(analytics.benchmarks.topQuartile.map((item) => item.values[analytics.dataset.variables.indexOf(variable)])));
-      Plotly.react('individualRadar', [
+      const compareRow = analytics.dataset.rows.find((item) => item.id === state.selectedCompareEntity);
+      const compareValues = compareRow ? variables.map((variable) => compareRow.values[analytics.dataset.variables.indexOf(variable)]) : null;
+      const traces = [
         radarTrace(variables, values, row.id, '#087c8f'),
         radarTrace(variables, means, 'Média', '#6d8f21'),
         radarTrace(variables, clusterMeans, 'Cluster', '#a15c07'),
         radarTrace(variables, topQuartileMeans, 'Top quartil', '#147a3d')
+      ];
+      if (compareValues) traces.push(radarTrace(variables, compareValues, `Comparação: ${compareRow.id}`, '#7c3aed'));
+      Plotly.react('individualRadar', [
+        ...traces
       ], { polar: { radialaxis: { visible: true, range: [0, 1] } }, margin: { t: 30, b: 30, l: 40, r: 40 }, legend: { orientation: 'h' } }, plotConfig());
       const rank = analytics.benchmarks.rootRank.findIndex((item) => item.id === row.id) + 1;
       const profile = analytics.dataset.variables.map((variable, index) => ({
@@ -2285,8 +2715,9 @@ agregados:
       Plotly.react('distributionChart', [
         { type: 'histogram', x: rootValues, name: analytics.dataset.root, marker: { color: '#087c8f' }, opacity: 0.75 },
         { type: 'box', x: rootValues, name: 'Boxplot', marker: { color: '#a15c07' }, boxpoints: 'outliers' },
-        { type: 'violin', x: rootValues, name: 'Violin', marker: { color: '#6d8f21' }, meanline: { visible: true } }
-      ], plotLayout(`Distribuição de ${analytics.dataset.root}`), plotConfig());
+        { type: 'violin', x: rootValues, name: 'Violin', marker: { color: '#6d8f21' }, meanline: { visible: true } },
+        { type: 'scatter', mode: 'lines', x: kernelDensity(rootValues).x, y: kernelDensity(rootValues).y, name: 'Densidade', yaxis: 'y2', line: { color: '#7c3aed' } }
+      ], { ...plotLayout(`Distribuição de ${analytics.dataset.root}`), yaxis2: { overlaying: 'y', side: 'right', showgrid: false } }, plotConfig());
     }
 
     function renderPcaExplainability(analytics) {
@@ -2298,15 +2729,81 @@ agregados:
       ], { ...plotLayout('PCA: variância e loadings'), yaxis2: { overlaying: 'y', side: 'right', range: [0, 1], tickformat: '.0%' }, barmode: 'group' }, plotConfig());
     }
 
+    function renderClusterQualityPanel(analytics) {
+      const q = analytics.clusterQuality;
+      $('clusterQualityPanel').innerHTML = `<div class="mini-grid">
+        <div class="mini-metric"><b>${escapeHtml(q.method)}</b><span>Método</span></div>
+        <div class="mini-metric"><b>${formatNumber(q.silhouette)}</b><span>Silhouette médio</span></div>
+        <div class="mini-metric"><b>${formatNumber(q.avgDistance)}</b><span>Distância média</span></div>
+        <div class="mini-metric"><b>${q.noiseCount}</b><span>Ruído DBSCAN</span></div>
+      </div>` + renderTable(['cluster', 'count', 'mean', 'min', 'max'], analytics.benchmarks.clusterSummary, (row, col) => col === 'cluster' ? row[col] + 1 : typeof row[col] === 'number' ? formatNumber(row[col]) : row[col]);
+    }
+
+    function renderDendrogram(analytics) {
+      const merges = analytics.clusters.dendrogram || [];
+      if (!merges.length) {
+        $('dendrogramChart').innerHTML = '<div class="notice small">Dendrograma disponível ao selecionar clustering hierárquico.</div>';
+        return;
+      }
+      $('dendrogramChart').innerHTML = '';
+      const visible = merges.slice(-Math.min(30, merges.length));
+      Plotly.react('dendrogramChart', [{
+        type: 'bar',
+        x: visible.map((merge, index) => `M${index + 1}`),
+        y: visible.map((merge) => merge.distance),
+        text: visible.map((merge) => `n=${merge.size}`),
+        marker: { color: '#087c8f' }
+      }], plotLayout('Altura das fusões hierárquicas'), plotConfig());
+    }
+
+    function renderTemporalViews(analytics) {
+      if (!analytics.temporal.available) {
+        $('temporalPanel').innerHTML = `<div class="notice small">${escapeHtml(analytics.temporal.message)}</div>`;
+        return;
+      }
+      $('temporalPanel').innerHTML = '<div id="temporalChart" class="chart"></div>';
+      Plotly.react('temporalChart', [{
+        type: 'scatter',
+        mode: 'lines+markers',
+        x: analytics.temporal.byCycle.map((row) => row.cycle),
+        y: analytics.temporal.byCycle.map((row) => row.mean),
+        text: analytics.temporal.byCycle.map((row) => `${row.count} organizações`),
+        line: { color: '#087c8f' }
+      }], plotLayout('Evolução média por ciclo'), plotConfig());
+    }
+
     function fillAnalyticsEntitySelect(dataset) {
-      const source = dataset.ids.filter((id) => !state.analyticsSearch || id.toLowerCase().includes(state.analyticsSearch));
+      fillMaturityFilter(dataset);
+      const source = dataset.ids.filter((id) => {
+        const rowIndex = dataset.ids.indexOf(id);
+        const clusterOk = !state.clusterFilter || !state.analytics || String(state.analytics.clusters.assignments[rowIndex]) === state.clusterFilter;
+        return clusterOk && (!state.analyticsSearch || id.toLowerCase().includes(state.analyticsSearch));
+      });
       $('analyticsEntitySelect').innerHTML = source.map((id) => `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`).join('');
+      $('analyticsCompareSelect').innerHTML = source.map((id) => `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`).join('');
       if (source.length && !source.includes(state.selectedAnalyticsEntity)) state.selectedAnalyticsEntity = source[0];
+      if (source.length && !source.includes(state.selectedCompareEntity)) state.selectedCompareEntity = source.find((id) => id !== state.selectedAnalyticsEntity) || source[0];
       $('analyticsEntitySelect').value = state.selectedAnalyticsEntity || '';
+      $('analyticsCompareSelect').value = state.selectedCompareEntity || '';
+    }
+
+    function fillMaturityFilter(dataset) {
+      const options = ['<option value="">Todos</option>', ...dataset.allMaturity.map((name) => `<option value="${escapeHtml(name)}" ${state.maturityFilter === name ? 'selected' : ''}>${escapeHtml(name)}</option>`)];
+      $('analyticsMaturityFilter').innerHTML = options.join('');
+    }
+
+    function fillClusterFilter(analytics) {
+      const labels = [...new Set(analytics.clusters.assignments)].sort((a, b) => a - b);
+      const options = ['<option value="">Todos</option>', ...labels.map((label) => `<option value="${label}" ${state.clusterFilter === String(label) ? 'selected' : ''}>${label < 0 ? 'Ruído' : `Cluster ${label + 1}`}</option>`)];
+      $('analyticsClusterFilter').innerHTML = options.join('');
     }
 
     function filteredRootRank(analytics) {
-      return analytics.benchmarks.rootRank.filter((item) => !state.analyticsSearch || item.id.toLowerCase().includes(state.analyticsSearch));
+      return analytics.benchmarks.rootRank.filter((item) => {
+        const clusterOk = !state.clusterFilter || String(item.cluster) === state.clusterFilter;
+        const searchOk = !state.analyticsSearch || item.id.toLowerCase().includes(state.analyticsSearch);
+        return clusterOk && searchOk;
+      });
     }
 
     function correlationPairs(analytics) {
@@ -2335,11 +2832,14 @@ agregados:
 
     function plotLayout(title) {
       return {
+        autosize: true,
         title: { text: title, font: { size: 14, color: '#152033' } },
-        margin: { t: 46, b: 54, l: 60, r: 24 },
+        margin: { t: 46, b: 70, l: 82, r: 24 },
         paper_bgcolor: '#ffffff',
         plot_bgcolor: '#ffffff',
-        font: { family: 'Inter, Segoe UI, sans-serif', color: '#152033' }
+        font: { family: 'Inter, Segoe UI, sans-serif', color: '#152033' },
+        xaxis: { automargin: true, tickfont: { size: 11 } },
+        yaxis: { automargin: true, tickfont: { size: 11 } }
       };
     }
 
@@ -2348,7 +2848,15 @@ agregados:
     }
 
     function scatterLayout(title) {
-      return { ...plotLayout(title), xaxis: { title: 'Dimensão 1', zeroline: false }, yaxis: { title: 'Dimensão 2', zeroline: false } };
+      return { ...plotLayout(title), xaxis: { title: 'Dimensão 1', zeroline: false, automargin: true }, yaxis: { title: 'Dimensão 2', zeroline: false, automargin: true } };
+    }
+
+    function resizeAnalyticsCharts() {
+      window.requestAnimationFrame(() => {
+        document.querySelectorAll('#analyticsTab .chart').forEach((element) => {
+          if (element.offsetParent && window.Plotly) Plotly.Plots.resize(element);
+        });
+      });
     }
 
     function scatterTrace(dataset, points, marker, name) {
@@ -2389,6 +2897,19 @@ agregados:
         lines.push(['cluster', row.id, analytics.clusters.assignments[index] + 1, formatNumber(row.valor)].join(','));
       });
       return lines.join('\n');
+    }
+
+    function downloadAnalyticsXlsx(analytics) {
+      if (!window.XLSX) {
+        downloadText('analise-estatistica-igovti.csv', analyticsToCsv(analytics), 'text/csv');
+        return;
+      }
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(analytics.stats), 'estatisticas');
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(correlationPairs(analytics)), 'correlacoes');
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(analytics.benchmarks.rootRank), 'ranking');
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(analytics.outliers), 'outliers');
+      XLSX.writeFile(workbook, 'analise-estatistica-igovti.xlsx');
     }
 
     function analyticsJsonReplacer(key, value) {
@@ -2446,8 +2967,27 @@ agregados:
     function rankValues(values) {
       const sorted = values.map((value, index) => ({ value, index })).sort((a, b) => a.value - b.value);
       const ranks = new Array(values.length);
-      sorted.forEach((item, index) => { ranks[item.index] = index + 1; });
+      for (let i = 0; i < sorted.length; i++) {
+        let j = i;
+        while (j + 1 < sorted.length && sorted[j + 1].value === sorted[i].value) j++;
+        const avgRank = (i + 1 + j + 1) / 2;
+        for (let k = i; k <= j; k++) ranks[sorted[k].index] = avgRank;
+        i = j;
+      }
       return ranks;
+    }
+
+    function kernelDensity(values) {
+      const clean = values.filter(Number.isFinite);
+      if (!clean.length) return { x: [], y: [] };
+      const min = Math.min(...clean);
+      const max = Math.max(...clean);
+      const sd = stddev(clean) || 0.1;
+      const bandwidth = Math.max(0.03, 1.06 * sd * Math.pow(clean.length, -0.2));
+      const steps = 50;
+      const x = Array.from({ length: steps }, (_, index) => min + ((max - min || 1) * index) / (steps - 1));
+      const y = x.map((point) => mean(clean.map((value) => Math.exp(-0.5 * Math.pow((point - value) / bandwidth, 2)) / (bandwidth * Math.sqrt(2 * Math.PI)))));
+      return { x, y };
     }
 
     function mutualInformation(a, b, bins) {

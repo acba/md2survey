@@ -13,6 +13,7 @@ O arquivo `index.html` é autocontido e roda diretamente no navegador. Ele usa b
 - `Plotly.js`: gráficos interativos e exportação visual.
 - `simple-statistics`: dependência preparada para estatística, embora a página também implemente funções estatísticas locais.
 - `tsne-js`: projeção t-SNE na aba analítica, com fallback para PCA 2D.
+- `umap-js`: projeção UMAP quando selecionada, com fallback para PCA 2D.
 
 A aplicação possui três abas principais:
 
@@ -202,6 +203,7 @@ Cada linha da planilha é convertida em uma linha processada contendo:
 
 A aplicação tenta identificar a coluna da organização com os nomes:
 
+- `firstname`
 - `attribute_1`
 - `orgao`
 - `órgão`
@@ -211,6 +213,8 @@ A aplicação tenta identificar a coluna da organização com os nomes:
 - `id`
 
 Se nenhuma dessas existir, usa a primeira coluna da planilha.
+
+O campo `firstname` é priorizado porque, nas exportações do LimeSurvey usadas neste fluxo, ele contém o nome legível da organização. O campo técnico `id` só é usado como fallback.
 
 ### Normalização de Colunas
 
@@ -574,14 +578,30 @@ A aba possui controles para:
 - escopo de variáveis:
   - `Agregados`;
   - `Tudo numérico`.
+- seleção múltipla de variáveis.
 - número de clusters:
   - mínimo `2`;
   - máximo `10`;
   - padrão `4`.
+- algoritmo de clustering:
+  - K-Means;
+  - DBSCAN;
+  - Hierárquico.
+- parâmetros DBSCAN:
+  - `eps`;
+  - `minPts`.
 - projeção:
   - `t-SNE`;
+  - `UMAP`;
   - `PCA 2D`.
+- modo da rede de dependências:
+  - Pearson;
+  - Spearman;
+  - Mutual Information.
+- filtro por nível de maturidade.
+- filtro por cluster.
 - organização selecionada;
+- organização de comparação;
 - busca textual por organização.
 
 ## Estatística Descritiva
@@ -749,6 +769,10 @@ A aba exibe:
 
 ## Clustering
 
+O motor analítico permite alternar entre K-Means, DBSCAN e clustering hierárquico.
+
+### K-Means
+
 A função `computeKMeans` implementa K-Means localmente.
 
 Parâmetros:
@@ -794,11 +818,35 @@ O clustering gera:
 - centroides;
 - distância de cada organização ao centroide.
 
+### DBSCAN
+
+A função `computeDbscan` agrupa organizações por densidade usando:
+
+- `eps`: distância máxima de vizinhança;
+- `minPts`: quantidade mínima de vizinhos para formar núcleo.
+
+Organizações classificadas como ruído recebem cluster `-1` e aparecem como ruído no filtro.
+
+### Clustering Hierárquico
+
+A função `computeHierarchicalClustering` executa aglomeração determinística por centroides e corta a árvore pelo número de clusters informado. Ela também gera uma sequência de fusões usada para renderizar o painel de dendrograma simplificado.
+
+### Qualidade dos Clusters
+
+A aplicação calcula uma métrica de silhouette aproximada por organização e resume:
+
+- método selecionado;
+- silhouette médio;
+- distância média ao centroide;
+- quantidade de ruídos no DBSCAN;
+- resumo de média, mínimo e máximo por cluster.
+
 ## t-SNE e Projeção 2D
 
 A aba permite escolher:
 
 - `t-SNE`;
+- `UMAP`;
 - `PCA 2D`.
 
 Quando `t-SNE` está selecionado e a biblioteca está disponível, a função `computeEmbedding` executa:
@@ -815,9 +863,11 @@ max(2, min(20, floor((n - 1) / 3)))
 
 Se `tsne-js` falhar ou não estiver carregado, a aplicação usa PCA 2D como fallback.
 
+Quando `UMAP` está selecionado e `umap-js` está disponível, a aplicação usa UMAP com parâmetros conservadores (`nNeighbors` dinâmico e `minDist` 0.1). Se a biblioteca falhar ou não carregar, usa PCA 2D como fallback.
+
 ## Outliers
 
-A função `computeOutliers` detecta organizações atípicas por dois critérios.
+A função `computeOutliers` detecta organizações atípicas por múltiplos critérios.
 
 ### Outlier por IQR
 
@@ -846,6 +896,14 @@ distância > Q3_distância + 1.5 * IQR_distância
 
 Na visualização de clusters, outliers aparecem com marcador maior.
 
+### Outlier por Desequilíbrio Interno
+
+Cada organização recebe um desvio padrão interno entre suas variáveis analíticas. Valores altos indicam organizações com áreas muito fortes e muito fracas simultaneamente.
+
+### Outliers por Variável
+
+A função `computeVariableOutliers` aplica IQR por variável e lista organizações com valores extremos em dimensões específicas.
+
 ## Benchmarking
 
 A função `computeBenchmarks` produz:
@@ -854,6 +912,9 @@ A função `computeBenchmarks` produz:
 - top organizações;
 - bottom organizações;
 - ranking de variáveis por média;
+- ranking de variáveis fortes;
+- organizações equilibradas;
+- organizações desbalanceadas;
 - resumo por cluster;
 - top quartil.
 
@@ -903,6 +964,7 @@ Ao selecionar uma organização ou clicar em rankings/scatterplots, a aba atuali
 - nível de maturidade;
 - cluster;
 - tabela de gaps.
+- comparação opcional com outra organização selecionada.
 
 ### Radar Chart
 
@@ -952,7 +1014,10 @@ A função `generateInsights` produz textos automáticos com:
 - dimensão mais homogênea;
 - dimensão mais dispersa;
 - maior correlação com a raiz;
+- dependência não linear mais forte;
+- variável mais estruturante;
 - cluster mais crítico;
+- qualidade média dos clusters;
 - quantidade de organizações atípicas.
 
 Critérios:
@@ -962,8 +1027,23 @@ Critérios:
 - homogênea: menor desvio padrão;
 - dispersa: maior coeficiente de variação;
 - maior correlação com raiz: maior `abs(Pearson)` contra a raiz;
+- dependência não linear mais forte: maior Mutual Information entre pares;
+- variável estruturante: combinação ponderada de correlação com a raiz, correlação média, MI média e importância PCA;
 - cluster crítico: menor média do índice raiz;
 - atípicas: total de outliers por IQR ou distância ao centroide.
+
+## Análise Temporal
+
+A aplicação tenta detectar colunas de ciclo nas linhas brutas importadas:
+
+- `ano`;
+- `ciclo`;
+- `year`;
+- `survey_year`;
+- `periodo`;
+- `período`.
+
+Se houver dois ou mais ciclos, o painel temporal mostra evolução média por ciclo. Se não houver, exibe mensagem explícita de indisponibilidade.
 
 ## Renderização Visual
 
@@ -980,6 +1060,7 @@ A interface preserva a identidade da calculadora:
 A aba analítica adiciona:
 
 - cards executivos;
+- textos de ajuda em cada card, explicando a finalidade da análise e como interpretar os resultados;
 - controles compactos;
 - painéis em grid de 12 colunas;
 - gráficos Plotly responsivos;
@@ -1089,12 +1170,20 @@ Foi adicionada a aba **Análises Estatísticas**, com:
 - Mutual Information;
 - PCA;
 - K-Means;
+- DBSCAN;
+- clustering hierárquico;
 - t-SNE;
+- UMAP;
 - benchmarking;
 - outliers;
+- outliers por variável;
+- análise de desequilíbrio interno;
 - exploração individual;
+- comparação entre organizações;
 - radar chart;
 - distribuições;
+- densidade;
+- análise temporal condicional;
 - insights automáticos;
 - exportações CSV/JSON.
 

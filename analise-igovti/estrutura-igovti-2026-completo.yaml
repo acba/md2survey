@@ -1,0 +1,332 @@
+metadata:
+  nome: iGovTI
+  versao: "2026"
+  raiz: iGovTI
+
+preprocessamento:
+  nao_se_aplica: parcial
+
+categorias:
+  # Codigos exportados pelo LimeSurvey para questoes [adoption]
+  naoad: 0
+  adfor: 0.05
+  admen: 0.15
+  adpar: 0.5
+  admai: 1
+  naoap: 0.5
+
+  # Codigos exportados pelas escalas sim/nao
+  sim: 1
+  nao: 0
+
+  # Rotulos mantidos como fallback para planilhas ja decodificadas
+  "Não adota": 0
+  "Não adota.": 0
+  "Há decisão formal ou plano aprovado para adotá-lo": 0.05
+  "Há decisão formal ou plano aprovado para adotá-lo.": 0.05
+  "Adota em menor parte": 0.15
+  "Adota em menor parte.": 0.15
+  "Adota parcialmente": 0.5
+  "Adota parcialmente.": 0.5
+  "Não se aplica": 0.5
+  "Não se aplica.": 0.5
+  "Adota": 1
+  "Adota em maior parte ou totalmente": 1
+  "Adota em maior parte ou totalmente.": 1
+  "Sim": 1
+  "Não": 0
+  "Nao": 0
+  "N/A": 0
+
+niveis_maturidade:
+  - nome: Inexpressivo
+    min: 0
+    max: 0.15
+    inclui_min: true
+    inclui_max: false
+  - nome: Iniciando
+    min: 0.15
+    max: 0.4
+    inclui_min: true
+    inclui_max: false
+  - nome: Intermediário
+    min: 0.4
+    max: 0.7
+    inclui_min: true
+    inclui_max: false
+  - nome: Aprimorado
+    min: 0.7
+    max: 1
+    inclui_min: true
+    inclui_max: true
+
+agregados:
+  GovernancaTI:
+    componentes:
+      - id: q1001
+        peso: 0.327403834851957
+      - id: q1002
+        peso: 0.275682914168293
+      - id: q1003
+        peso: 0.153597864756459
+      - id: q1004
+        peso: 0.243315386223291
+
+  # Gestão
+  PlanejamentoTI:
+    componentes:
+      - id: q2101
+        peso: 0.502245016099551
+      - id: q2102
+        peso: 0.497754983900449
+  ServicosTI:
+    componentes:
+      - id: q2201
+        peso: 0.243988021274905
+      - id: q2202
+        peso: 0.241081341165387
+      - id: q2203
+        peso: 0.262416152533095
+      - id: q2204
+        peso: 0.252514485026613
+  RiscosTISegInfo:
+    componentes:
+      - id: q2301
+        peso: 0.313583824988742
+      - id: q2302
+        peso: 0.334855010417522
+      - id: q2303
+        peso: 0.351561164593736
+  EstruturaSegInfo:
+    componentes:
+      - id: q2401
+        peso: 0.352918884966675
+      - id: q2402
+        peso: 0.314480446156258
+      - id: q2403
+        peso: 0.332600668877067
+  _q4251ext[A](TCU):
+    componentes:
+      - id: q2501ext[A]
+        peso: 0.5
+      - id: q2501ext[C]
+        peso: 0.5
+  _q4251(TCU):
+    componentes:
+      - id: _q4251ext[A](TCU)
+        peso: 0.166666666666667
+      - id: q2502
+        peso: 0.833333333333333
+  ProcessoSegInfo:
+    componentes:
+      - id: _q4251(TCU)
+        peso: 0.375836866199098
+      - id: q2503
+        peso: 0.301047566345608
+      - id: q2504
+        peso: 0.323115567455294
+  GerirSoluçõesTI:
+    componentes:
+      - id: q2601
+        peso: 0.509278560342789
+      - id: q2602
+        peso: 0.490721439657210
+  iGestTI:
+    componentes:
+      - id: PlanejamentoTI
+        peso: 0.153402950545233
+      - id: ServicosTI
+        peso: 0.185165801954126
+      - id: RiscosTISegInfo
+        peso: 0.163182752556826
+      - id: EstruturaSegInfo
+        peso: 0.157769302046022
+      - id: ProcessoSegInfo
+        peso: 0.182134616637340
+      - id: GerirSoluçõesTI
+        peso: 0.158344576260455
+
+  iGovTI:
+    componentes:
+      - id: GovernancaTI
+        peso: 0.477696299232863
+      - id: iGestTI
+        peso: 0.522303700767137
+
+  # Calculo do Pro-forma para comparação com auditorias de 2023
+  # Governança
+  (ProForma)ModeloTI:
+    componentes:
+      - id: q1001
+        peso: 1
+  (ProForma)MonitorAvaliaTI:
+    componentes:
+      - id: q1002
+        peso: 0.239954113847665
+      - id: q1003ext[A]
+        peso: 0.380399470228791
+      - id: q1003ext[B]
+        peso: 0.379646415923544
+  (ProForma)ResultadoTI:
+    componentes:
+      - id: q1004
+        peso: 1
+  (ProForma)GovernancaTI:
+    componentes:
+      - id: (ProForma)ModeloTI
+        peso: 0.34248477689372
+      - id: (ProForma)MonitorAvaliaTI
+        peso: 0.344356081316603
+      - id: (ProForma)ResultadoTI
+        peso: 0.313159141789676
+
+
+  # Gestão
+  (ProForma)PlanejamentoTI:
+    componentes:
+      - id: q2101
+        peso: 0.5
+      - id: q2102
+        peso: 0.5
+  (ProForma)PessoasTI:
+    componentes:
+      - id: q2211
+        peso: 0.200015591427986
+      - id: q2212
+        peso: 0.189707149747752
+      - id: q2213
+        peso: 0.138620127809127
+      - id: q2221
+        peso: 0.17980424931722
+      - id: q2231
+        peso: 0.167513819607624
+      - id: q2241
+        peso: 0.124339062090292
+
+  (ProForma)iGestServicosTI:
+    componentes:
+      - id: q2201
+        peso: 0.236308617074049
+      - id: q2202
+        peso: 0.262957173833819
+      - id: q2203
+        peso: 0.235636430094488
+      - id: q2204
+        peso: 0.265097778997645
+  (ProForma)iGestNiveisServicoTI:
+    componentes:
+      - id: q2201ext[B]
+        peso: 0.333
+      - id: q2201ext[D]
+        peso: 0.333
+      - id: q2201ext[E]
+        peso: 0.334
+  (ProForma)iGestRiscosTI:
+    componentes:
+      - id: q2141
+        peso: 0.135195390704305
+      - id: q2142
+        peso: 0.114370438771681
+      - id: q2146
+        peso: 0.160657263976458
+      - id: q2147
+        peso: 0.154558443847086
+      - id: q2143
+        peso: 0.172921049657911
+      - id: q2144
+        peso: 0.165393181316535
+      - id: q2145
+        peso: 0.0969042317260227
+  (ProForma)EstruturaSegInfo:
+    componentes:
+      - id: q2151
+        peso: 0.337225127598945
+      - id: q2152
+        peso: 0.328584171771053
+      - id: q2153
+        peso: 0.334190700630002
+  (ProForma)ProcessoSegInfo:
+    componentes:
+      - id: q2161
+        peso: 0.169100077513301
+      - id: q2162
+        peso: 0.181906589345358
+      - id: q2163
+        peso: 0.168444883055573
+      - id: q2164
+        peso: 0.146840126078019
+      - id: q2165
+        peso: 0.180269707258143
+      - id: q2166
+        peso: 0.153438616749606
+  (ProForma)ProcessoSoftware:
+    componentes:
+      - id: q2171
+        peso: 1
+  (ProForma)iGestProjetosTI:
+    componentes:
+      - id: q2181
+        peso: 1
+  (ProForma)iGestContratosTI:
+    componentes:
+      - id: q2311
+        peso: 0.308686396585945
+      - id: q2321A
+        peso: 0.358650374345277
+      - id: q2322A
+        peso: 0.332663229068778
+
+  (ProForma)iGestSegInfo:
+    componentes:
+      - id: EstruturaSegInfo
+        peso: 0.185207883709867
+      - id: ProcessoSegInfo
+        peso: 0.219713326377589
+      - id: q2145
+        peso: 0.143292869064277
+      - id: q2142
+        peso: 0.198007190889671
+      - id: q2171F
+        peso: 0.133404667143688
+      - id: q1122E
+        peso: 0.120374062814908
+  (ProForma)ProcessosTI:
+    componentes:
+      - id: (ProForma)iGestServicosTI
+        peso: 0.167073137421224
+      - id: (ProForma)iGestNiveisServicoTI
+        peso: 0.134705191897048
+      - id: (ProForma)iGestRiscosTI
+        peso: 0.137263981410149
+      - id: (ProForma)iGestSegInfo
+        peso: 0.170654806089732
+      - id: (ProForma)ProcessoSoftware
+        peso: 0.138678880790189
+      - id: (ProForma)iGestProjetosTI
+        peso: 0.148415256905944
+      - id: (ProForma)iGestContratosTI
+        peso: 0.103208745485713
+  (ProForma)iGestTI:
+    componentes:
+      - id: PlanejamentoTI
+        peso: 0.330476319864886
+      - id: (ProForma)PessoasTI
+        peso: 0.301194908895905
+      - id: (ProForma)ProcessosTI
+        peso: 0.368328771239209
+  (ProForma)iGovTI:
+    componentes:
+      - id: (ProForma)GovernancaTI
+        peso: 0.5
+      - id: (ProForma)iGestTI
+        peso: 0.5
+  (ProForma)ProcessosContratacao:
+    componentes:
+      - id: q2331
+        peso: 0.167173482808753
+      - id: q2341
+        peso: 0.288160971623168
+      - id: q2342
+        peso: 0.272246466624149
+      - id: q2343
+        peso: 0.272419078943929
