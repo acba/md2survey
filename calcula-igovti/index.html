@@ -575,6 +575,7 @@
       <button id="downloadYamlBtn">Exportar YAML</button>
       <button id="downloadJsonBtn" disabled>Exportar resultados JSON</button>
       <button id="downloadCsvBtn" disabled>Exportar resultados CSV</button>
+      <button id="downloadXlsxBtn" disabled>Exportar resultados XLSX</button>
     </div>
   </header>
 
@@ -1114,6 +1115,7 @@ agregados:
     $('downloadYamlBtn').addEventListener('click', () => downloadText('estrutura-igovti.yaml', $('yamlEditor').value, 'text/yaml'));
     $('downloadJsonBtn').addEventListener('click', () => downloadText('resultado-igovti.json', JSON.stringify(state.results, null, 2), 'application/json'));
     $('downloadCsvBtn').addEventListener('click', () => downloadText('resultado-igovti.csv', toCsv(state.results), 'text/csv'));
+    $('downloadXlsxBtn').addEventListener('click', () => downloadResultsXlsx(state.results));
     document.querySelectorAll('.tab-btn').forEach((button) => {
       button.addEventListener('click', () => setActiveTab(button.dataset.tab));
     });
@@ -1417,6 +1419,7 @@ agregados:
       });
       $('downloadJsonBtn').disabled = false;
       $('downloadCsvBtn').disabled = false;
+      $('downloadXlsxBtn').disabled = false;
       renderResultsTable();
       fillEntitySelect();
       renderSelectedEntity();
@@ -3072,10 +3075,39 @@ agregados:
       return (pca.scores || []).map((row) => [row[0] || 0, row[1] || 0]);
     }
 
+    function resultExportColumns() {
+      const root = state.config.metadata.raiz;
+      return ['id', root, 'nivel_maturidade', ...Object.keys(state.config.agregados).filter((id) => id !== root)];
+    }
+
+    function resultExportRows(results) {
+      const columns = resultExportColumns();
+      return results.map((result) => {
+        const row = {};
+        for (const col of columns) {
+          row[col] = col === 'id' ? result.id : col === 'nivel_maturidade' ? result.nivel_maturidade : result.valores[col];
+        }
+        return row;
+      });
+    }
+
+    function downloadResultsXlsx(results) {
+      if (!results.length) return;
+      if (!window.XLSX) {
+        downloadText('resultado-igovti.csv', toCsv(results), 'text/csv');
+        return;
+      }
+      const columns = resultExportColumns();
+      const worksheet = XLSX.utils.json_to_sheet(resultExportRows(results), { header: columns });
+      worksheet['!cols'] = columns.map((column) => ({ wch: Math.max(14, String(column).length + 2) }));
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'resultados');
+      XLSX.writeFile(workbook, 'resultado-igovti.xlsx');
+    }
+
     function toCsv(results) {
       if (!results.length) return '';
-      const root = state.config.metadata.raiz;
-      const columns = ['id', root, 'nivel_maturidade', ...Object.keys(state.config.agregados).filter((id) => id !== root)];
+      const columns = resultExportColumns();
       const lines = [columns.join(',')];
       for (const result of results) {
         lines.push(columns.map((col) => {
