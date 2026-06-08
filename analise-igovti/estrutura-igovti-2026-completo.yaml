@@ -180,7 +180,6 @@ agregados:
       - id: (ProForma)ResultadoTI
         peso: 0.313159141789676
 
-
   # Gestão
   (ProForma)PlanejamentoTI:
     componentes:
@@ -190,22 +189,31 @@ agregados:
         peso: 0.5
   (ProForma)PessoasTI:
     componentes:
-      - id: q2211
+      - id: q2701
         peso: 0.200015591427986
-      - id: q2212
+      - id: q2702
         peso: 0.189707149747752
-      - id: q2213
+      - id: q2703
         peso: 0.138620127809127
-      - id: q2221
+      - id: q2704
         peso: 0.17980424931722
-      - id: q2231
+      - id: q2705
         peso: 0.167513819607624
-      - id: q2241
+      - id: q2707
         peso: 0.124339062090292
+
+  _q2201_catalogo:
+    componentes:
+      - id: q2201ext[A]
+        peso: 0.333
+      - id: q2201ext[B]
+        peso: 0.333
+      - id: q2201ext[C]
+        peso: 0.334
 
   (ProForma)iGestServicosTI:
     componentes:
-      - id: q2201
+      - id: _q2201_catalogo
         peso: 0.236308617074049
       - id: q2202
         peso: 0.262957173833819
@@ -213,6 +221,7 @@ agregados:
         peso: 0.235636430094488
       - id: q2204
         peso: 0.265097778997645
+
   (ProForma)iGestNiveisServicoTI:
     componentes:
       - id: q2201ext[B]
@@ -221,11 +230,12 @@ agregados:
         peso: 0.333
       - id: q2201ext[E]
         peso: 0.334
+
   (ProForma)iGestRiscosTI:
     componentes:
-      - id: q2141
+      - id: q2301
         peso: 0.135195390704305
-      - id: q2142
+      - id: q2303
         peso: 0.114370438771681
       - id: q2146
         peso: 0.160657263976458
